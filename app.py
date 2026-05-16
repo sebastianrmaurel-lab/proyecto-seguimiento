@@ -127,6 +127,29 @@ def api_stats():
     })
 
 
+# Últimos ingresados
+@app.route('/api/recientes')
+def api_recientes():
+    n = int(request.args.get('n', 8))
+    contratos = Contrato.query.order_by(Contrato.creado_en.desc()).limit(n).all()
+    return jsonify([c.to_dict() for c in contratos])
+
+
+# Datos globales para gráficos
+@app.route('/api/chart-data')
+def api_chart_data():
+    all_c = Contrato.query.all()
+    by_month = [0] * 12
+    for c in all_c:
+        if c.fecha_inicio:
+            by_month[c.fecha_inicio.month - 1] += 1
+    etapas = [0] * 5
+    for c in all_c:
+        if 0 <= c.etapa <= 4:
+            etapas[c.etapa] += 1
+    return jsonify({'by_month': by_month, 'etapas': etapas})
+
+
 # Buscar por RUT (vista pública)
 @app.route('/api/buscar')
 def api_buscar():

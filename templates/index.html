@@ -3,393 +3,614 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Consulta — Seguimiento</title>
+<title>Seguimiento — Dashboard General</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f6f5f3;--surface:#fff;--border:#e8e6e1;
-  --text:#1a1916;--muted:#6b6860;
-  --navy:#003082;--navy-light:#eff4ff;
-  --red:#CF142B;--red-light:#fff1f2;
-  --amber:#d97706;--amber-light:#fffbeb;
-  --green:#16a34a;--green-light:#f0fdf4;
+  --bg:#f0efe9;
+  --surface:#ffffff;
+  --surface2:#fafaf8;
+  --border:#e5e3dc;
+  --border2:#d4d2cb;
+  --text:#18180f;
+  --muted:#6b6858;
+  --soft:#9b9888;
+  --navy:#003082;
+  --navy2:#002060;
+  --navy-l:#eef3ff;
+  --red:#b91c1c;
+  --red-l:#fef2f2;
+  --amber:#b45309;
+  --amber-l:#fefce8;
+  --green:#15803d;
+  --green-l:#f0fdf4;
+  --purple:#6d28d9;
+  --purple-l:#f5f3ff;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 
-/* NAV */
-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.nav-logo{font-family:'DM Serif Display',serif;font-size:19px;color:var(--text);display:flex;align-items:center;gap:9px;text-decoration:none}
-.nav-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--navy);flex-shrink:0}
-.nav-link-admin{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 14px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:6px;transition:all .15s}
-.nav-link-admin:hover{border-color:var(--navy);color:var(--navy);background:var(--navy-light)}
+/* ── TOP NAV ── */
+.topnav{
+  height:54px;background:var(--navy2);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.75rem;position:sticky;top:0;z-index:200;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.topnav-logo{font-family:'DM Serif Display',serif;font-size:18px;display:flex;align-items:center;gap:9px}
+.topnav-logo .dot{width:8px;height:8px;border-radius:50%;background:#4fa3f7;flex-shrink:0}
+.topnav-right{display:flex;align-items:center;gap:10px}
+.nav-pill{font-size:12px;padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.75);cursor:pointer;transition:all .15s;background:transparent;font-family:'Inter',sans-serif}
+.nav-pill:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-pill.primary{background:#003082;border-color:#003082;color:#fff}
+.nav-pill.primary:hover{background:#0041ad}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.5)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* HERO */
-.hero{display:flex;flex-direction:column;align-items:center;padding:5rem 1.5rem 2.5rem;text-align:center}
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--navy);background:var(--navy-light);padding:5px 16px;border-radius:20px;margin-bottom:1.25rem;border:1px solid #c7d8ff}
-.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:400;line-height:1.18;color:var(--text);margin-bottom:.75rem;max-width:560px}
-.hero p{font-size:15px;color:var(--muted);max-width:400px;line-height:1.65;margin-bottom:2.5rem}
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:calc(100vh - 54px)}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
 
-/* SEARCH */
-.search-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:2rem;width:100%;max-width:540px;box-shadow:0 6px 30px rgba(0,0,0,.07)}
-.search-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:10px}
-.search-row{display:flex;gap:8px}
-.search-input-wrap{flex:1;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;background:#fafaf9;overflow:hidden;transition:border-color .15s}
-.search-input-wrap:focus-within{border-color:var(--navy);background:var(--surface)}
-.search-input-wrap .si{padding:0 12px;color:var(--muted);font-size:15px;flex-shrink:0}
-.search-input-wrap input{flex:1;height:46px;border:none;background:transparent;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none}
-.search-input-wrap input::placeholder{color:#b0ae9e}
-.btn-buscar{height:46px;padding:0 24px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:7px}
-.btn-buscar:hover{background:#00225c}
-.btn-buscar:active{transform:scale(.97)}
+/* ── MAIN COLUMN ── */
+.main-col{padding:1.5rem;overflow:hidden}
 
-/* RESULTS WRAPPER */
-#results-section{width:100%;max-width:920px;margin:0 auto 4rem;padding:0 1.5rem}
-.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
-.results-count{font-size:13px;color:var(--muted)}
-.results-rut{font-size:13px;font-weight:700;font-family:monospace;background:var(--navy-light);color:var(--navy);padding:4px 14px;border-radius:20px;border:1px solid #c7d8ff}
+/* ── SIDEBAR ── */
+.sidebar{
+  border-left:1px solid var(--border);background:var(--surface);
+  padding:1.25rem;display:flex;flex-direction:column;gap:1.25rem;
+  overflow-y:auto;
+}
+@media(max-width:960px){.sidebar{border-left:none;border-top:1px solid var(--border)}}
 
-/* CONTRACT CARD */
-.c-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
-.c-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.08);border-color:#d0cec9}
-.c-card-strip{height:4px}
-.strip-critico{background:var(--red)}.strip-advertencia{background:var(--amber)}.strip-normal{background:var(--navy)}.strip-completado{background:var(--green)}.strip-sinefecto{background:#9ca3af}
+/* ── METRIC CARDS ── */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+@media(max-width:700px){.metrics-row{grid-template-columns:repeat(2,1fr)}}
+.metric{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:.875rem 1rem;position:relative;overflow:hidden;cursor:pointer;transition:all .15s;
+}
+.metric:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric.m-navy::before{background:var(--navy)}
+.metric.m-amber::before{background:#d97706}
+.metric.m-red::before{background:var(--red)}
+.metric.m-green::before{background:var(--green)}
+.metric.m-purple::before{background:var(--purple)}
+.metric.m-soft::before{background:var(--soft)}
+.metric-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:.625rem}
+.metric-icon.i-navy{background:var(--navy-l);color:var(--navy)}
+.metric-icon.i-amber{background:var(--amber-l);color:var(--amber)}
+.metric-icon.i-red{background:var(--red-l);color:var(--red)}
+.metric-icon.i-green{background:var(--green-l);color:var(--green)}
+.metric-icon.i-purple{background:var(--purple-l);color:var(--purple)}
+.metric-icon.i-soft{background:#f3f3f0;color:var(--soft)}
+.metric-val{font-size:26px;font-weight:800;line-height:1;margin-bottom:3px}
+.metric-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.metric-sub{font-size:10px;color:var(--soft);margin-top:3px}
 
-.c-top{padding:1.25rem 1.5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
-.c-top-info .empresa{font-size:16px;font-weight:800;color:var(--text);margin-bottom:5px}
-.c-top-info .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
-.c-top-info .meta span{display:flex;align-items:center;gap:4px}
-.c-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;flex-shrink:0}
+/* ── PANELS ── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.25rem}
+.panel-hdr{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.panel-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.panel-title i{font-size:15px}
+.panel-action{font-size:12px;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:4px;text-decoration:none;font-weight:500}
+.panel-action:hover{text-decoration:underline}
 
-.c-stages{padding:.875rem 1.5rem;border-top:1px solid var(--border);background:#fafaf8;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
-.stage-block{flex:1;min-width:200px}
-.stage-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:7px}
-.stage-bar{display:flex;gap:5px}
-.stage-seg{height:8px;flex:1;border-radius:4px;background:#e8e6e1}
-.stage-seg.done{background:var(--green)}.stage-seg.active{background:var(--navy)}
-.stage-name{font-size:13px;font-weight:700;color:var(--navy);margin-top:5px}
-.flags-block{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+/* ── CHARTS GRID ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+@media(max-width:640px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.125rem}
+.chart-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:1rem}
+.chart-wrap{position:relative;height:160px}
 
-.flag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;border:1px solid var(--border)}
-.flag-ok{background:var(--green-light);color:#15803d;border-color:#86efac}
-.flag-no{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb}
-.flag-warn{background:var(--amber-light);color:#92400e;border-color:#fde68a}
-.flag-danger{background:var(--red-light);color:#991b1b;border-color:#fca5a5}
+/* ── RECIENTES TABLE ── */
+.rec-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rec-table th{padding:8px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--soft);border-bottom:1px solid var(--border);background:var(--surface2)}
+.rec-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.rec-table tr:last-child td{border-bottom:none}
+.rec-table tr:hover td{background:var(--surface2)}
+.rut-mono{font-family:monospace;font-size:11px;color:var(--muted)}
+.empresa-cell strong{display:block;font-size:13px;font-weight:600;margin-bottom:1px}
 
-.c-info{padding:1rem 1.5rem;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem}
-.info-field .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
-.info-field .val{font-size:13px;font-weight:600;color:var(--text)}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.b-proc{background:var(--navy-l);color:var(--navy);border-color:#c7d8ff}
+.b-done{background:var(--green-l);color:var(--green);border-color:#86efac}
+.b-sinef{background:#f4f4f1;color:var(--muted);border-color:var(--border2)}
+.b-crit{background:var(--red-l);color:var(--red);border-color:#fca5a5}
+.b-warn{background:var(--amber-l);color:var(--amber);border-color:#fde68a}
 
-.c-obs{padding:.875rem 1.5rem;border-top:1px solid var(--border);background:#fffdf5;display:flex;gap:10px;align-items:flex-start}
-.c-obs .obs-text{font-size:13px;color:var(--muted);line-height:1.5}
+/* Stage dots */
+.stage-dots{display:flex;gap:3px}
+.sd{width:14px;height:5px;border-radius:3px;background:var(--border)}
+.sd.d{background:var(--green)}.sd.a{background:var(--navy)}
 
-.days-badge{display:flex;flex-direction:column;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:72px;text-align:center;flex-shrink:0}
-.days-num{font-size:22px;font-weight:800;line-height:1}
-.days-lbl{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+/* Alert banner */
+.alert-row{background:var(--red-l);border-left:3px solid var(--red);padding:.625rem 1rem;font-size:12px;color:#7f1d1d;display:flex;align-items:center;gap:8px;border-bottom:1px solid #fecaca}
+.alert-row.warn{background:var(--amber-l);border-color:#d97706;color:#78350f;border-bottom-color:#fde68a}
 
-.badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid transparent}
-.b-navy{background:var(--navy-light);color:var(--navy);border-color:#c7d8ff}
-.b-done{background:var(--green-light);color:#15803d;border-color:#86efac}
-.b-sinef{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
-.b-critico{background:var(--red-light);color:var(--red);border-color:#fca5a5}
-.b-advertencia{background:var(--amber-light);color:var(--amber);border-color:#fde68a}
+/* ── SIDEBAR SEARCH ── */
+.sb-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
+.sb-input-row{display:flex;gap:6px;margin-bottom:.75rem}
+.sb-input{
+  flex:1;height:38px;border:1.5px solid var(--border);border-radius:8px;
+  padding:0 10px;font-size:13px;font-family:'Inter',sans-serif;
+  color:var(--text);background:var(--surface2);outline:none;transition:border-color .15s;
+}
+.sb-input:focus{border-color:var(--navy);background:var(--surface)}
+.sb-input::placeholder{color:#c0bdb4}
+.sb-btn{height:38px;width:38px;border:none;background:var(--navy);color:#fff;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
+.sb-btn:hover{background:var(--navy2)}
 
-.alert-banner{border-radius:10px;padding:.875rem 1.25rem;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;border:1px solid;margin:0 1.5rem .75rem}
-.ab-critico{background:var(--red-light);color:#991b1b;border-color:#fca5a5}
-.ab-advertencia{background:var(--amber-light);color:#92400e;border-color:#fde68a}
+/* RUT result card in sidebar */
+.rut-result-card{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:.75rem}
+.rut-card-hdr{padding:.75rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.rut-card-hdr .emp{font-size:13px;font-weight:700}
+.rut-card-hdr .cod{font-size:11px;color:var(--muted);margin-top:2px}
+.rut-card-body{padding:.75rem}
+.rut-stage-bar{display:flex;gap:4px;margin-bottom:.5rem}
+.rsb{flex:1;height:6px;border-radius:3px;background:var(--border)}
+.rsb.d{background:var(--green)}.rsb.a{background:var(--navy)}
+.rut-flags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.5rem}
+.rflag{font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid var(--border);color:var(--muted)}
+.rflag.ok{background:var(--green-l);color:var(--green);border-color:#86efac}
+.rflag.warn{background:var(--amber-l);color:var(--amber);border-color:#fde68a}
+.rflag.bad{background:var(--red-l);color:var(--red);border-color:#fca5a5}
+.rut-meta{font-size:11px;color:var(--muted)}
+.days-chip{
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
+  background:var(--border);color:var(--muted);
+}
+.days-chip.red{background:var(--red-l);color:var(--red)}
+.days-chip.amber{background:var(--amber-l);color:var(--amber)}
 
-/* CHARTS */
-.charts-wrap{margin-top:2rem}
-.charts-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
-@media(max-width:620px){.charts-grid{grid-template-columns:1fr}}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
-.chart-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:1rem}
-.chart-wrap{position:relative;height:180px}
+/* ── ALERTAS SIDEBAR LIST ── */
+.alert-item{padding:.625rem .75rem;border-radius:8px;margin-bottom:6px;border:1px solid;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.alert-item.crit{background:var(--red-l);border-color:#fca5a5}
+.alert-item.warn{background:var(--amber-l);border-color:#fde68a}
+.alert-item-info .emp{font-size:12px;font-weight:600}
+.alert-item-info .cod{font-size:10px;color:var(--muted)}
+.alert-chip{font-size:11px;font-weight:800;flex-shrink:0}
+.alert-chip.red{color:var(--red)}.alert-chip.amber{color:var(--amber)}
 
-/* State */
-.state-box{text-align:center;padding:4rem 1rem;color:var(--muted)}
-.state-box .icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
-.state-box h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:.5rem}
-.spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:3rem auto}
+/* ── MISC ── */
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:1.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
+.empty-sm{text-align:center;padding:1.5rem .5rem;color:var(--soft);font-size:13px}
+.divider{height:1px;background:var(--border);margin:.5rem 0}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--border);color:var(--muted)}
+.tag.new{background:#dbeafe;color:#1e40af}
 
-footer{margin-top:auto;padding:1.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);background:var(--surface)}
+.refresh-btn{border:none;background:transparent;cursor:pointer;color:var(--muted);font-size:14px;padding:3px 6px;border-radius:5px;transition:all .15s}
+.refresh-btn:hover{background:var(--border);color:var(--text)}
+
+/* Footer */
+footer{border-top:1px solid var(--border);background:var(--surface);padding:.875rem 1.75rem;font-size:11px;color:var(--soft);display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
 <body>
 
-<nav>
-  <a class="nav-logo" href="/"><span class="dot"></span> Seguimiento</a>
-  <a class="nav-link-admin" href="/admin"><i class="bi bi-shield-lock"></i> Administración</a>
-</nav>
+<!-- TOP NAV -->
+<header class="topnav">
+  <div class="topnav-logo"><span class="dot"></span> Seguimiento</div>
+  <div class="topnav-right">
+    <div class="live-badge"><span class="live-dot"></span> En vivo</div>
+    <a href="/admin" class="nav-pill primary"><i class="bi bi-shield-lock"></i> Administración</a>
+  </div>
+</header>
 
-<main>
-  <div class="hero">
-    <div class="eyebrow">Portal de Consulta</div>
-    <h1>Consulta el estado de tu trámite</h1>
-    <p>Ingresa tu RUT para ver el avance, etapas y alertas vigentes de todos tus contratos.</p>
+<!-- LAYOUT -->
+<div class="layout">
 
-    <div class="search-card">
-      <label class="search-label" for="rutInput">RUT del cliente</label>
-      <div class="search-row">
-        <div class="search-input-wrap">
-          <i class="bi bi-card-text si"></i>
-          <input type="text" id="rutInput" placeholder="Ej: 12.345.678-9"
-                 oninput="autoFormatRut(this)"
-                 onkeydown="if(event.key==='Enter')buscar()">
-        </div>
-        <button class="btn-buscar" onclick="buscar()">
-          <i class="bi bi-search"></i> Buscar
-        </button>
+  <!-- ═══════════════════════════ MAIN COLUMN ═══════════════════════════ -->
+  <main class="main-col">
+
+    <!-- Métricas globales -->
+    <div class="metrics-row" id="metrics-row">
+      <div class="metric m-navy"><div class="metric-icon i-navy"><i class="bi bi-files"></i></div><div class="metric-val" id="m-total">—</div><div class="metric-lbl">Total contratos</div></div>
+      <div class="metric m-amber"><div class="metric-icon i-amber"><i class="bi bi-loader"></i></div><div class="metric-val" id="m-proceso">—</div><div class="metric-lbl">En proceso</div></div>
+      <div class="metric m-red"><div class="metric-icon i-red"><i class="bi bi-exclamation-triangle"></i></div><div class="metric-val" id="m-alerta">—</div><div class="metric-lbl">Alertas críticas</div></div>
+      <div class="metric m-green"><div class="metric-icon i-green"><i class="bi bi-check-circle"></i></div><div class="metric-val" id="m-done">—</div><div class="metric-lbl">Completados</div></div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-lbl"><i class="bi bi-bar-chart-fill"></i> Ingresos por mes (fecha inicio)</div>
+        <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-lbl"><i class="bi bi-pie-chart-fill"></i> Distribución de estados</div>
+        <div class="chart-wrap"><canvas id="ch-est"></canvas></div>
       </div>
     </div>
-  </div>
 
-  <div id="results-section" style="display:none"></div>
-</main>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-lbl"><i class="bi bi-diagram-3"></i> Contratos por etapa</div>
+        <div class="chart-wrap"><canvas id="ch-etapa"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-lbl"><i class="bi bi-check2-square"></i> Flags globales</div>
+        <div class="chart-wrap"><canvas id="ch-flags"></canvas></div>
+      </div>
+    </div>
 
-<footer>Sistema de Seguimiento de Contratos</footer>
+    <!-- Últimos ingresados -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title"><i class="bi bi-clock-history" style="color:var(--navy)"></i> Últimos ingresados</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="refresh-btn" onclick="loadAll()" title="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
+          <a href="/admin" class="panel-action">Ver todos <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div id="recientes-wrap">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Buscar por RUT -->
+    <div>
+      <div class="sb-title"><i class="bi bi-search"></i> Consultar RUT</div>
+      <div class="sb-input-row">
+        <input class="sb-input" id="rut-input" placeholder="Ej: 12.345.678-9"
+               oninput="autoRut(this)" onkeydown="if(event.key==='Enter')buscarRut()">
+        <button class="sb-btn" onclick="buscarRut()"><i class="bi bi-search"></i></button>
+      </div>
+      <div id="rut-results"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Alertas críticas sidebar -->
+    <div>
+      <div class="sb-title"><i class="bi bi-exclamation-triangle-fill" style="color:var(--red)"></i> Alertas activas</div>
+      <div id="alertas-wrap"><div class="spinner"></div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Resumen rápido -->
+    <div>
+      <div class="sb-title"><i class="bi bi-lightning-fill" style="color:var(--amber)"></i> Resumen rápido</div>
+      <div id="quick-wrap"><div class="spinner"></div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Top RUTs -->
+    <div>
+      <div class="sb-title"><i class="bi bi-building"></i> Top empresas</div>
+      <div id="toprut-wrap"><div class="spinner"></div></div>
+    </div>
+
+  </aside>
+</div>
+
+<footer>
+  <span>Sistema de Seguimiento de Contratos</span>
+  <span id="footer-ts" style="color:var(--border2)"></span>
+</footer>
 
 <script>
-const ETAPAS = ['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
+const ETAPAS = ['E0','E1','E2','E3','E4'];
 const MESES  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let charts = {};
 
-function autoFormatRut(el){
+/* ── Utils ── */
+function autoRut(el){
   let v = el.value.replace(/[^0-9kK]/g,'');
-  if(v.length > 1){
-    const dv   = v.slice(-1).toUpperCase();
-    const body = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-    el.value   = body + '-' + dv;
-  }
+  if(v.length>1){const dv=v.slice(-1).toUpperCase();const b=v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');el.value=b+'-'+dv;}
 }
-
-function fmtDate(d){
-  if(!d) return '—';
-  const p = d.split('-');
-  return `${p[2]}/${p[1]}/${p[0]}`;
-}
-function fmtMonto(m){ return m ? '$'+Number(m).toLocaleString('es-CL') : '—'; }
+function fmtDate(d){if(!d)return '—';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`;}
+function fmtMonto(m){return m?'$'+Number(m).toLocaleString('es-CL'):'—';}
+function daysColor(d){if(d===null)return'';if(d<=7)return'red';if(d<=20)return'amber';return'';}
 
 function badgeEstado(c){
-  if(c.alerta==='critico')      return `<span class="badge b-critico"><i class="bi bi-exclamation-triangle-fill"></i> Crítico</span>`;
-  if(c.alerta==='advertencia')  return `<span class="badge b-advertencia"><i class="bi bi-clock-history"></i> Por vencer</span>`;
-  if(c.estado==='completado')   return `<span class="badge b-done"><i class="bi bi-check-circle-fill"></i> Completado</span>`;
-  if(c.estado==='sin_efecto')   return `<span class="badge b-sinef">Sin efecto</span>`;
-  return `<span class="badge b-navy"><i class="bi bi-circle-fill" style="font-size:6px"></i> En proceso</span>`;
-}
-function stripClass(c){
-  if(c.alerta==='critico') return 'strip-critico';
-  if(c.alerta==='advertencia') return 'strip-advertencia';
-  if(c.estado==='completado') return 'strip-completado';
-  if(c.estado==='sin_efecto') return 'strip-sinefecto';
-  return 'strip-normal';
-}
-function stageBar(e){
-  return ETAPAS.map((_,i)=>`<div class="stage-seg ${i<e?'done':i===e?'active':''}"></div>`).join('');
-}
-function daysColor(d){
-  if(d===null) return 'var(--muted)';
-  if(d<=0) return 'var(--red)';
-  if(d<=7) return 'var(--red)';
-  if(d<=20) return 'var(--amber)';
-  return 'var(--navy)';
+  if(c.alerta==='critico')     return`<span class="badge b-crit">⚠ Crítico</span>`;
+  if(c.alerta==='advertencia') return`<span class="badge b-warn">⏰ Por vencer</span>`;
+  if(c.estado==='completado')  return`<span class="badge b-done">✓ Listo</span>`;
+  if(c.estado==='sin_efecto')  return`<span class="badge b-sinef">Sin efecto</span>`;
+  return`<span class="badge b-proc">● En proceso</span>`;
 }
 
-function renderCard(c){
-  const d = c.dias_restantes;
-  const dc = daysColor(d);
+function stageDots(e){
+  return ETAPAS.map((_,i)=>`<div class="sd ${i<e?'d':i===e?'a':''}"></div>`).join('');
+}
 
-  const daysBox = d!==null ? `
-    <div class="days-badge">
-      <div class="days-num" style="color:${dc}">${d<=0?'Venc.':d}</div>
-      <div class="days-lbl">${d<=0?'Vencido':'días'}</div>
-    </div>` : '';
+/* ── Destroy charts ── */
+function killCharts(){Object.values(charts).forEach(c=>c.destroy());charts={};}
 
-  let alertBanner = '';
-  if(c.alerta==='critico')
-    alertBanner=`<div class="alert-banner ab-critico"><i class="bi bi-exclamation-triangle-fill"></i> Este contrato vence en <strong>${d} días</strong>. Contacta al responsable de inmediato.</div>`;
-  else if(c.alerta==='advertencia')
-    alertBanner=`<div class="alert-banner ab-advertencia"><i class="bi bi-clock-history"></i> Quedan <strong>${d} días</strong> para el vencimiento.</div>`;
+/* ── Load everything ── */
+async function loadAll(){
+  document.getElementById('footer-ts').textContent='Actualizando...';
+  await Promise.all([loadStats(), loadCharts(), loadRecientes(), loadAlertas(), loadQuick(), loadTopRut()]);
+  const now = new Date();
+  document.getElementById('footer-ts').textContent=
+    `Actualizado: ${now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}`;
+}
 
-  const fV = c.visado==='si'
-    ? `<span class="flag flag-ok"><i class="bi bi-check2"></i> Visado</span>`
-    : c.visado==='no'
-    ? `<span class="flag flag-danger"><i class="bi bi-x"></i> Sin visar</span>`
-    : `<span class="flag flag-no"><i class="bi bi-hourglass"></i> Visado pend.</span>`;
-  const fD = c.devuelto ? `<span class="flag flag-ok"><i class="bi bi-arrow-counterclockwise"></i> Devuelto</span>` : `<span class="flag flag-no">No devuelto</span>`;
-  const fO = c.tiene_observacion ? `<span class="flag flag-warn"><i class="bi bi-chat-square-text"></i> Con obs.</span>` : `<span class="flag flag-ok"><i class="bi bi-check2"></i> Sin obs.</span>`;
-  const fP = c.pago_imprevisto ? `<span class="flag flag-warn"><i class="bi bi-currency-dollar"></i> Pago imprev.</span>` : '';
-
-  const emailField = c.email
-    ? `<div class="info-field"><div class="lbl">Correo</div><div class="val"><a href="mailto:${c.email}" style="color:var(--navy);text-decoration:none">${c.email}</a></div></div>` : '';
-
-  const obsRow = c.tiene_observacion && c.observaciones
-    ? `<div class="c-obs"><i class="bi bi-chat-square-text" style="color:var(--amber);font-size:16px;flex-shrink:0;margin-top:2px"></i><div class="obs-text">${c.observaciones}</div></div>` : '';
-
-  return `
-  <div class="c-card">
-    <div class="c-card-strip ${stripClass(c)}"></div>
-    <div class="c-top">
-      <div class="c-top-info">
-        <div class="empresa">${c.empresa}</div>
-        <div class="meta">
-          <span><i class="bi bi-file-earmark-text"></i> ${c.codigo||'Sin código'}</span>
-          ${c.descripcion?`<span><i class="bi bi-card-text"></i> ${c.descripcion}</span>`:''}
-          ${c.responsable?`<span><i class="bi bi-person"></i> ${c.responsable}</span>`:''}
-        </div>
-      </div>
-      <div class="c-badges">${badgeEstado(c)}${daysBox}</div>
-    </div>
-    ${alertBanner}
-    <div class="c-stages">
-      <div class="stage-block">
-        <div class="stage-lbl">Progreso de etapas</div>
-        <div class="stage-bar">${stageBar(c.etapa)}</div>
-        <div class="stage-name">${ETAPAS[c.etapa]}</div>
-      </div>
-      <div class="flags-block">${fV}${fD}${fO}${fP}</div>
-    </div>
-    <div class="c-info">
-      <div class="info-field"><div class="lbl">Monto</div><div class="val">${fmtMonto(c.monto)}</div></div>
-      <div class="info-field"><div class="lbl">Fecha inicio</div><div class="val">${fmtDate(c.fecha_inicio)}</div></div>
-      <div class="info-field"><div class="lbl">Fecha fin</div><div class="val">${fmtDate(c.fecha_fin)}</div></div>
-      <div class="info-field"><div class="lbl">Estado</div><div class="val">${(c.estado||'').replace('_',' ')}</div></div>
-      ${emailField}
-    </div>
-    ${obsRow}
-  </div>`;
+/* ── Stats (métricas) ── */
+async function loadStats(){
+  try{
+    const s = await fetch('/api/stats').then(r=>r.json());
+    document.getElementById('m-total').textContent   = s.total;
+    document.getElementById('m-proceso').textContent = s.en_proceso;
+    document.getElementById('m-alerta').textContent  = s.alertas;
+    document.getElementById('m-done').textContent    = s.completado;
+  }catch(e){console.error(e)}
 }
 
 /* ── Charts ── */
-function destroyCharts(){Object.values(charts).forEach(c=>c.destroy()); charts={};}
+async function loadCharts(){
+  try{
+    const [cd, stats, allC] = await Promise.all([
+      fetch('/api/chart-data').then(r=>r.json()),
+      fetch('/api/stats').then(r=>r.json()),
+      fetch('/api/contratos').then(r=>r.json()),
+    ]);
+    killCharts();
 
-function renderCharts(data){
-  destroyCharts();
+    /* Bar: ingresos por mes */
+    const ctx1 = document.getElementById('ch-mes').getContext('2d');
+    charts.mes = new Chart(ctx1,{
+      type:'bar',
+      data:{
+        labels:MESES,
+        datasets:[{
+          label:'Contratos',data:cd.by_month,
+          backgroundColor:cd.by_month.map((_,i)=>{
+            const now = new Date().getMonth();
+            return i===now?'rgba(0,48,130,1)':'rgba(0,48,130,0.45)';
+          }),
+          borderRadius:4,borderWidth:0,
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>`Mes: ${MESES[i[0].dataIndex]}`}}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:10}},grid:{display:false}}}
+      }
+    });
 
-  /* Contratos por mes (fecha_inicio) */
-  const byMonth = Array(12).fill(0);
-  data.forEach(c=>{ if(c.fecha_inicio){ const m=parseInt(c.fecha_inicio.split('-')[1],10)-1; byMonth[m]++; }});
+    /* Doughnut: estados */
+    const ctx2 = document.getElementById('ch-est').getContext('2d');
+    charts.est = new Chart(ctx2,{
+      type:'doughnut',
+      data:{
+        labels:['En proceso','Completado','Sin efecto'],
+        datasets:[{data:[stats.en_proceso,stats.completado,stats.sin_efecto],
+          backgroundColor:['#003082','#15803d','#9ca3af'],borderWidth:0,hoverOffset:5}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+        plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10,boxWidth:10}}}
+      }
+    });
 
-  /* Estados */
-  const est={en_proceso:0,completado:0,sin_efecto:0};
-  data.forEach(c=>{ if(est[c.estado]!==undefined) est[c.estado]++; });
+    /* Horizontal bar: etapas */
+    const ctx3 = document.getElementById('ch-etapa').getContext('2d');
+    charts.etapa = new Chart(ctx3,{
+      type:'bar',
+      data:{
+        labels:['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'],
+        datasets:[{label:'Contratos',data:cd.etapas,
+          backgroundColor:['#93c5fd','#60a5fa','#3b82f6','#2563eb','#003082'],
+          borderRadius:4,borderWidth:0}]
+      },
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},y:{ticks:{font:{size:10}},grid:{display:false}}}
+      }
+    });
 
-  /* Etapas */
-  const etps = Array(5).fill(0);
-  data.forEach(c=>{ if(c.etapa>=0&&c.etapa<=4) etps[c.etapa]++; });
+    /* Bar: flags globales */
+    const visados  = allC.filter(c=>c.visado==='si').length;
+    const sinVisar = allC.filter(c=>c.visado!=='si').length;
+    const conObs   = allC.filter(c=>c.tiene_observacion).length;
+    const devueltos= allC.filter(c=>c.devuelto).length;
+    const imprev   = allC.filter(c=>c.pago_imprevisto).length;
+    const ctx4 = document.getElementById('ch-flags').getContext('2d');
+    charts.flags = new Chart(ctx4,{
+      type:'bar',
+      data:{
+        labels:['Visados','Sin visar','Con obs.','Devueltos','Pago imprev.'],
+        datasets:[{label:'N°',data:[visados,sinVisar,conObs,devueltos,imprev],
+          backgroundColor:['#15803d','#dc2626','#d97706','#003082','#6d28d9'],
+          borderRadius:4,borderWidth:0}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
+      }
+    });
 
-  /* Alertas / stats */
-  const alertas  = data.filter(c=>c.alerta==='critico').length;
-  const warnings = data.filter(c=>c.alerta==='advertencia').length;
-  const withEmail= data.filter(c=>c.email).length;
-
-  /* Insert charts HTML */
-  document.getElementById('results-section').insertAdjacentHTML('beforeend', `
-    <div class="charts-wrap">
-      <div class="charts-title"><i class="bi bi-bar-chart-fill" style="color:var(--navy)"></i> Resumen de contratos</div>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-card-title">Ingresos por mes</div>
-          <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Distribución de estados</div>
-          <div class="chart-wrap"><canvas id="ch-est"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-card-title">Contratos por etapa</div>
-          <div class="chart-wrap"><canvas id="ch-etapa"></canvas></div>
-        </div>
-        <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center">
-          <div class="chart-card-title">Resumen rápido</div>
-          <div id="qs"></div>
-        </div>
-      </div>
-    </div>`);
-
-  /* Bar: ingresos por mes */
-  charts.mes = new Chart(document.getElementById('ch-mes').getContext('2d'),{
-    type:'bar',
-    data:{labels:MESES,datasets:[{label:'Contratos',data:byMonth,backgroundColor:'rgba(0,48,130,.7)',borderColor:'#003082',borderWidth:1.5,borderRadius:5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}
-  });
-
-  /* Doughnut: estados */
-  charts.est = new Chart(document.getElementById('ch-est').getContext('2d'),{
-    type:'doughnut',
-    data:{labels:['En proceso','Completado','Sin efecto'],datasets:[{data:[est.en_proceso,est.completado,est.sin_efecto],backgroundColor:['#003082','#16a34a','#9ca3af'],borderWidth:0,hoverOffset:6}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12,boxWidth:12}}}}
-  });
-
-  /* Horizontal bar: etapas */
-  charts.etapa = new Chart(document.getElementById('ch-etapa').getContext('2d'),{
-    type:'bar',
-    data:{labels:ETAPAS,datasets:[{label:'Contratos',data:etps,backgroundColor:['rgba(0,48,130,.4)','rgba(0,48,130,.55)','rgba(0,48,130,.7)','rgba(0,48,130,.85)','rgba(0,48,130,1)'],borderRadius:5,borderWidth:0}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
-  });
-
-  /* Quick stats */
-  function qr(icon,label,val,color){
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.375rem 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
-        <i class="bi ${icon}" style="color:${color};width:15px"></i>${label}
-      </div>
-      <span style="font-size:16px;font-weight:800;color:${color}">${val}</span>
-    </div>`;
-  }
-  document.getElementById('qs').innerHTML =
-    qr('bi-files','Total contratos',data.length,'var(--navy)') +
-    qr('bi-exclamation-triangle-fill','Críticos (≤7 días)',alertas,'var(--red)') +
-    qr('bi-clock-history','Por vencer (≤20 días)',warnings,'var(--amber)') +
-    qr('bi-check-circle-fill','Completados',est.completado,'var(--green)') +
-    qr('bi-envelope-fill','Con correo registrado',withEmail,'#6366f1');
+  }catch(e){console.error('charts error',e)}
 }
 
-/* ── FETCH principal — BUG CORREGIDO (.strip() → .trim()) ── */
-async function buscar(){
-  const rut = document.getElementById('rutInput').value.trim(); /* ← .trim() no .strip() */
-  if(!rut) return;
-
-  const sec = document.getElementById('results-section');
-  sec.style.display = 'block';
-  sec.innerHTML = '<div class="spinner"></div>';
-
+/* ── Recientes ── */
+async function loadRecientes(){
+  const el = document.getElementById('recientes-wrap');
   try{
-    const res  = await fetch('/api/buscar?rut=' + encodeURIComponent(rut));
-    const data = await res.json();
+    const data = await fetch('/api/recientes?n=10').then(r=>r.json());
+    if(!data.length){el.innerHTML='<div class="empty-sm">Sin contratos registrados</div>';return;}
 
-    if(!data.length){
-      sec.innerHTML = `
-        <div class="state-box">
-          <span class="icon"><i class="bi bi-search" style="color:var(--muted)"></i></span>
-          <h3>Sin resultados</h3>
-          <p>No se encontraron contratos para el RUT <strong>${rut}</strong>.<br>Verifica el formato e intenta nuevamente.</p>
-        </div>`;
+    el.innerHTML=`<div style="overflow-x:auto">
+    <table class="rec-table">
+      <thead><tr>
+        <th>Empresa / RUT</th><th>Código</th><th>Etapas</th>
+        <th>Estado</th><th>Fecha fin</th><th>Días</th>
+      </tr></thead>
+      <tbody>
+      ${data.map(c=>{
+        const d = c.dias_restantes;
+        const dc= daysColor(d);
+        return`<tr>
+          <td class="empresa-cell">
+            <strong>${c.empresa}</strong>
+            <div class="rut-mono">${c.rut}</div>
+          </td>
+          <td style="font-family:monospace;font-size:11px">${c.codigo||'—'}</td>
+          <td>
+            <div class="stage-dots">${stageDots(c.etapa)}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">E${c.etapa}</div>
+          </td>
+          <td>${badgeEstado(c)}</td>
+          <td style="font-size:12px">${fmtDate(c.fecha_fin)}</td>
+          <td>${d!==null?`<span class="days-chip ${dc}">${d<=0?'Venc':d+'d'}</span>`:'<span style="color:var(--soft)">—</span>'}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>`;
+  }catch(e){el.innerHTML='<div class="empty-sm">Error cargando datos</div>';}
+}
+
+/* ── Alertas sidebar ── */
+async function loadAlertas(){
+  const el = document.getElementById('alertas-wrap');
+  try{
+    const data = await fetch('/api/contratos').then(r=>r.json());
+    const criticos = data.filter(c=>c.alerta==='critico');
+    const warnings = data.filter(c=>c.alerta==='advertencia');
+    const lista = [...criticos,...warnings].slice(0,6);
+
+    if(!lista.length){
+      el.innerHTML=`<div class="empty-sm"><i class="bi bi-check-circle-fill" style="color:var(--green);font-size:20px;display:block;margin-bottom:6px"></i>Sin alertas activas</div>`;
       return;
     }
-
-    sec.innerHTML =
-      `<div class="results-header">
-        <div class="results-count">${data.length} contrato${data.length!==1?'s':''} encontrado${data.length!==1?'s':''}</div>
-        <div class="results-rut">RUT: ${rut}</div>
-       </div>` +
-      data.map(renderCard).join('');
-
-    renderCharts(data);
-
-  }catch(e){
-    sec.innerHTML = `
-      <div class="state-box">
-        <span class="icon"><i class="bi bi-wifi-off" style="color:var(--muted)"></i></span>
-        <h3>Error de conexión</h3>
-        <p>No se pudo conectar con el servidor. Intenta nuevamente.</p>
+    el.innerHTML = lista.map(c=>{
+      const d = c.dias_restantes;
+      const isCrit = c.alerta==='critico';
+      return`<div class="alert-item ${isCrit?'crit':'warn'}">
+        <div class="alert-item-info">
+          <div class="emp">${c.empresa}</div>
+          <div class="cod">${c.codigo||c.rut}</div>
+        </div>
+        <span class="alert-chip ${isCrit?'red':'amber'}">${d<=0?'Venc':d+'d'}</span>
       </div>`;
-  }
+    }).join('');
+  }catch(e){el.innerHTML='<div class="empty-sm">Error</div>';}
 }
+
+/* ── Quick stats ── */
+async function loadQuick(){
+  const el = document.getElementById('quick-wrap');
+  try{
+    const [s, all] = await Promise.all([
+      fetch('/api/stats').then(r=>r.json()),
+      fetch('/api/contratos').then(r=>r.json()),
+    ]);
+    const conEmail = all.filter(c=>c.email).length;
+    const conObs   = all.filter(c=>c.tiene_observacion).length;
+    const visados  = all.filter(c=>c.visado==='si').length;
+    const advertencias = all.filter(c=>c.alerta==='advertencia').length;
+
+    function qr(icon,label,val,color){
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)">
+          <i class="bi ${icon}" style="color:${color};width:14px"></i>${label}
+        </div>
+        <span style="font-size:15px;font-weight:800;color:${color}">${val}</span>
+      </div>`;
+    }
+    el.innerHTML =
+      qr('bi-files','Total',s.total,'var(--navy)') +
+      qr('bi-loader','En proceso',s.en_proceso,'var(--amber)') +
+      qr('bi-exclamation-triangle-fill','Críticos',s.alertas,'var(--red)') +
+      qr('bi-clock-history','Advertencias',advertencias,'#d97706') +
+      qr('bi-check-circle-fill','Completados',s.completado,'var(--green)') +
+      qr('bi-slash-circle','Sin efecto',s.sin_efecto,'var(--soft)') +
+      qr('bi-stamp','Visados',visados,'var(--navy)') +
+      qr('bi-chat-square-text','Con observación',conObs,'var(--amber)') +
+      qr('bi-envelope-fill','Con correo',conEmail,'var(--purple)');
+  }catch(e){el.innerHTML='<div class="empty-sm">Error</div>';}
+}
+
+/* ── Top RUTs ── */
+async function loadTopRut(){
+  const el = document.getElementById('toprut-wrap');
+  try{
+    const data = await fetch('/api/por-rut').then(r=>r.json());
+    if(!data.length){el.innerHTML='<div class="empty-sm">Sin datos</div>';return;}
+    el.innerHTML = data.slice(0,5).map((r,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:12px;font-weight:600">${r.empresa}</div>
+          <div class="rut-mono">${r.rut}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:800;color:var(--navy)">${r.count}</div>
+          <div style="font-size:10px;color:var(--muted)">contrato${r.count!==1?'s':''}</div>
+        </div>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<div class="empty-sm">Error</div>';}
+}
+
+/* ── Buscar por RUT (sidebar) ── */
+async function buscarRut(){
+  const rut = document.getElementById('rut-input').value.trim();
+  if(!rut) return;
+  const el = document.getElementById('rut-results');
+  el.innerHTML='<div class="spinner"></div>';
+  try{
+    const data = await fetch('/api/buscar?rut='+encodeURIComponent(rut)).then(r=>r.json());
+    if(!data.length){
+      el.innerHTML=`<div class="empty-sm"><i class="bi bi-search"></i><br>Sin contratos para<br><strong>${rut}</strong></div>`;
+      return;
+    }
+    el.innerHTML = data.map(c=>{
+      const d = c.dias_restantes;
+      const dc = daysColor(d);
+      const flagV = c.visado==='si'?'ok':c.visado==='no'?'bad':'';
+      const flagD = c.devuelto?'ok':'';
+      const flagO = c.tiene_observacion?'warn':'';
+      return`
+      <div class="rut-result-card">
+        <div class="rut-card-hdr">
+          <div>
+            <div class="emp">${c.empresa}</div>
+            <div class="cod">${c.codigo||'Sin código'} · ${(c.estado||'').replace('_',' ')}</div>
+          </div>
+          ${badgeEstado(c)}
+        </div>
+        <div class="rut-card-body">
+          <div class="rut-stage-bar">
+            ${['','','','',''].map((_,i)=>`<div class="rsb ${i<c.etapa?'d':i===c.etapa?'a':''}"></div>`).join('')}
+          </div>
+          <div class="rut-flags">
+            <span class="rflag ${flagV}">${c.visado==='si'?'✓ Visado':c.visado==='no'?'✗ Visado':'Vis. pend.'}</span>
+            ${c.devuelto?`<span class="rflag ok">↩ Devuelto</span>`:''}
+            ${c.tiene_observacion?`<span class="rflag warn">⚠ Con obs.</span>`:''}
+            ${c.pago_imprevisto?`<span class="rflag warn">$ Imprev.</span>`:''}
+          </div>
+          <div class="rut-meta" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Vence ${fmtDate(c.fecha_fin)}</span>
+            ${d!==null?`<span class="days-chip ${dc}">${d<=0?'VENCIDO':d+' días'}</span>`:''}
+          </div>
+          ${c.observaciones?`<div style="margin-top:.5rem;font-size:11px;color:var(--muted);border-left:2px solid #fde68a;padding-left:6px">${c.observaciones}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div class="empty-sm">Error de conexión</div>';}
+}
+
+/* ── Init ── */
+loadAll();
+
+/* Auto-refresh cada 60s */
+setInterval(()=>{
+  loadStats();
+  loadAlertas();
+  loadQuick();
+}, 60000);
 </script>
 </body>
 </html>
