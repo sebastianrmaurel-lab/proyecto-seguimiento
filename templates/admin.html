@@ -1,16 +1,16 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Administración — Seguimiento</title>
+<title>Administración — Seguimiento de Clientes</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#f6f5f3;--surface:#fff;--border:#e5e3df;
   --text:#1a1916;--muted:#6b6860;
-  --accent:#1d4ed8;--accent-light:#eff6ff;
+  --accent:#003082;--accent-light:#eff6ff;
   --red:#dc2626;--red-light:#fef2f2;
   --amber:#d97706;--amber-light:#fffbeb;
   --green:#16a34a;--green-light:#f0fdf4;
@@ -222,8 +222,7 @@ tbody tr:hover td{background:#fafaf9}
   background:var(--bg);outline:none;transition:border-color .15s;
 }
 .fg input:focus,.fg select:focus,.fg textarea:focus{
-  border-color:var(--accent);background:var(--surface);
-}
+  border-color:var(--accent);background:var(--surface)}
 .fg textarea{resize:vertical;min-height:72px}
 
 /* Form section divider */
@@ -281,36 +280,34 @@ tbody tr:hover td{background:#fafaf9}
 </head>
 <body>
 
-<!-- Sidebar -->
 <nav class="sidebar">
   <div class="sidebar-logo"><span class="dot"></span> Seguimiento</div>
   <div class="sidebar-nav">
-    <div class="nav-section">Panel</div>
+    <div class="nav-section">Panel Principal</div>
     <button class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
-      <span class="icon">📊</span> Dashboard
+      <span class="icon">📊</span> Resumen General
     </button>
     <button class="nav-item" id="nav-contratos" onclick="switchView('contratos')">
-      <span class="icon">📋</span> Contratos
+      <span class="icon">👥</span> Lista de Clientes
     </button>
     <button class="nav-item" id="nav-ruts" onclick="switchView('ruts')">
-      <span class="icon">🏢</span> Por RUT
+      <span class="icon">🔍</span> Historial por RUT
     </button>
-    <div class="nav-section">Acciones</div>
+    <div class="nav-section">Operaciones</div>
     <button class="nav-item" onclick="openModal()">
-      <span class="icon">➕</span> Nuevo contrato
+      <span class="icon">👤</span> Agregar Cliente
     </button>
   </div>
   <div class="sidebar-footer">
-    <a class="back-link" href="/">← Vista pública</a>
+    <a class="back-link" href="/">← Portal de Consulta</a>
   </div>
 </nav>
 
-<!-- Main -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="view-title">Dashboard</div>
     <div class="topbar-actions">
-      <button class="btn btn-primary" onclick="openModal()">+ Nuevo contrato</button>
+      <button class="btn btn-primary" onclick="openModal()">+ Nuevo Registro</button>
     </div>
   </div>
   <div class="content" id="view-content">
@@ -318,72 +315,71 @@ tbody tr:hover td{background:#fafaf9}
   </div>
 </div>
 
-<!-- Modal Crear/Editar -->
 <div class="backdrop" id="modal-wrap" style="display:none">
 <div class="modal">
   <div class="modal-hdr">
-    <h2 id="modal-title">Nuevo Contrato</h2>
+    <h2 id="modal-title">Nuevo Trámite</h2>
     <button class="close-btn" onclick="closeModal()">✕</button>
   </div>
   <div class="modal-body">
     <div class="form-row">
       <div class="fg">
-        <label>RUT Empresa</label>
-        <input id="f-rut" placeholder="12.345.678-9">
+        <label>RUT del Cliente</label>
+        <input id="f-rut" placeholder="Ej: 12.345.678-9">
       </div>
       <div class="fg">
-        <label>Nombre Empresa</label>
-        <input id="f-empresa" placeholder="Nombre empresa">
+        <label>Nombre del Cliente / Razón Social</label>
+        <input id="f-empresa" placeholder="Nombre completo del solicitante">
       </div>
     </div>
     <div class="form-row">
       <div class="fg">
-        <label>N° Contrato / Código</label>
-        <input id="f-codigo" placeholder="CTR-2025-001">
+        <label>N° Seguimiento / Código</label>
+        <input id="f-codigo" placeholder="Ej: CTR-2026-001">
       </div>
       <div class="fg">
-        <label>Responsable</label>
-        <input id="f-resp" placeholder="Nombre responsable">
+        <label>Profesional Responsable</label>
+        <input id="f-resp" placeholder="Nombre del encargado del caso">
       </div>
     </div>
     <div class="form-row one">
       <div class="fg">
-        <label>Descripción</label>
-        <input id="f-desc" placeholder="Descripción corta del contrato">
+        <label>Descripción del Trámite</label>
+        <input id="f-desc" placeholder="Breve descripción o tipo de servicio">
       </div>
     </div>
     <div class="form-row">
       <div class="fg">
-        <label>Monto total ($)</label>
+        <label>Monto Total del Servicio ($)</label>
         <input id="f-monto" type="number" placeholder="0" min="0">
       </div>
       <div class="fg"></div>
     </div>
     <div class="form-row">
       <div class="fg">
-        <label>Fecha Inicio</label>
+        <label>Fecha de Ingreso</label>
         <input id="f-inicio" type="date">
       </div>
       <div class="fg">
-        <label>Fecha Fin</label>
+        <label>Fecha Límite / Vencimiento</label>
         <input id="f-fin" type="date">
       </div>
     </div>
 
-    <div class="form-section">Estado y etapas</div>
+    <div class="form-section">Estado y flujo de etapas</div>
     <div class="form-row">
       <div class="fg">
-        <label>Etapa actual</label>
+        <label>Etapa Actual</label>
         <select id="f-etapa">
-          <option value="0">Etapa 0 — Inicio</option>
-          <option value="1">Etapa 1</option>
-          <option value="2">Etapa 2</option>
-          <option value="3">Etapa 3</option>
-          <option value="4">Etapa 4 — Final</option>
+          <option value="0">Etapa 0 — Recepción</option>
+          <option value="1">Etapa 1 — Análisis</option>
+          <option value="2">Etapa 2 — Desarrollo</option>
+          <option value="3">Etapa 3 — Revisión Final</option>
+          <option value="4">Etapa 4 — Finalizado</option>
         </select>
       </div>
       <div class="fg">
-        <label>Estado general</label>
+        <label>Estado General</label>
         <select id="f-estado">
           <option value="en_proceso">En proceso</option>
           <option value="completado">Completado</option>
@@ -392,7 +388,7 @@ tbody tr:hover td{background:#fafaf9}
       </div>
     </div>
 
-    <div class="form-section">Flags y seguimiento</div>
+    <div class="form-section">Flags y visados de control</div>
     <div class="form-row three">
       <div class="fg">
         <label>Pago Imprevisto</label>
@@ -402,7 +398,7 @@ tbody tr:hover td{background:#fafaf9}
         </select>
       </div>
       <div class="fg">
-        <label>Visado</label>
+        <label>Visado Interno</label>
         <select id="f-visado">
           <option value="pendiente">Pendiente</option>
           <option value="si">Sí</option>
@@ -410,7 +406,7 @@ tbody tr:hover td{background:#fafaf9}
         </select>
       </div>
       <div class="fg">
-        <label>Devuelto</label>
+        <label>Documento Devuelto</label>
         <select id="f-devuelto">
           <option value="false">No</option>
           <option value="true">Sí</option>
@@ -419,7 +415,7 @@ tbody tr:hover td{background:#fafaf9}
     </div>
     <div class="form-row">
       <div class="fg">
-        <label>Tuvo Observación</label>
+        <label>Tiene Observaciones</label>
         <select id="f-obs-yn">
           <option value="false">No</option>
           <option value="true">Sí</option>
@@ -429,24 +425,23 @@ tbody tr:hover td{background:#fafaf9}
     </div>
     <div class="form-row one">
       <div class="fg">
-        <label>Observaciones / Notas</label>
-        <textarea id="f-obs" placeholder="Detalle observaciones relevantes..."></textarea>
+        <label>Detalle de Observaciones / Notas Históricas</label>
+        <textarea id="f-obs" placeholder="Escribe aquí reparos, detalles o anotaciones especiales sobre el trámite del cliente..."></textarea>
       </div>
     </div>
   </div>
   <div class="modal-footer">
     <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-primary" onclick="guardar()">✓ Guardar contrato</button>
+    <button class="btn btn-primary" onclick="guardar()">✓ Guardar Cambios</button>
   </div>
 </div>
 </div>
 
-<!-- Confirm Delete Modal -->
 <div class="backdrop" id="confirm-wrap" style="display:none">
   <div class="confirm-modal">
     <div style="font-size:2.5rem;margin-bottom:.75rem">🗑</div>
-    <h3>Eliminar contrato</h3>
-    <p>¿Estás seguro de que quieres eliminar este contrato?<br>Esta acción no se puede deshacer.</p>
+    <h3>Eliminar Registro</h3>
+    <p>¿Estás seguro de que deseas eliminar la ficha de este cliente?<br>Esta acción no se puede deshacer.</p>
     <div class="confirm-row">
       <button class="btn btn-ghost" onclick="cancelDelete()">Cancelar</button>
       <button class="btn btn-danger" onclick="confirmDelete()">Sí, eliminar</button>
@@ -455,7 +450,7 @@ tbody tr:hover td{background:#fafaf9}
 </div>
 
 <script>
-const ETAPAS = ['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
+const ETAPAS = ['Etapa 0 — Recepción','Etapa 1 — Análisis','Etapa 2 — Desarrollo','Etapa 3 — Revisión','Etapa 4 — Finalizado'];
 let view = 'dashboard';
 let editId = null;
 let deleteId = null;
@@ -494,7 +489,7 @@ function switchView(v){
 
 async function loadView(){
   const el = document.getElementById('view-content');
-  const titles = {dashboard:'Dashboard',contratos:'Contratos',ruts:'Clientes por RUT'};
+  const titles = {dashboard:'Dashboard de Control',contratos:'Listado de Clientes y Seguimiento',ruts:'Historial de Clientes por RUT'};
   document.getElementById('view-title').textContent = titles[view]||'Panel';
   el.innerHTML = '<div class="spinner"></div>';
   if(view==='dashboard') await renderDashboard();
@@ -515,39 +510,39 @@ async function renderDashboard(){
   el.innerHTML = `
   <div class="metrics">
     <div class="metric m-total" onclick="switchView('contratos')">
-      <div class="metric-label">Total</div>
+      <div class="metric-label">Total Clientes</div>
       <div class="metric-val">${stats.total}</div>
-      <div class="metric-sub">Todos los contratos</div>
+      <div class="metric-sub">Fichas en el sistema</div>
     </div>
     <div class="metric m-proc" onclick="filterView('en_proceso')">
-      <div class="metric-label">En proceso</div>
+      <div class="metric-label">En Proceso</div>
       <div class="metric-val">${stats.en_proceso}</div>
-      <div class="metric-sub">Activos</div>
+      <div class="metric-sub">Trámites activos</div>
     </div>
     <div class="metric m-done" onclick="filterView('completado')">
       <div class="metric-label">Completados</div>
       <div class="metric-val">${stats.completado}</div>
-      <div class="metric-sub">Finalizados</div>
+      <div class="metric-sub">Casos cerrados</div>
     </div>
     <div class="metric m-alert" onclick="filterView('critico')">
-      <div class="metric-label">Alertas</div>
+      <div class="metric-label">Alertas Críticas</div>
       <div class="metric-val">${stats.alertas}</div>
-      <div class="metric-sub">≤7 días para vencer</div>
+      <div class="metric-sub">≤ 7 días límite</div>
     </div>
     <div class="metric m-sinef" onclick="filterView('sin_efecto')">
-      <div class="metric-label">Sin efecto</div>
+      <div class="metric-label">Sin Efecto</div>
       <div class="metric-val">${stats.sin_efecto}</div>
-      <div class="metric-sub">Anulados</div>
+      <div class="metric-sub">Trámites anulados</div>
     </div>
   </div>
 
   ${criticals.length?`
   <div class="panel alerts-section">
     <div class="panel-hdr">
-      <span class="panel-title" style="color:var(--red)">⚠ Contratos críticos — vencen en 7 días o menos</span>
+      <span class="panel-title" style="color:var(--red)">⚠ Casos Críticos — Vencen en 7 días o menos</span>
     </div>
     <table>
-      <thead><tr><th>Empresa</th><th>Código</th><th>Vence</th><th>Días</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>Cliente / Solicitante</th><th>N° Seguimiento</th><th>Límite</th><th>Días Restantes</th><th>Estado</th><th></th></tr></thead>
       <tbody>
       ${criticals.map(c=>`<tr>
         <td><strong>${c.empresa}</strong><div style="font-size:11px;color:var(--muted);font-family:monospace">${c.rut}</div></td>
@@ -564,13 +559,13 @@ async function renderDashboard(){
   ${warnings.length?`
   <div class="panel">
     <div class="panel-hdr" style="background:#fffdf5;border-color:#fde68a">
-      <span class="panel-title" style="color:var(--amber)">⏰ Por vencer — próximos 20 días</span>
+      <span class="panel-title" style="color:var(--amber)">⏰ Próximos a Vencer — Plazo menor a 20 días</span>
     </div>
     <table>
-      <thead><tr><th>Empresa</th><th>Código</th><th>Vence</th><th>Días</th><th></th></tr></thead>
+      <thead><tr><th>Cliente / Solicitante</th><th>N° Seguimiento</th><th>Límite</th><th>Días Restantes</th><th></th></tr></thead>
       <tbody>
       ${warnings.map(c=>`<tr>
-        <td><strong>${c.empresa}</strong></td>
+        <td><strong>${c.empresa}</strong><div style="font-size:11px;color:var(--muted);font-family:monospace">${c.rut}</div></td>
         <td>${c.codigo||'—'}</td>
         <td>${fmtDate(c.fecha_fin)}</td>
         <td><span style="color:var(--amber);font-weight:700;font-size:15px">${c.dias_restantes}</span></td>
@@ -583,8 +578,8 @@ async function renderDashboard(){
   ${!criticals.length&&!warnings.length?`
   <div class="panel"><div class="empty">
     <span class="empty-icon">✅</span>
-    <strong>Sin alertas activas</strong><br>
-    <span>Todos los contratos están al día.</span>
+    <strong>Sin alertas vigentes</strong><br>
+    <span>Todos los trámites de clientes se encuentran al día.</span>
   </div></div>`:''}
   `;
 }
@@ -594,7 +589,7 @@ function filterView(f){
   filterEstado=f;
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos').classList.add('active');
-  document.getElementById('view-title').textContent='Contratos';
+  document.getElementById('view-title').textContent='Lista de Clientes';
   renderContratos();
 }
 
@@ -603,7 +598,7 @@ function filterByRutView(rut){
   filterRut=rut; filterEstado='';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos').classList.add('active');
-  document.getElementById('view-title').textContent='Contratos';
+  document.getElementById('view-title').textContent='Lista de Clientes';
   renderContratos();
 }
 
@@ -624,31 +619,31 @@ async function renderContratos(){
   <div class="panel">
     <div class="panel-hdr">
       <span class="panel-title">
-        ${filterRut?`RUT: ${filterRut}`:filterEstado?`Filtrado: ${filterEstado}`:'Todos los contratos'}
-        <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:6px">(${data.length})</span>
+        ${filterRut?`Filtrado por RUT: ${filterRut}`:filterEstado?`Filtrado por Estado: ${filterEstado}`:'Todos los Trámites'}
+        <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:6px">(${data.length} registros)</span>
       </span>
-      <button class="btn btn-primary" onclick="openModal()">+ Nuevo</button>
+      <button class="btn btn-primary" onclick="openModal()">+ Nuevo Cliente</button>
     </div>
     <div class="filter-row">
-      <input placeholder="Buscar empresa, RUT, código..." value="${searchQ}"
+      <input placeholder="Buscar por Nombre, RUT, código de seguimiento..." value="${searchQ}"
         oninput="searchQ=this.value;renderContratos()">
       <select onchange="filterEstado=this.value;filterRut='';renderContratos()">
         <option value="" ${!filterEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${filterEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${filterEstado==='completado'?'selected':''}>Completados</option>
         <option value="sin_efecto" ${filterEstado==='sin_efecto'?'selected':''}>Sin efecto</option>
-        <option value="critico" ${filterEstado==='critico'?'selected':''}>⚠ Críticos</option>
-        <option value="advertencia" ${filterEstado==='advertencia'?'selected':''}>⏰ Por vencer</option>
+        <option value="critico" ${filterEstado==='critico'?'selected':''}>⚠ Críticos (≤7 días)</option>
+        <option value="advertencia" ${filterEstado==='advertencia'?'selected':''}>⏰ Por vencer (≤20 días)</option>
       </select>
-      ${filterRut||filterEstado?`<button class="btn btn-ghost" onclick="filterEstado='';filterRut='';renderContratos()" style="padding:7px 12px">✕ Limpiar</button>`:''}
+      ${filterRut||filterEstado?`<button class="btn btn-ghost" onclick="filterEstado='';filterRut='';renderContratos()" style="padding:7px 12px">✕ Limpiar Filtros</button>`:''}
     </div>
-    ${data.length===0?`<div class="empty"><span class="empty-icon">📭</span>No hay contratos que mostrar</div>`:`
+    ${data.length===0?`<div class="empty"><span class="empty-icon">📭</span>No se encontraron registros en esta vista</div>`:`
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>Empresa / RUT</th><th>Código</th><th>Descripción</th>
-        <th>Etapas</th><th>Estado</th><th>Fecha fin</th>
-        <th>Flags</th><th>Acciones</th>
+        <th>Cliente / RUT</th><th>Código Seg.</th><th>Descripción Servicio</th>
+        <th>Progreso Etapas</th><th>Estado</th><th>Fecha Límite</th>
+        <th>Visados</th><th>Acciones</th>
       </tr></thead>
       <tbody>
       ${data.map(c=>`<tr onclick="openModal(${c.id})">
@@ -660,14 +655,14 @@ async function renderContratos(){
         <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.descripcion}">${c.descripcion||'—'}</td>
         <td>
           <div class="stg-bar" title="${ETAPAS[c.etapa]}">${stgBar(c.etapa)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">${ETAPAS[c.etapa]}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${ETAPAS[c.etapa].split(' — ')[0]}</div>
         </td>
         <td>${badgeFull(c)}</td>
         <td style="font-size:12px;white-space:nowrap">
           ${fmtDate(c.fecha_fin)}
           ${c.dias_restantes!==null&&c.estado==='en_proceso'?`
           <div style="font-size:11px;color:${c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">
-            ${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+' días'}
+            ${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+' días restantes'}
           </div>`:''}
         </td>
         <td onclick="event.stopPropagation()">
@@ -680,8 +675,8 @@ async function renderContratos(){
         </td>
         <td onclick="event.stopPropagation()">
           <div class="actions-td">
-            <button class="act-btn" title="Editar" onclick="openModal(${c.id})">✏</button>
-            <button class="act-btn del" title="Eliminar" onclick="askDelete(${c.id})">🗑</button>
+            <button class="act-btn" title="Editar Ficha" onclick="openModal(${c.id})">✏</button>
+            <button class="act-btn del" title="Eliminar Ficha" onclick="askDelete(${c.id})">🗑</button>
           </div>
         </td>
       </tr>`).join('')}
@@ -697,8 +692,8 @@ async function renderRuts(){
   const el = document.getElementById('view-content');
   el.innerHTML = `
   <div class="panel">
-    <div class="panel-hdr"><span class="panel-title">Empresas / RUTs registrados</span></div>
-    ${data.length===0?`<div class="empty"><span class="empty-icon">🏢</span>Sin registros</div>`:
+    <div class="panel-hdr"><span class="panel-title">Clientes Registrados por RUT</span></div>
+    ${data.length===0?`<div class="empty"><span class="empty-icon">👥</span>Sin clientes ingresados todavía</div>`:
     data.map(r=>`
     <div class="rut-row">
       <div class="rut-info">
@@ -706,10 +701,10 @@ async function renderRuts(){
         <div class="rut-num">${r.rut}</div>
       </div>
       <div class="rut-right">
-        <div style="font-size:12px;color:var(--muted)">${fmtMonto(r.monto)}</div>
-        <span class="rut-count">${r.count} contrato${r.count!==1?'s':''}</span>
+        <div style="font-size:12px;color:var(--muted)">Inversión Total: ${fmtMonto(r.monto)}</div>
+        <span class="rut-count">${r.count} trámite${r.count!==1?'s':''}</span>
         <button class="btn btn-ghost" onclick="filterByRutView('${r.rut}')" style="font-size:12px;padding:5px 12px">
-          Ver →
+          Ver Historial →
         </button>
       </div>
     </div>`).join('')}
@@ -719,7 +714,7 @@ async function renderRuts(){
 /* ── Modal Crear/Editar ── */
 async function openModal(id=null){
   editId = id;
-  document.getElementById('modal-title').textContent = id?'Editar Contrato':'Nuevo Contrato';
+  document.getElementById('modal-title').textContent = id?'Editar Datos del Trámite':'Ingresar Nuevo Trámite';
   const f = v => document.getElementById(v);
   if(id){
     const c = await fetch(`/api/contratos/${id}`).then(r=>r.json());
@@ -764,12 +759,12 @@ async function guardar(){
     tiene_observacion:f('f-obs-yn')==='true',
     observaciones:f('f-obs').trim(),
   };
-  if(!body.rut||!body.empresa){alert('RUT y empresa son obligatorios');return;}
+  if(!body.rut||!body.empresa){alert('El RUT y el Nombre del cliente son campos obligatorios.');return;}
   const url  = editId ? `/api/contratos/${editId}` : '/api/contratos';
   const method = editId ? 'PUT' : 'POST';
   const res = await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(res.ok){closeModal();loadView();}
-  else{const e=await res.json();alert(e.error||'Error al guardar');}
+  else{const e=await res.json();alert(e.error||'Error crítico al guardar los datos.');}
 }
 
 /* ── Delete ── */
