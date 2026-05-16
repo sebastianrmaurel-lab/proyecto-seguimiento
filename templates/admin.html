@@ -342,10 +342,14 @@ tbody tr:hover td{background:#fafaf9}
         <input id="f-resp" placeholder="Nombre del encargado del caso">
       </div>
     </div>
-    <div class="form-row one">
+    <div class="form-row">
       <div class="fg">
         <label>Descripción del Trámite</label>
         <input id="f-desc" placeholder="Breve descripción o tipo de servicio">
+      </div>
+      <div class="fg">
+        <label>Correo Electrónico</label>
+        <input id="f-email" type="email" placeholder="contacto@empresa.cl">
       </div>
     </div>
     <div class="form-row">
@@ -723,6 +727,7 @@ async function openModal(id=null){
     f('f-codigo').value    = c.codigo||'';
     f('f-desc').value      = c.descripcion||'';
     f('f-resp').value      = c.responsable||'';
+    f('f-email').value     = c.email||'';
     f('f-monto').value     = c.monto||'';
     f('f-inicio').value    = c.fecha_inicio||'';
     f('f-fin').value       = c.fecha_fin||'';
@@ -734,7 +739,7 @@ async function openModal(id=null){
     f('f-obs-yn').value    = c.tiene_observacion?'true':'false';
     f('f-obs').value       = c.observaciones||'';
   } else {
-    ['f-rut','f-empresa','f-codigo','f-desc','f-resp','f-monto','f-inicio','f-fin','f-obs']
+    ['f-rut','f-empresa','f-codigo','f-desc','f-resp','f-email','f-monto','f-inicio','f-fin','f-obs']
       .forEach(id=>f(id).value='');
     f('f-etapa').value='0'; f('f-estado').value='en_proceso';
     f('f-pago').value='false'; f('f-visado').value='pendiente';
@@ -750,7 +755,7 @@ async function guardar(){
   const body = {
     rut:f('f-rut').trim(), empresa:f('f-empresa').trim(),
     codigo:f('f-codigo').trim(), descripcion:f('f-desc').trim(),
-    responsable:f('f-resp').trim(), monto:Number(f('f-monto'))||0,
+    responsable:f('f-resp').trim(), email:f('f-email').trim(), monto:Number(f('f-monto'))||0,
     fecha_inicio:f('f-inicio'), fecha_fin:f('f-fin'),
     etapa:Number(f('f-etapa')), estado:f('f-estado'),
     pago_imprevisto:f('f-pago')==='true',

@@ -1,128 +1,395 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Consulta - Seguimiento</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        .navbar-brand { font-weight: 700; color: #003082 !important; }
-        .btn-primary { background-color: #003082; border-color: #003082; font-weight: 600; padding: 10px 25px; }
-        .btn-primary:hover { background-color: #00225c; border-color: #00225c; }
-        .search-container { max-width: 650px; margin: 80px auto 40px auto; text-align: center; }
-        .search-box { background: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        .main-title { font-weight: 800; color: #111; font-size: 2.5rem; margin-bottom: 15px; }
-        .result-card { max-width: 850px; margin: 20px auto; background: #ffffff; border-radius: 16px; border: none; box-shadow: 0 4px 25px rgba(0,0,0,0.05); overflow: hidden; }
-        .card-status-header { padding: 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .badge-critico { background-color: #CF142B; color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; }
-        .badge-advertencia { background-color: #ffc107; color: #000; padding: 8px 16px; border-radius: 50px; font-weight: 600; }
-        .badge-normal { background-color: #003082; color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; }
-        .step-indicator { font-size: 1.5rem; font-weight: 700; color: #003082; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Consulta — Seguimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f5f3;--surface:#fff;--border:#e8e6e1;
+  --text:#1a1916;--muted:#6b6860;
+  --navy:#003082;--navy-light:#eff4ff;
+  --red:#CF142B;--red-light:#fff1f2;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --green:#16a34a;--green-light:#f0fdf4;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'DM Serif Display',serif;font-size:19px;color:var(--text);display:flex;align-items:center;gap:9px;text-decoration:none}
+.nav-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--navy);flex-shrink:0}
+.nav-link-admin{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 14px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-link-admin:hover{border-color:var(--navy);color:var(--navy);background:var(--navy-light)}
+
+/* HERO */
+.hero{display:flex;flex-direction:column;align-items:center;padding:5rem 1.5rem 2.5rem;text-align:center}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--navy);background:var(--navy-light);padding:5px 16px;border-radius:20px;margin-bottom:1.25rem;border:1px solid #c7d8ff}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:400;line-height:1.18;color:var(--text);margin-bottom:.75rem;max-width:560px}
+.hero p{font-size:15px;color:var(--muted);max-width:400px;line-height:1.65;margin-bottom:2.5rem}
+
+/* SEARCH */
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:2rem;width:100%;max-width:540px;box-shadow:0 6px 30px rgba(0,0,0,.07)}
+.search-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:10px}
+.search-row{display:flex;gap:8px}
+.search-input-wrap{flex:1;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;background:#fafaf9;overflow:hidden;transition:border-color .15s}
+.search-input-wrap:focus-within{border-color:var(--navy);background:var(--surface)}
+.search-input-wrap .si{padding:0 12px;color:var(--muted);font-size:15px;flex-shrink:0}
+.search-input-wrap input{flex:1;height:46px;border:none;background:transparent;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none}
+.search-input-wrap input::placeholder{color:#b0ae9e}
+.btn-buscar{height:46px;padding:0 24px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.btn-buscar:hover{background:#00225c}
+.btn-buscar:active{transform:scale(.97)}
+
+/* RESULTS WRAPPER */
+#results-section{width:100%;max-width:920px;margin:0 auto 4rem;padding:0 1.5rem}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.results-count{font-size:13px;color:var(--muted)}
+.results-rut{font-size:13px;font-weight:700;font-family:monospace;background:var(--navy-light);color:var(--navy);padding:4px 14px;border-radius:20px;border:1px solid #c7d8ff}
+
+/* CONTRACT CARD */
+.c-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.c-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.08);border-color:#d0cec9}
+.c-card-strip{height:4px}
+.strip-critico{background:var(--red)}.strip-advertencia{background:var(--amber)}.strip-normal{background:var(--navy)}.strip-completado{background:var(--green)}.strip-sinefecto{background:#9ca3af}
+
+.c-top{padding:1.25rem 1.5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.c-top-info .empresa{font-size:16px;font-weight:800;color:var(--text);margin-bottom:5px}
+.c-top-info .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.c-top-info .meta span{display:flex;align-items:center;gap:4px}
+.c-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;flex-shrink:0}
+
+.c-stages{padding:.875rem 1.5rem;border-top:1px solid var(--border);background:#fafaf8;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.stage-block{flex:1;min-width:200px}
+.stage-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:7px}
+.stage-bar{display:flex;gap:5px}
+.stage-seg{height:8px;flex:1;border-radius:4px;background:#e8e6e1}
+.stage-seg.done{background:var(--green)}.stage-seg.active{background:var(--navy)}
+.stage-name{font-size:13px;font-weight:700;color:var(--navy);margin-top:5px}
+.flags-block{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+.flag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;border:1px solid var(--border)}
+.flag-ok{background:var(--green-light);color:#15803d;border-color:#86efac}
+.flag-no{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb}
+.flag-warn{background:var(--amber-light);color:#92400e;border-color:#fde68a}
+.flag-danger{background:var(--red-light);color:#991b1b;border-color:#fca5a5}
+
+.c-info{padding:1rem 1.5rem;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem}
+.info-field .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+.info-field .val{font-size:13px;font-weight:600;color:var(--text)}
+
+.c-obs{padding:.875rem 1.5rem;border-top:1px solid var(--border);background:#fffdf5;display:flex;gap:10px;align-items:flex-start}
+.c-obs .obs-text{font-size:13px;color:var(--muted);line-height:1.5}
+
+.days-badge{display:flex;flex-direction:column;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:72px;text-align:center;flex-shrink:0}
+.days-num{font-size:22px;font-weight:800;line-height:1}
+.days-lbl{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.b-navy{background:var(--navy-light);color:var(--navy);border-color:#c7d8ff}
+.b-done{background:var(--green-light);color:#15803d;border-color:#86efac}
+.b-sinef{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
+.b-critico{background:var(--red-light);color:var(--red);border-color:#fca5a5}
+.b-advertencia{background:var(--amber-light);color:var(--amber);border-color:#fde68a}
+
+.alert-banner{border-radius:10px;padding:.875rem 1.25rem;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;border:1px solid;margin:0 1.5rem .75rem}
+.ab-critico{background:var(--red-light);color:#991b1b;border-color:#fca5a5}
+.ab-advertencia{background:var(--amber-light);color:#92400e;border-color:#fde68a}
+
+/* CHARTS */
+.charts-wrap{margin-top:2rem}
+.charts-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+@media(max-width:620px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
+.chart-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:1rem}
+.chart-wrap{position:relative;height:180px}
+
+/* State */
+.state-box{text-align:center;padding:4rem 1rem;color:var(--muted)}
+.state-box .icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.state-box h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:.5rem}
+.spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:3rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+footer{margin-top:auto;padding:1.5rem;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);background:var(--surface)}
+</style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div class="container">
-            <a class="navbar-brand" href="/"><i class="bi bi-circle-fill me-2" style="color: #003082; font-size: 0.8rem;"></i>Seguimiento</a>
-            <a href="/admin" class="btn btn-outline-secondary btn-sm"><i class="bi bi-shield-lock me-1"></i> Administración</a>
-        </div>
-    </nav>
+<nav>
+  <a class="nav-logo" href="/"><span class="dot"></span> Seguimiento</a>
+  <a class="nav-link-admin" href="/admin"><i class="bi bi-shield-lock"></i> Administración</a>
+</nav>
 
-    <div class="container">
-        <div class="search-container">
-            <span class="badge bg-light text-primary border px-3 py-2 mb-3 text-uppercase tracking-wider fw-bold" style="font-size: 0.75rem;">Portal de Consulta</span>
-            <h1 class="main-title">Consulta el estado de tu trámite</h1>
-            <p class="text-muted mb-4">Ingresa tu RUT para conocer el avance, etapas actuales y alertas vigentes.</p>
-            
-            <div class="search-box">
-                <form id="searchForm" class="row g-2">
-                    <div class="col-md-9">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-card-text text-muted"></i></span>
-                            <input type="text" id="rutInput" class="form-control bg-light border-start-0" placeholder="Ej: 12.345.678-9" required>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+<main>
+  <div class="hero">
+    <div class="eyebrow">Portal de Consulta</div>
+    <h1>Consulta el estado de tu trámite</h1>
+    <p>Ingresa tu RUT para ver el avance, etapas y alertas vigentes de todos tus contratos.</p>
 
-        <div id="resultadosContainer"></div>
+    <div class="search-card">
+      <label class="search-label" for="rutInput">RUT del cliente</label>
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <i class="bi bi-card-text si"></i>
+          <input type="text" id="rutInput" placeholder="Ej: 12.345.678-9"
+                 oninput="autoFormatRut(this)"
+                 onkeydown="if(event.key==='Enter')buscar()">
+        </div>
+        <button class="btn-buscar" onclick="buscar()">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        document.getElementById('searchForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const rut = document.getElementById('rutInput').value.strip();
-            const response = await fetch(`/api/buscar?rut=${rut}`);
-            const contratos = await response.json();
-            
-            const container = document.getElementById('resultadosContainer');
-            container.innerHTML = '';
+  <div id="results-section" style="display:none"></div>
+</main>
 
-            if (contratos.length === 0) {
-                container.innerHTML = `<div class="alert alert-custom text-center max-width-650 mx-auto bg-white border shadow-sm p-4 rounded-4" style="max-width: 650px;">
-                    <i class="bi bi-exclamation-circle text-danger h3 d-block mb-2"></i> No se encontraron registros para el RUT ingresado.
-                </div>`;
-                return;
-            }
+<footer>Sistema de Seguimiento de Contratos</footer>
 
-            contratos.forEach(c => {
-                let alertaBadge = `<span class="badge badge-normal">Estado: Normal</span>`;
-                if (c.alerta === 'critico') alertaBadge = `<span class="badge badge-critico"><i class="bi bi-exclamation-triangle-fill me-1"></i> Crítico</span>`;
-                if (c.alerta === 'advertencia') alertaBadge = `<span class="badge badge-advertencia"><i class="bi bi-clock-history me-1"></i> Advertencia</span>`;
+<script>
+const ETAPAS = ['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
+const MESES  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let charts = {};
 
-                container.innerHTML += `
-                    <div class="card result-card animated fadeIn">
-                        <div class="card-status-header bg-light">
-                            <div>
-                                <h4 class="mb-1 fw-bold text-dark">${c.empresa}</h4>
-                                <small class="text-muted">Código Seguimiento: <strong>${c.codigo || 'N/A'}</strong></small>
-                            </div>
-                            <div>${alertaBadge}</div>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row text-center g-3">
-                                <div class="col-6 col-md-3 border-end">
-                                    <span class="text-muted d-block small text-uppercase fw-semibold">Etapa Actual</span>
-                                    <span class="step-indicator">Etapa ${c.etapa}</span>
-                                </div>
-                                <div class="col-6 col-md-3 border-end">
-                                    <span class="text-muted d-block small text-uppercase fw-semibold">Visado</span>
-                                    <span class="h5 fw-bold text-capitalize ${c.visado === 'si' ? 'text-success' : 'text-secondary'}">${c.visado}</span>
-                                </div>
-                                <div class="col-6 col-md-3 border-end">
-                                    <span class="text-muted d-block small text-uppercase fw-semibold">Observación</span>
-                                    <span class="h5 fw-bold ${c.tiene_observacion ? 'text-danger' : 'text-success'}">${c.tiene_observacion ? 'Sí' : 'No'}</span>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <span class="text-muted d-block small text-uppercase fw-semibold">Estado General</span>
-                                    <span class="h5 fw-bold text-dark text-capitalize">${c.estado.replace('_', ' ')}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-4 p-3 bg-light rounded-3 border-start border-primary border-3">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p class="mb-1 small"><strong>Descripción:</strong> ${c.descripcion || 'Sin descripción adicional.'}</p>
-                                        <p class="mb-0 small"><strong>Responsable Asignado:</strong> ${c.responsable || 'No especificado'}</p>
-                                    </div>
-                                    <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                                        <p class="mb-1 small"><strong>Fecha Límite:</strong> ${c.fecha_fin || 'No definida'}</p>
-                                        <p class="mb-0 small"><strong>Días Restantes:</strong> <span class="badge bg-dark">${c.dias_restantes !== null ? c.dias_restantes : 'N/A'} días</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-    </script>
+function autoFormatRut(el){
+  let v = el.value.replace(/[^0-9kK]/g,'');
+  if(v.length > 1){
+    const dv   = v.slice(-1).toUpperCase();
+    const body = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    el.value   = body + '-' + dv;
+  }
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  const p = d.split('-');
+  return `${p[2]}/${p[1]}/${p[0]}`;
+}
+function fmtMonto(m){ return m ? '$'+Number(m).toLocaleString('es-CL') : '—'; }
+
+function badgeEstado(c){
+  if(c.alerta==='critico')      return `<span class="badge b-critico"><i class="bi bi-exclamation-triangle-fill"></i> Crítico</span>`;
+  if(c.alerta==='advertencia')  return `<span class="badge b-advertencia"><i class="bi bi-clock-history"></i> Por vencer</span>`;
+  if(c.estado==='completado')   return `<span class="badge b-done"><i class="bi bi-check-circle-fill"></i> Completado</span>`;
+  if(c.estado==='sin_efecto')   return `<span class="badge b-sinef">Sin efecto</span>`;
+  return `<span class="badge b-navy"><i class="bi bi-circle-fill" style="font-size:6px"></i> En proceso</span>`;
+}
+function stripClass(c){
+  if(c.alerta==='critico') return 'strip-critico';
+  if(c.alerta==='advertencia') return 'strip-advertencia';
+  if(c.estado==='completado') return 'strip-completado';
+  if(c.estado==='sin_efecto') return 'strip-sinefecto';
+  return 'strip-normal';
+}
+function stageBar(e){
+  return ETAPAS.map((_,i)=>`<div class="stage-seg ${i<e?'done':i===e?'active':''}"></div>`).join('');
+}
+function daysColor(d){
+  if(d===null) return 'var(--muted)';
+  if(d<=0) return 'var(--red)';
+  if(d<=7) return 'var(--red)';
+  if(d<=20) return 'var(--amber)';
+  return 'var(--navy)';
+}
+
+function renderCard(c){
+  const d = c.dias_restantes;
+  const dc = daysColor(d);
+
+  const daysBox = d!==null ? `
+    <div class="days-badge">
+      <div class="days-num" style="color:${dc}">${d<=0?'Venc.':d}</div>
+      <div class="days-lbl">${d<=0?'Vencido':'días'}</div>
+    </div>` : '';
+
+  let alertBanner = '';
+  if(c.alerta==='critico')
+    alertBanner=`<div class="alert-banner ab-critico"><i class="bi bi-exclamation-triangle-fill"></i> Este contrato vence en <strong>${d} días</strong>. Contacta al responsable de inmediato.</div>`;
+  else if(c.alerta==='advertencia')
+    alertBanner=`<div class="alert-banner ab-advertencia"><i class="bi bi-clock-history"></i> Quedan <strong>${d} días</strong> para el vencimiento.</div>`;
+
+  const fV = c.visado==='si'
+    ? `<span class="flag flag-ok"><i class="bi bi-check2"></i> Visado</span>`
+    : c.visado==='no'
+    ? `<span class="flag flag-danger"><i class="bi bi-x"></i> Sin visar</span>`
+    : `<span class="flag flag-no"><i class="bi bi-hourglass"></i> Visado pend.</span>`;
+  const fD = c.devuelto ? `<span class="flag flag-ok"><i class="bi bi-arrow-counterclockwise"></i> Devuelto</span>` : `<span class="flag flag-no">No devuelto</span>`;
+  const fO = c.tiene_observacion ? `<span class="flag flag-warn"><i class="bi bi-chat-square-text"></i> Con obs.</span>` : `<span class="flag flag-ok"><i class="bi bi-check2"></i> Sin obs.</span>`;
+  const fP = c.pago_imprevisto ? `<span class="flag flag-warn"><i class="bi bi-currency-dollar"></i> Pago imprev.</span>` : '';
+
+  const emailField = c.email
+    ? `<div class="info-field"><div class="lbl">Correo</div><div class="val"><a href="mailto:${c.email}" style="color:var(--navy);text-decoration:none">${c.email}</a></div></div>` : '';
+
+  const obsRow = c.tiene_observacion && c.observaciones
+    ? `<div class="c-obs"><i class="bi bi-chat-square-text" style="color:var(--amber);font-size:16px;flex-shrink:0;margin-top:2px"></i><div class="obs-text">${c.observaciones}</div></div>` : '';
+
+  return `
+  <div class="c-card">
+    <div class="c-card-strip ${stripClass(c)}"></div>
+    <div class="c-top">
+      <div class="c-top-info">
+        <div class="empresa">${c.empresa}</div>
+        <div class="meta">
+          <span><i class="bi bi-file-earmark-text"></i> ${c.codigo||'Sin código'}</span>
+          ${c.descripcion?`<span><i class="bi bi-card-text"></i> ${c.descripcion}</span>`:''}
+          ${c.responsable?`<span><i class="bi bi-person"></i> ${c.responsable}</span>`:''}
+        </div>
+      </div>
+      <div class="c-badges">${badgeEstado(c)}${daysBox}</div>
+    </div>
+    ${alertBanner}
+    <div class="c-stages">
+      <div class="stage-block">
+        <div class="stage-lbl">Progreso de etapas</div>
+        <div class="stage-bar">${stageBar(c.etapa)}</div>
+        <div class="stage-name">${ETAPAS[c.etapa]}</div>
+      </div>
+      <div class="flags-block">${fV}${fD}${fO}${fP}</div>
+    </div>
+    <div class="c-info">
+      <div class="info-field"><div class="lbl">Monto</div><div class="val">${fmtMonto(c.monto)}</div></div>
+      <div class="info-field"><div class="lbl">Fecha inicio</div><div class="val">${fmtDate(c.fecha_inicio)}</div></div>
+      <div class="info-field"><div class="lbl">Fecha fin</div><div class="val">${fmtDate(c.fecha_fin)}</div></div>
+      <div class="info-field"><div class="lbl">Estado</div><div class="val">${(c.estado||'').replace('_',' ')}</div></div>
+      ${emailField}
+    </div>
+    ${obsRow}
+  </div>`;
+}
+
+/* ── Charts ── */
+function destroyCharts(){Object.values(charts).forEach(c=>c.destroy()); charts={};}
+
+function renderCharts(data){
+  destroyCharts();
+
+  /* Contratos por mes (fecha_inicio) */
+  const byMonth = Array(12).fill(0);
+  data.forEach(c=>{ if(c.fecha_inicio){ const m=parseInt(c.fecha_inicio.split('-')[1],10)-1; byMonth[m]++; }});
+
+  /* Estados */
+  const est={en_proceso:0,completado:0,sin_efecto:0};
+  data.forEach(c=>{ if(est[c.estado]!==undefined) est[c.estado]++; });
+
+  /* Etapas */
+  const etps = Array(5).fill(0);
+  data.forEach(c=>{ if(c.etapa>=0&&c.etapa<=4) etps[c.etapa]++; });
+
+  /* Alertas / stats */
+  const alertas  = data.filter(c=>c.alerta==='critico').length;
+  const warnings = data.filter(c=>c.alerta==='advertencia').length;
+  const withEmail= data.filter(c=>c.email).length;
+
+  /* Insert charts HTML */
+  document.getElementById('results-section').insertAdjacentHTML('beforeend', `
+    <div class="charts-wrap">
+      <div class="charts-title"><i class="bi bi-bar-chart-fill" style="color:var(--navy)"></i> Resumen de contratos</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-title">Ingresos por mes</div>
+          <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Distribución de estados</div>
+          <div class="chart-wrap"><canvas id="ch-est"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Contratos por etapa</div>
+          <div class="chart-wrap"><canvas id="ch-etapa"></canvas></div>
+        </div>
+        <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center">
+          <div class="chart-card-title">Resumen rápido</div>
+          <div id="qs"></div>
+        </div>
+      </div>
+    </div>`);
+
+  /* Bar: ingresos por mes */
+  charts.mes = new Chart(document.getElementById('ch-mes').getContext('2d'),{
+    type:'bar',
+    data:{labels:MESES,datasets:[{label:'Contratos',data:byMonth,backgroundColor:'rgba(0,48,130,.7)',borderColor:'#003082',borderWidth:1.5,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+  });
+
+  /* Doughnut: estados */
+  charts.est = new Chart(document.getElementById('ch-est').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['En proceso','Completado','Sin efecto'],datasets:[{data:[est.en_proceso,est.completado,est.sin_efecto],backgroundColor:['#003082','#16a34a','#9ca3af'],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12,boxWidth:12}}}}
+  });
+
+  /* Horizontal bar: etapas */
+  charts.etapa = new Chart(document.getElementById('ch-etapa').getContext('2d'),{
+    type:'bar',
+    data:{labels:ETAPAS,datasets:[{label:'Contratos',data:etps,backgroundColor:['rgba(0,48,130,.4)','rgba(0,48,130,.55)','rgba(0,48,130,.7)','rgba(0,48,130,.85)','rgba(0,48,130,1)'],borderRadius:5,borderWidth:0}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0ede8'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+
+  /* Quick stats */
+  function qr(icon,label,val,color){
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.375rem 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
+        <i class="bi ${icon}" style="color:${color};width:15px"></i>${label}
+      </div>
+      <span style="font-size:16px;font-weight:800;color:${color}">${val}</span>
+    </div>`;
+  }
+  document.getElementById('qs').innerHTML =
+    qr('bi-files','Total contratos',data.length,'var(--navy)') +
+    qr('bi-exclamation-triangle-fill','Críticos (≤7 días)',alertas,'var(--red)') +
+    qr('bi-clock-history','Por vencer (≤20 días)',warnings,'var(--amber)') +
+    qr('bi-check-circle-fill','Completados',est.completado,'var(--green)') +
+    qr('bi-envelope-fill','Con correo registrado',withEmail,'#6366f1');
+}
+
+/* ── FETCH principal — BUG CORREGIDO (.strip() → .trim()) ── */
+async function buscar(){
+  const rut = document.getElementById('rutInput').value.trim(); /* ← .trim() no .strip() */
+  if(!rut) return;
+
+  const sec = document.getElementById('results-section');
+  sec.style.display = 'block';
+  sec.innerHTML = '<div class="spinner"></div>';
+
+  try{
+    const res  = await fetch('/api/buscar?rut=' + encodeURIComponent(rut));
+    const data = await res.json();
+
+    if(!data.length){
+      sec.innerHTML = `
+        <div class="state-box">
+          <span class="icon"><i class="bi bi-search" style="color:var(--muted)"></i></span>
+          <h3>Sin resultados</h3>
+          <p>No se encontraron contratos para el RUT <strong>${rut}</strong>.<br>Verifica el formato e intenta nuevamente.</p>
+        </div>`;
+      return;
+    }
+
+    sec.innerHTML =
+      `<div class="results-header">
+        <div class="results-count">${data.length} contrato${data.length!==1?'s':''} encontrado${data.length!==1?'s':''}</div>
+        <div class="results-rut">RUT: ${rut}</div>
+       </div>` +
+      data.map(renderCard).join('');
+
+    renderCharts(data);
+
+  }catch(e){
+    sec.innerHTML = `
+      <div class="state-box">
+        <span class="icon"><i class="bi bi-wifi-off" style="color:var(--muted)"></i></span>
+        <h3>Error de conexión</h3>
+        <p>No se pudo conectar con el servidor. Intenta nuevamente.</p>
+      </div>`;
+  }
+}
+</script>
 </body>
 </html>

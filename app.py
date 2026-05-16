@@ -25,6 +25,7 @@ class Contrato(db.Model):
     codigo       = db.Column(db.String(100))
     descripcion  = db.Column(db.String(300))
     responsable  = db.Column(db.String(150))
+    email        = db.Column(db.String(200))
     monto        = db.Column(db.BigInteger, default=0)
 
     etapa        = db.Column(db.Integer, default=0)   # 0-4
@@ -65,6 +66,7 @@ class Contrato(db.Model):
             'codigo': self.codigo or '',
             'descripcion': self.descripcion or '',
             'responsable': self.responsable or '',
+            'email': self.email or '',
             'monto': self.monto or 0,
             'etapa': self.etapa,
             'estado': self.estado,
@@ -200,6 +202,7 @@ def api_crear():
         codigo=d.get('codigo', '').strip(),
         descripcion=d.get('descripcion', '').strip(),
         responsable=d.get('responsable', '').strip(),
+        email=d.get('email', '').strip(),
         monto=int(d.get('monto', 0) or 0),
         etapa=int(d.get('etapa', 0)),
         estado=d.get('estado', 'en_proceso'),
@@ -228,6 +231,7 @@ def api_actualizar(id):
     c.codigo            = d.get('codigo', c.codigo or '').strip()
     c.descripcion       = d.get('descripcion', c.descripcion or '').strip()
     c.responsable       = d.get('responsable', c.responsable or '').strip()
+    c.email             = d.get('email', c.email or '').strip()
     c.monto             = int(d.get('monto', c.monto or 0) or 0)
     c.etapa             = int(d.get('etapa', c.etapa))
     c.estado            = d.get('estado', c.estado)
