@@ -5,173 +5,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Administración — Seguimiento</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f6f5f3;--surface:#fff;--border:#e5e3df;
-  --text:#1a1916;--muted:#6b6860;
-  --accent:#003082;--accent-light:#eff6ff;
-  --red:#dc2626;--red-light:#fef2f2;
-  --amber:#d97706;--amber-light:#fffbeb;
-  --green:#16a34a;--green-light:#f0fdf4;
-  --sidebar:220px;
+  --bg:#f6f5f3;--surface:#fff;--surface2:#fafaf9;--border:#e5e3df;
+  --text:#1a1916;--muted:#6b6860;--soft:#9b9888;
+  --accent:#003082;--accent-l:#eff4ff;
+  --red:#dc2626;--red-l:#fef2f2;
+  --amber:#d97706;--amber-l:#fffbeb;
+  --green:#16a34a;--green-l:#f0fdf4;
+  --sidebar:224px;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
-.sidebar{width:var(--sidebar);background:var(--text);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:50}
-.sidebar-logo{padding:1.25rem 1.25rem 1rem;font-family:'DM Serif Display',serif;font-size:18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
-.sidebar-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
-.sidebar-nav{padding:.75rem .5rem;flex:1}
-.nav-section{font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;padding:.5rem .75rem .25rem;margin-top:.5rem}
-.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem .75rem;border-radius:8px;font-size:13px;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'Inter',sans-serif}
-.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:600}
-.nav-item .icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
-.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.1)}
-.back-link{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.5);text-decoration:none;padding:.5rem;border-radius:6px;transition:all .15s}
-.back-link:hover{color:#fff;background:rgba(255,255,255,.08)}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:#18180f;color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sb-logo{padding:1.25rem 1.125rem 1rem;font-family:'DM Serif Display',serif;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px}
+.sb-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.sb-nav{padding:.625rem .5rem;flex:1;overflow-y:auto}
+.sb-sec{font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;padding:.625rem .75rem .25rem;margin-top:.5rem}
+.nav-item{display:flex;align-items:center;gap:9px;padding:.575rem .75rem;border-radius:7px;font-size:13px;color:rgba(255,255,255,.65);cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'Inter',sans-serif}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+.nav-item .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-count{margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,.12);padding:1px 6px;border-radius:10px}
+.nav-count.red{background:rgba(220,38,38,.6)}
+.nav-count.amber{background:rgba(217,119,6,.6)}
+.sb-foot{padding:.875rem;border-top:1px solid rgba(255,255,255,.08)}
+.back-link{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;padding:.45rem .5rem;border-radius:6px;transition:all .15s}
+.back-link:hover{color:#fff;background:rgba(255,255,255,.07)}
 
-.main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
 .topbar-title{font-size:15px;font-weight:700}
-.content{padding:1.5rem;flex:1}
+.content{padding:1.375rem;flex:1}
 
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.75rem}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;cursor:pointer;transition:all .15s}
-.metric:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);border-color:var(--accent)}
-.metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:.5rem}
-.metric-val{font-size:28px;font-weight:700;line-height:1}
-.metric-sub{font-size:11px;color:var(--muted);margin-top:4px}
-.m-total .metric-val{color:var(--accent)}
-.m-proc .metric-val{color:var(--amber)}
-.m-done .metric-val{color:var(--green)}
-.m-alert .metric-val{color:var(--red)}
-.m-sinef .metric-val{color:var(--muted)}
-.m-adv .metric-val{color:var(--amber)}
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.375rem}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:.875rem 1rem;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.metric:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px)}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.m-nav::before{background:var(--accent)}.m-amb::before{background:var(--amber)}.m-red::before{background:var(--red)}.m-grn::before{background:var(--green)}.m-sft::before{background:var(--soft)}.m-vis::before{background:#6d28d9}.m-obs::before{background:#d97706}
+.metric-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.375rem}
+.metric-val{font-size:26px;font-weight:800;line-height:1}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.m-nav .metric-val{color:var(--accent)}.m-amb .metric-val{color:var(--amber)}.m-red .metric-val{color:var(--red)}.m-grn .metric-val{color:var(--green)}.m-sft .metric-val{color:var(--muted)}.m-vis .metric-val{color:#6d28d9}.m-obs .metric-val{color:var(--amber)}
 
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem}
-.panel-hdr{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.panel-title{font-size:14px;font-weight:700}
-.filter-row{display:flex;gap:8px;padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-wrap:wrap;background:#fafaf9}
-.filter-row input,.filter-row select{border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none}
-.filter-row input:focus,.filter-row select:focus{border-color:var(--accent)}
-.filter-row input{flex:1;min-width:200px}
+/* PANELS */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.25rem}
+.panel-hdr{padding:.75rem 1.125rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.panel-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
 
+/* FILTER ROW */
+.filter-row{display:flex;gap:8px;padding:.75rem 1.125rem;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface2)}
+.filter-row input,.filter-row select{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--accent);background:var(--surface)}
+.filter-row input{flex:1;min-width:180px}
+
+/* TABLE */
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:#fafaf9;white-space:nowrap}
-td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tbody tr{cursor:pointer;transition:background .1s}
-tbody tr:hover td{background:#fafaf9}
+tbody tr:hover td{background:var(--surface2)}
 
-.stg-bar{display:flex;gap:3px}.stg-seg{width:18px;height:6px;border-radius:3px;background:#e5e3df}.stg-seg.done{background:var(--green)}.stg-seg.cur{background:var(--accent)}
+.stg-bar{display:flex;gap:3px}.stg-seg{width:16px;height:5px;border-radius:3px;background:#e5e3df}.stg-seg.done{background:var(--green)}.stg-seg.cur{background:var(--accent)}
 
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.b-proc{background:var(--accent-light);color:var(--accent);border:1px solid #bfdbfe}
-.b-done{background:var(--green-light);color:#15803d;border:1px solid #86efac}
-.b-sinef{background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb}
-.b-alert{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
-.b-warn{background:var(--amber-light);color:var(--amber);border:1px solid #fde68a}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.b-proc{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
+.b-done{background:var(--green-l);color:#15803d;border-color:#86efac}
+.b-sinef{background:#f9fafb;color:#6b7280;border-color:#e5e7eb}
+.b-alert{background:var(--red-l);color:var(--red);border-color:#fca5a5}
+.b-warn{background:var(--amber-l);color:var(--amber);border-color:#fde68a}
 
-.flag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;margin:1px}
-.flag-ok{background:var(--green-light);color:#15803d}
-.flag-no{background:#f3f4f6;color:#9ca3af}
-.flag-warn{background:var(--amber-light);color:#92400e}
+.flag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin:1px}
+.f-ok{background:var(--green-l);color:#15803d}.f-no{background:#f3f4f6;color:#9ca3af}.f-warn{background:var(--amber-l);color:#92400e}
 
-.act-btn{width:30px;height:30px;border:1.5px solid var(--border);border-radius:7px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;color:var(--muted)}
+.act-btn{width:28px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;color:var(--muted);text-decoration:none}
 .act-btn:hover{background:var(--bg);color:var(--text)}
-.act-btn.del:hover{border-color:#fca5a5;background:var(--red-light);color:var(--red)}
-.act-btn.mail{color:var(--accent)}
-.act-btn.mail:hover{background:var(--accent-light)}
+.act-btn.del:hover{border-color:#fca5a5;background:var(--red-l);color:var(--red)}
+.act-btn.mail:hover{border-color:#bfdbfe;background:var(--accent-l);color:var(--accent)}
 
-.btn{padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#002060}
-.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text)}
-.btn-ghost:hover{background:var(--bg)}
-.btn-danger{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
-.btn-danger:hover{background:#fecaca}
+/* MATERIAS CHART */
+.charts-2col{display:grid;grid-template-columns:1fr 1fr;gap:1.125rem;margin-bottom:1.25rem}
+@media(max-width:700px){.charts-2col{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem}
+.chart-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:.875rem}
+.chart-wrap{position:relative;height:200px}
+.chart-wrap.tall{height:280px}
 
+/* MATERIAS BAR LIST */
+.mat-bar-item{display:flex;align-items:center;gap:8px;padding:.35rem 0;cursor:pointer;transition:opacity .15s}
+.mat-bar-item:hover{opacity:.75}
+.mat-bar-label{font-size:12px;font-weight:500;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mat-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.mat-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.mat-bar-count{font-size:11px;font-weight:700;color:var(--accent);min-width:24px;text-align:right}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#002060}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-ghost:hover{background:var(--bg)}
+.btn-danger{background:var(--red-l);color:var(--red);border:1px solid #fca5a5}.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 11px;font-size:12px}
+
+/* MODAL */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
-.modal{background:var(--surface);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.18)}
-.modal-hdr{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
-.modal-hdr h2{font-size:17px;font-weight:700}
-.close-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surface);border-radius:15px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.2)}
+.modal-hdr{padding:1.125rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-hdr h2{font-size:16px;font-weight:700}
+.close-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
 .close-btn:hover{background:var(--bg)}
-.modal-body{padding:1.5rem}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.modal-body{padding:1.375rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:.875rem}
 .form-row.one{grid-template-columns:1fr}
 .form-row.three{grid-template-columns:1fr 1fr 1fr}
-.fg{display:flex;flex-direction:column;gap:5px}
-.fg label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.fg input,.fg select,.fg textarea{border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.fg input,.fg select,.fg textarea{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);background:var(--surface)}
-.fg textarea{resize:vertical;min-height:72px}
-.form-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding-top:.75rem;margin-bottom:.75rem;border-top:1px solid var(--border)}
-.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface)}
+.fg textarea{resize:vertical;min-height:65px}
+/* datalist combo */
+.fg input[list]{background:var(--bg)}
+.form-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding-top:.625rem;margin-bottom:.625rem;border-top:1px solid var(--border)}
+.modal-foot{padding:.875rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface)}
 
-.confirm-modal{background:var(--surface);border-radius:14px;padding:2rem;max-width:400px;width:100%;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.18);text-align:center}
-.confirm-modal h3{font-size:17px;font-weight:700;margin-bottom:.5rem}
-.confirm-modal p{font-size:14px;color:var(--muted);margin-bottom:1.5rem;line-height:1.5}
-.confirm-row{display:flex;gap:8px;justify-content:center}
+.confirm-modal{background:var(--surface);border-radius:13px;padding:1.75rem;max-width:380px;width:100%;border:1px solid var(--border);text-align:center}
+.confirm-modal h3{font-size:16px;font-weight:700;margin-bottom:.5rem}
+.confirm-modal p{font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.5}
 
-/* Historia por RUT */
-.rut-hist-card{border:1px solid var(--border);border-radius:12px;margin-bottom:1rem;overflow:hidden}
-.rhc-hdr{padding:1rem 1.25rem;background:#fafaf9;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rhc-name{font-size:16px;font-weight:700}
-.rhc-rut{font-size:11px;font-family:monospace;color:var(--muted);margin-top:2px}
-.rhc-stats{display:flex;gap:1rem;align-items:center}
-.rhc-stat{text-align:center}
-.rhc-stat .sv{font-size:18px;font-weight:800;color:var(--accent)}
+/* ALERT BANNERS */
+.ab{border-radius:8px;padding:.625rem 1rem;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.875rem;border:1px solid}
+.ab-red{background:var(--red-l);color:#991b1b;border-color:#fca5a5}
+.ab-amber{background:var(--amber-l);color:#92400e;border-color:#fde68a}
+.ab button{background:transparent;border:none;cursor:pointer;color:inherit;text-decoration:underline;font-size:13px;margin-left:6px}
+
+/* HISTORIAL */
+.rhc{border:1px solid var(--border);border-radius:11px;margin-bottom:.875rem;overflow:hidden}
+.rhc-hdr{padding:.875rem 1.125rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.rhc-name{font-size:15px;font-weight:700}
+.rhc-sub{font-size:11px;font-family:monospace;color:var(--muted);margin-top:2px}
+.rhc-right{display:flex;gap:1rem;align-items:center}
+.rhc-stat .sv{font-size:17px;font-weight:800;color:var(--accent);text-align:center}
 .rhc-stat .sl{font-size:10px;color:var(--muted)}
 
-/* Alert banner */
-.alert-banner{border-radius:8px;padding:.75rem 1rem;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.875rem;border:1px solid}
-.ab-red{background:var(--red-light);color:#991b1b;border-color:#fca5a5}
-.ab-amber{background:var(--amber-light);color:#92400e;border-color:#fde68a}
-
-.spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:3.5rem 1rem;color:var(--muted)}
-.empty-icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-icon{font-size:2.25rem;margin-bottom:.75rem;display:block}
+a.eml{color:var(--accent);text-decoration:none;font-size:11px}
+a.eml:hover{text-decoration:underline}
 
-/* email link en tabla */
-a.email-link{color:var(--accent);text-decoration:none;font-size:12px}
-a.email-link:hover{text-decoration:underline}
+/* active filter pill */
+.active-filter{background:var(--accent-l);color:var(--accent);border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.active-filter button{background:transparent;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1}
 </style>
 </head>
 <body>
 
 <nav class="sidebar">
-  <div class="sidebar-logo"><span class="dot"></span> Seguimiento</div>
-  <div class="sidebar-nav">
-    <div class="nav-section">Panel</div>
-    <button class="nav-item" id="nav-dashboard" onclick="switchView('dashboard')"><span class="icon">📊</span> Dashboard</button>
-    <button class="nav-item" id="nav-contratos" onclick="switchView('contratos')"><span class="icon">📋</span> Lista de Clientes</button>
-    <button class="nav-item" id="nav-ruts" onclick="switchView('ruts')"><span class="icon">🏢</span> Historial por RUT</button>
-    <div class="nav-section">Filtros rápidos</div>
-    <button class="nav-item" id="nav-critico" onclick="filterView('critico')"><span class="icon">🔴</span> Críticos</button>
-    <button class="nav-item" id="nav-advertencia" onclick="filterView('advertencia')"><span class="icon">🟡</span> Advertencias</button>
-    <div class="nav-section">Operaciones</div>
-    <button class="nav-item" onclick="openModal()"><span class="icon">➕</span> Agregar Cliente</button>
+  <div class="sb-logo"><span class="dot"></span> Seguimiento</div>
+  <div class="sb-nav">
+    <div class="sb-sec">Panel</div>
+    <button class="nav-item" id="nav-dashboard"   onclick="switchView('dashboard')"><span class="ic">📊</span> Resumen General</button>
+    <button class="nav-item" id="nav-contratos"   onclick="switchView('contratos')"><span class="ic">📋</span> Lista de Clientes</button>
+    <button class="nav-item" id="nav-materias"    onclick="switchView('materias')"><span class="ic">📂</span> Materias</button>
+    <button class="nav-item" id="nav-ruts"        onclick="switchView('ruts')"><span class="ic">👥</span> Historial por RUT</button>
+    <div class="sb-sec">Filtros rápidos</div>
+    <button class="nav-item" id="nav-critico"     onclick="filterView('critico')"><span class="ic">🔴</span> Críticos <span class="nav-count red" id="nc-crit">—</span></button>
+    <button class="nav-item" id="nav-advertencia" onclick="filterView('advertencia')"><span class="ic">🟡</span> Advertencias <span class="nav-count amber" id="nc-adv">—</span></button>
+    <button class="nav-item"                      onclick="filterView('visados')"><span class="ic">✅</span> Visados <span class="nav-count" id="nc-vis">—</span></button>
+    <button class="nav-item"                      onclick="filterView('obs')"><span class="ic">💬</span> Con observación <span class="nav-count" id="nc-obs">—</span></button>
+    <div class="sb-sec">Operaciones</div>
+    <button class="nav-item" onclick="openModal()"><span class="ic">➕</span> Agregar Cliente</button>
   </div>
-  <div class="sidebar-footer">
+  <div class="sb-foot">
     <a class="back-link" href="/">← Portal de Consulta</a>
   </div>
 </nav>
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title" id="view-title">Dashboard de Control</div>
+    <div class="topbar-title" id="view-title">Resumen General</div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="openModal()">+ Nuevo Registro</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo Registro</button>
     </div>
   </div>
   <div class="content" id="view-content"><div class="spinner"></div></div>
 </div>
 
-<!-- Modal Crear/Editar -->
+<!-- Modal -->
 <div class="backdrop" id="modal-wrap" style="display:none">
 <div class="modal">
   <div class="modal-hdr">
@@ -184,11 +211,15 @@ a.email-link:hover{text-decoration:underline}
       <div class="fg"><label>Nombre Completo</label><input id="f-nombre" placeholder="Juan Pérez Rojas"></div>
     </div>
     <div class="form-row">
-      <div class="fg"><label>Empresa (opcional)</label><input id="f-empresa" placeholder="Empresa S.A."></div>
+      <div class="fg">
+        <label>Materia</label>
+        <input id="f-materia" list="materias-list" placeholder="Ej: Contrata, Comisión Nacional...">
+        <datalist id="materias-list"></datalist>
+      </div>
       <div class="fg"><label>N° Seguimiento / Código</label><input id="f-codigo" placeholder="SEG-2025-001"></div>
     </div>
     <div class="form-row">
-      <div class="fg"><label>Profesional Responsable</label><input id="f-resp" placeholder="Nombre del responsable"></div>
+      <div class="fg"><label>Responsable</label><input id="f-resp" placeholder="Nombre del responsable"></div>
       <div class="fg"><label>Correo Electrónico</label><input id="f-email" type="email" placeholder="contacto@email.cl"></div>
     </div>
     <div class="form-row one">
@@ -202,7 +233,7 @@ a.email-link:hover{text-decoration:underline}
       <div class="fg"><label>Fecha de Ingreso</label><input id="f-inicio" type="date"></div>
       <div class="fg"><label>Fecha Límite / Fin</label><input id="f-fin" type="date"></div>
     </div>
-    <div class="form-section">Estado y etapas</div>
+    <div class="form-sec">Estado y etapas</div>
     <div class="form-row">
       <div class="fg"><label>Etapa actual</label>
         <select id="f-etapa">
@@ -221,7 +252,7 @@ a.email-link:hover{text-decoration:underline}
         </select>
       </div>
     </div>
-    <div class="form-section">Flags de seguimiento</div>
+    <div class="form-sec">Flags de seguimiento</div>
     <div class="form-row three">
       <div class="fg"><label>Pago Imprevisto</label>
         <select id="f-pago"><option value="false">No</option><option value="true">Sí</option></select>
@@ -243,7 +274,7 @@ a.email-link:hover{text-decoration:underline}
       <div class="fg"><label>Observaciones / Notas</label><textarea id="f-obs" placeholder="Detalle observaciones..."></textarea></div>
     </div>
   </div>
-  <div class="modal-footer">
+  <div class="modal-foot">
     <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="guardar()">✓ Guardar</button>
   </div>
@@ -253,10 +284,10 @@ a.email-link:hover{text-decoration:underline}
 <!-- Confirm Delete -->
 <div class="backdrop" id="confirm-wrap" style="display:none">
   <div class="confirm-modal">
-    <div style="font-size:2.5rem;margin-bottom:.75rem">🗑</div>
+    <div style="font-size:2.25rem;margin-bottom:.75rem">🗑</div>
     <h3>Eliminar registro</h3>
-    <p>¿Seguro que deseas eliminar este registro?<br>Esta acción no se puede deshacer.</p>
-    <div class="confirm-row">
+    <p>¿Seguro que deseas eliminar este registro? No se puede deshacer.</p>
+    <div style="display:flex;gap:8px;justify-content:center">
       <button class="btn btn-ghost" onclick="cancelDel()">Cancelar</button>
       <button class="btn btn-danger" onclick="confirmDel()">Sí, eliminar</button>
     </div>
@@ -266,17 +297,23 @@ a.email-link:hover{text-decoration:underline}
 <script>
 const ETAPAS=['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
 let view='dashboard', editId=null, delId=null;
-let filterEstado='', filterRut='', searchQ='';
+let filterEstado='', filterRut='', filterMateria='', filterVisado='', filterObs='', searchQ='';
+let globalMaterias=[];
 
-/* ── URL param al cargar ── */
+/* URL params al cargar */
 (function(){
-  const p = new URLSearchParams(window.location.search);
-  const f = p.get('filter');
-  if(f==='critico'||f==='advertencia'){view='contratos';filterEstado=f;}
-  else if(f==='en_proceso'||f==='completado'||f==='sin_efecto'){view='contratos';filterEstado=f;}
+  const p=new URLSearchParams(window.location.search);
+  const f=p.get('filter');
+  if(['critico','advertencia','en_proceso','completado','sin_efecto'].includes(f)){
+    view='contratos'; filterEstado=f;
+  } else if(f==='visados'){
+    view='contratos'; filterVisado='si';
+  } else if(f==='obs'){
+    view='contratos'; filterObs='1';
+  }
 })();
 
-/* ── Utils ── */
+/* Utils */
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`;}
 function fmtMonto(m){return m?'$'+Number(m).toLocaleString('es-CL'):'—';}
 function stgBar(e){return ETAPAS.map((_,i)=>`<div class="stg-seg ${i<e?'done':i===e?'cur':''}"></div>`).join('');}
@@ -289,29 +326,51 @@ function badgeFull(c){
 }
 
 function switchView(v){
-  view=v;filterEstado='';filterRut='';searchQ='';
+  view=v; filterEstado=''; filterRut=''; filterMateria=''; filterVisado=''; filterObs=''; searchQ='';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  const nb=document.getElementById('nav-'+v);if(nb)nb.classList.add('active');
+  document.getElementById('nav-'+v)?.classList.add('active');
   loadView();
 }
 function filterView(f){
-  view='contratos';filterEstado=f;filterRut='';searchQ='';
+  view='contratos'; filterEstado=''; filterMateria=''; filterVisado=''; filterObs='';
+  if(f==='critico')      filterEstado='critico';
+  else if(f==='advertencia') filterEstado='advertencia';
+  else if(f==='en_proceso'||f==='completado'||f==='sin_efecto') filterEstado=f;
+  else if(f==='visados') filterVisado='si';
+  else if(f==='obs')     filterObs='1';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('nav-contratos').classList.add('active');
-  document.getElementById('nav-'+f)?.classList.add('active');
+  document.getElementById('nav-contratos')?.classList.add('active');
   loadView();
+}
+function filterByMateria(m){
+  view='contratos'; filterEstado=''; filterVisado=''; filterObs=''; filterMateria=m; searchQ='';
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-contratos')?.classList.add('active');
+  document.getElementById('view-title').textContent='Lista de Clientes';
+  renderContratos();
 }
 
 function loadView(){
-  const titles={dashboard:'Dashboard de Control',contratos:'Listado de Clientes y Seguimiento',ruts:'Historial de Clientes por RUT'};
+  const titles={dashboard:'Resumen General',contratos:'Lista de Clientes',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=titles[view]||'Panel';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  const nb=document.getElementById('nav-'+view);if(nb)nb.classList.add('active');
-  const el=document.getElementById('view-content');
-  el.innerHTML='<div class="spinner"></div>';
-  if(view==='dashboard') renderDashboard();
+  document.getElementById('nav-'+view)?.classList.add('active');
+  document.getElementById('view-content').innerHTML='<div class="spinner"></div>';
+  if(view==='dashboard')  renderDashboard();
   else if(view==='contratos') renderContratos();
-  else if(view==='ruts') renderRuts();
+  else if(view==='materias')  renderMaterias();
+  else if(view==='ruts')      renderRuts();
+}
+
+/* Load sidebar counts */
+async function loadSidebarCounts(){
+  try{
+    const s=await fetch('/api/stats').then(r=>r.json());
+    document.getElementById('nc-crit').textContent=s.alertas;
+    document.getElementById('nc-adv').textContent=s.advertencias;
+    document.getElementById('nc-vis').textContent=s.visados;
+    document.getElementById('nc-obs').textContent=s.con_obs;
+  }catch(e){}
 }
 
 /* ── DASHBOARD ── */
@@ -323,93 +382,94 @@ async function renderDashboard(){
   const crits=all.filter(c=>c.alerta==='critico');
   const warns=all.filter(c=>c.alerta==='advertencia');
   const el=document.getElementById('view-content');
-
   el.innerHTML=`
   <div class="metrics">
-    <div class="metric m-total" onclick="switchView('contratos')">
-      <div class="metric-label">Total Clientes</div>
-      <div class="metric-val">${stats.total}</div>
-      <div class="metric-sub">Fichas en el sistema</div>
+    <div class="metric m-nav" onclick="switchView('contratos')">
+      <div class="metric-lbl">Total Clientes</div><div class="metric-val">${stats.total}</div><div class="metric-sub">Fichas en el sistema</div>
     </div>
-    <div class="metric m-proc" onclick="filterView('en_proceso')">
-      <div class="metric-label">En proceso</div>
-      <div class="metric-val">${stats.en_proceso}</div>
-      <div class="metric-sub">Trámites activos</div>
+    <div class="metric m-amb" onclick="filterView('en_proceso')">
+      <div class="metric-lbl">En proceso</div><div class="metric-val">${stats.en_proceso}</div><div class="metric-sub">Trámites activos</div>
     </div>
-    <div class="metric m-done" onclick="filterView('completado')">
-      <div class="metric-label">Completados</div>
-      <div class="metric-val">${stats.completado}</div>
-      <div class="metric-sub">Casos cerrados</div>
+    <div class="metric m-grn" onclick="filterView('completado')">
+      <div class="metric-lbl">Completados</div><div class="metric-val">${stats.completado}</div><div class="metric-sub">Casos cerrados</div>
     </div>
-    <div class="metric m-alert" onclick="filterView('critico')">
-      <div class="metric-label">Alertas Críticas</div>
-      <div class="metric-val">${stats.alertas}</div>
-      <div class="metric-sub">≤ 7 días límite</div>
+    <div class="metric m-red" onclick="filterView('critico')">
+      <div class="metric-lbl">Alertas Críticas</div><div class="metric-val">${stats.alertas}</div><div class="metric-sub">≤ 7 días</div>
     </div>
-    <div class="metric m-adv" onclick="filterView('advertencia')">
-      <div class="metric-label">Advertencias</div>
-      <div class="metric-val">${stats.advertencias}</div>
-      <div class="metric-sub">≤ 20 días</div>
+    <div class="metric m-sft" onclick="filterView('advertencia')">
+      <div class="metric-lbl">Advertencias</div><div class="metric-val" style="color:var(--amber)">${stats.advertencias}</div><div class="metric-sub">≤ 20 días</div>
     </div>
-    <div class="metric m-sinef" onclick="filterView('sin_efecto')">
-      <div class="metric-label">Sin Efecto</div>
-      <div class="metric-val">${stats.sin_efecto}</div>
-      <div class="metric-sub">Trámites anulados</div>
+    <div class="metric m-vis" onclick="filterView('visados')">
+      <div class="metric-lbl">Visados</div><div class="metric-val">${stats.visados}</div><div class="metric-sub">Click → ver listado</div>
+    </div>
+    <div class="metric m-obs" onclick="filterView('obs')">
+      <div class="metric-lbl">Con observación</div><div class="metric-val">${stats.con_obs}</div><div class="metric-sub">Click → ver listado</div>
     </div>
   </div>
 
-  ${crits.length?`
-  <div class="alert-banner ab-red"><strong>⚠ ${crits.length} contrato${crits.length!==1?'s':''} crítico${crits.length!==1?'s':''}</strong> — vencen en 7 días o menos. <button onclick="filterView('critico')" style="margin-left:8px;background:transparent;border:none;cursor:pointer;color:inherit;text-decoration:underline;font-size:13px">Ver listado →</button></div>`:''}
-  ${warns.length?`
-  <div class="alert-banner ab-amber"><strong>⏰ ${warns.length} contrato${warns.length!==1?'s':''}</strong> por vencer en los próximos 20 días. <button onclick="filterView('advertencia')" style="margin-left:8px;background:transparent;border:none;cursor:pointer;color:inherit;text-decoration:underline;font-size:13px">Ver listado →</button></div>`:''}
+  ${crits.length?`<div class="ab ab-red">⚠ <strong>${crits.length} contrato${crits.length!==1?'s':''} crítico${crits.length!==1?'s':''}</strong> — vencen en ≤7 días.<button onclick="filterView('critico')">Ver listado →</button></div>`:''}
+  ${warns.length?`<div class="ab ab-amber">⏰ <strong>${warns.length} contrato${warns.length!==1?'s':''}</strong> por vencer en los próximos 20 días.<button onclick="filterView('advertencia')">Ver listado →</button></div>`:''}
 
   ${crits.length||warns.length?`
   <div class="panel">
-    <div class="panel-hdr"><span class="panel-title">🔴 Contratos que requieren atención urgente</span></div>
+    <div class="panel-hdr"><span class="panel-title">🔴 Requieren atención urgente</span></div>
     <table>
-      <thead><tr><th>Cliente</th><th>RUT</th><th>Código</th><th>Vence</th><th>Días</th><th>Correo</th><th></th></tr></thead>
+      <thead><tr><th>Cliente</th><th>RUT</th><th>Materia</th><th>Vence</th><th>Días</th><th>Correo</th><th></th></tr></thead>
       <tbody>
       ${[...crits,...warns].map(c=>`<tr onclick="openModal(${c.id})">
         <td><strong>${c.nombre}</strong></td>
         <td style="font-family:monospace;font-size:11px">${c.rut}</td>
-        <td>${c.codigo||'—'}</td>
+        <td>${c.materia||'—'}</td>
         <td>${fmtDate(c.fecha_fin)}</td>
-        <td><span style="font-weight:800;color:${c.alerta==='critico'?'var(--red)':'var(--amber)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+' días'}</span></td>
-        <td>${c.email?`<a class="email-link" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a>`:'—'}</td>
+        <td style="font-weight:800;color:${c.alerta==='critico'?'var(--red)':'var(--amber)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</td>
+        <td>${c.email?`<a class="eml" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a>`:'—'}</td>
         <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openModal(${c.id})">✏</button></td>
       </tr>`).join('')}
       </tbody>
     </table>
   </div>`:`
-  <div class="panel"><div style="text-align:center;padding:2.5rem 1rem;color:var(--muted)">
-    <div style="font-size:2.5rem;margin-bottom:.75rem">✅</div>
-    <strong>Sin alertas vigentes</strong><p style="font-size:13px;margin-top:.25rem">Todos los trámites de clientes se encuentran al día.</p>
+  <div class="panel"><div style="text-align:center;padding:2.5rem;color:var(--muted)">
+    <div style="font-size:2.25rem;margin-bottom:.625rem">✅</div>
+    <strong>Sin alertas vigentes</strong><p style="font-size:13px;margin-top:.25rem">Todos los trámites se encuentran al día.</p>
   </div></div>`}`;
 }
 
 /* ── CONTRATOS ── */
 async function renderContratos(){
   let url='/api/contratos?x=1';
-  if(filterEstado==='critico')           url+='&alerta=critico';
-  else if(filterEstado==='advertencia')  url+='&alerta=advertencia';
-  else if(filterEstado)                  url+='&estado='+filterEstado;
-  if(filterRut) url+='&rut='+encodeURIComponent(filterRut);
-  if(searchQ)   url+='&q='+encodeURIComponent(searchQ);
+  if(filterEstado==='critico')       url+='&alerta=critico';
+  else if(filterEstado==='advertencia') url+='&alerta=advertencia';
+  else if(filterEstado)              url+='&estado='+filterEstado;
+  if(filterRut)     url+='&rut='+encodeURIComponent(filterRut);
+  if(filterMateria) url+='&materia='+encodeURIComponent(filterMateria);
+  if(filterVisado)  url+='&visado='+filterVisado;
+  if(filterObs)     url+='&obs='+filterObs;
+  if(searchQ)       url+='&q='+encodeURIComponent(searchQ);
+
   const data=await fetch(url).then(r=>r.json());
   const el=document.getElementById('view-content');
 
-  const filterLabel=filterEstado==='critico'?'Críticos':filterEstado==='advertencia'?'Advertencias':filterEstado?filterEstado.replace('_',' '):'';
+  // active filter label
+  let activeLabel='';
+  if(filterMateria) activeLabel=`Materia: ${filterMateria}`;
+  else if(filterVisado) activeLabel='Solo visados';
+  else if(filterObs) activeLabel='Con observación';
+  else if(filterEstado) activeLabel=filterEstado.replace('_',' ');
+
+  // materias para select dinámico
+  const materiaOptions=globalMaterias.map(m=>`<option value="${m}">${m}</option>`).join('');
 
   el.innerHTML=`
+  ${activeLabel?`<div style="margin-bottom:.875rem"><span class="active-filter">${activeLabel} <button onclick="clearFilters()">✕</button></span></div>`:''}
   <div class="panel">
     <div class="panel-hdr">
-      <span class="panel-title">Todos los Trámites ${filterLabel?`— ${filterLabel}`:''} <span style="font-size:12px;font-weight:400;color:var(--muted)">(${data.length} registros)</span></span>
-      <button class="btn btn-primary" style="font-size:12px;padding:6px 12px" onclick="openModal()">+ Nuevo Cliente</button>
+      <span class="panel-title">Todos los Trámites <span style="font-size:12px;font-weight:400;color:var(--muted)">(${data.length})</span></span>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo</button>
     </div>
     <div class="filter-row">
-      <input placeholder="Buscar por Nombre, RUT, código de seguimiento..." value="${searchQ}"
+      <input placeholder="Buscar por Nombre, RUT, materia, código..." value="${searchQ}"
         oninput="searchQ=this.value;renderContratos()">
-      <select onchange="filterEstado=this.value;filterRut='';renderContratos()">
+      <select onchange="filterEstado=this.value;filterMateria='';filterVisado='';filterObs='';renderContratos()">
         <option value="" ${!filterEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${filterEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${filterEstado==='completado'?'selected':''}>Completados</option>
@@ -417,88 +477,157 @@ async function renderContratos(){
         <option value="critico" ${filterEstado==='critico'?'selected':''}>🔴 Críticos</option>
         <option value="advertencia" ${filterEstado==='advertencia'?'selected':''}>🟡 Advertencias</option>
       </select>
-      ${filterRut||filterEstado||searchQ?`<button class="btn btn-ghost" onclick="filterEstado='';filterRut='';searchQ='';renderContratos()" style="padding:7px 12px">✕ Limpiar</button>`:''}
+      <select onchange="filterMateria=this.value;filterEstado='';filterVisado='';filterObs='';renderContratos()">
+        <option value="">Todas las materias</option>
+        ${materiaOptions}
+      </select>
+      ${filterEstado||filterMateria||filterVisado||filterObs||searchQ?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Limpiar</button>`:''}
     </div>
     ${!data.length?`<div class="empty"><span class="empty-icon">📭</span>Sin registros</div>`:`
     <div class="tbl-wrap"><table>
-      <thead><tr>
-        <th>Cliente / RUT</th><th>Código Seg.</th><th>Descripción Servicio</th>
-        <th>Progreso Etapas</th><th>Estado</th><th>Fecha Límite</th><th>Visados</th><th>Adiciones</th>
-      </tr></thead>
+      <thead><tr><th>Cliente / RUT</th><th>Materia</th><th>Etapas</th><th>Estado</th><th>Fecha Ingreso</th><th>Fecha Fin</th><th>Flags</th><th></th></tr></thead>
       <tbody>
       ${data.map(c=>`<tr onclick="openModal(${c.id})">
         <td>
           <strong>${c.nombre}</strong>
           <div style="font-size:11px;font-family:monospace;color:var(--muted)">${c.rut}</div>
-          ${c.email?`<div><a class="email-link" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a></div>`:''}
+          ${c.email?`<div><a class="eml" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a></div>`:''}
         </td>
-        <td style="font-family:monospace;font-size:11px">${c.codigo||'—'}</td>
-        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.descripcion}">${c.descripcion||'—'}</td>
+        <td>
+          ${c.materia?`<span style="font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)" onclick="event.stopPropagation();filterByMateria('${c.materia}')" title="Filtrar por ${c.materia}">${c.materia}</span>`:'<span style="color:var(--soft)">—</span>'}
+        </td>
         <td>
           <div class="stg-bar">${stgBar(c.etapa)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">${ETAPAS[c.etapa]}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${ETAPAS[c.etapa]}</div>
         </td>
         <td>${badgeFull(c)}</td>
-        <td style="font-size:12px;white-space:nowrap">
+        <td style="font-size:11px;color:var(--muted)">${c.creado_en||'—'}</td>
+        <td style="font-size:11px;white-space:nowrap">
           ${fmtDate(c.fecha_fin)}
-          ${c.dias_restantes!==null&&c.estado==='en_proceso'?`<div style="font-size:11px;color:${c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+' días'}</div>`:''}
+          ${c.dias_restantes!==null&&c.estado==='en_proceso'?`<div style="font-size:10px;color:${c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</div>`:''}
         </td>
         <td onclick="event.stopPropagation()">
-          ${c.visado==='si'?`<span class="flag flag-ok">Vis ✓</span>`:`<span class="flag flag-no">Vis ${c.visado}</span>`}
-          ${c.devuelto?`<span class="flag flag-ok">Dev ✓</span>`:''}
-          ${c.tiene_observacion?`<span class="flag flag-warn">Obs ⚠</span>`:''}
-          ${c.pago_imprevisto?`<span class="flag flag-warn">$ Imp</span>`:''}
+          ${c.visado==='si'?`<span class="flag f-ok">Vis ✓</span>`:`<span class="flag f-no">Vis ${c.visado}</span>`}
+          ${c.devuelto?`<span class="flag f-ok">Dev ✓</span>`:''}
+          ${c.tiene_observacion?`<span class="flag f-warn">Obs ⚠</span>`:''}
+          ${c.pago_imprevisto?`<span class="flag f-warn">$ Imp</span>`:''}
         </td>
         <td onclick="event.stopPropagation()">
-          <div style="display:flex;gap:4px">
-            ${c.email?`<a class="act-btn mail" href="mailto:${c.email}" title="Enviar correo a ${c.email}">✉</a>`:''}
-            <button class="act-btn" onclick="openModal(${c.id})" title="Editar">✏</button>
-            <button class="act-btn del" onclick="askDel(${c.id})" title="Eliminar">🗑</button>
+          <div style="display:flex;gap:3px">
+            ${c.email?`<a class="act-btn mail" href="mailto:${c.email}" title="Enviar correo">✉</a>`:''}
+            <button class="act-btn" onclick="openModal(${c.id})">✏</button>
+            <button class="act-btn del" onclick="askDel(${c.id})">🗑</button>
           </div>
         </td>
       </tr>`).join('')}
       </tbody>
     </table></div>`}
   </div>`;
+
+  // set materia select value
+  const sel=el.querySelector('select:nth-child(3)');
+  if(sel&&filterMateria) sel.value=filterMateria;
 }
 
-/* ── HISTORIAL POR RUT ── */
+function clearFilters(){filterEstado='';filterMateria='';filterVisado='';filterObs='';searchQ='';renderContratos();}
+
+/* ── MATERIAS VIEW ── */
+async function renderMaterias(){
+  const cd=await fetch('/api/chart-data').then(r=>r.json());
+  const el=document.getElementById('view-content');
+  const mats=cd.materias||[];
+  const max=mats.length?mats[0].count:1;
+
+  el.innerHTML=`
+  <div class="panel">
+    <div class="panel-hdr">
+      <span class="panel-title">📂 Materias — Cuenta por tipo</span>
+      <span style="font-size:12px;color:var(--muted)">${mats.length} tipos distintos</span>
+    </div>
+    <div style="padding:1rem 1.25rem">
+      ${!mats.length?`<div class="empty"><span class="empty-icon">📂</span>Sin materias registradas</div>`:
+      mats.map(m=>`
+        <div class="mat-bar-item" onclick="filterByMateria('${m.nombre}')" title="Ver contratos de ${m.nombre}">
+          <div class="mat-bar-label">${m.nombre}</div>
+          <div class="mat-bar-track"><div class="mat-bar-fill" style="width:${Math.round(m.count/max*100)}%"></div></div>
+          <div class="mat-bar-count">${m.count}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="charts-2col">
+    <div class="chart-card">
+      <div class="chart-lbl">Distribución de materias (top 10)</div>
+      <div class="chart-wrap tall"><canvas id="ch-mat"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-lbl">Ingresos por mes</div>
+      <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
+    </div>
+  </div>`;
+
+  // Doughnut materias top 10
+  const top10=mats.slice(0,10);
+  const colors=['#003082','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd','#16a34a','#d97706','#dc2626','#6d28d9'];
+  new Chart(document.getElementById('ch-mat').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:top10.map(m=>m.nombre),datasets:[{data:top10.map(m=>m.count),backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'right',labels:{font:{size:10},padding:8,boxWidth:10}}}}
+  });
+
+  // Bar por mes
+  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const nowM=new Date().getMonth();
+  new Chart(document.getElementById('ch-mes').getContext('2d'),{
+    type:'bar',
+    data:{labels:MESES,datasets:[{label:'Contratos',data:cd.by_month,
+      backgroundColor:cd.by_month.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),
+      borderRadius:4,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
+  });
+}
+
+/* ── HISTORIAL RUT ── */
 async function renderRuts(){
   const data=await fetch('/api/por-rut').then(r=>r.json());
   const el=document.getElementById('view-content');
-  if(!data.length){el.innerHTML='<div class="empty"><span class="empty-icon">🏢</span>Sin registros</div>';return;}
-  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+  if(!data.length){el.innerHTML='<div class="empty"><span class="empty-icon">👥</span>Sin registros</div>';return;}
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
     <span style="font-size:13px;color:var(--muted)">${data.length} cliente${data.length!==1?'s':''} registrados</span>
-    <button class="btn btn-primary" onclick="openModal()">+ Nuevo Cliente</button>
-  </div>` +
+    <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo</button>
+  </div>`+
   data.map(r=>`
-  <div class="rut-hist-card">
+  <div class="rhc">
     <div class="rhc-hdr">
       <div>
         <div class="rhc-name">${r.nombre}</div>
-        <div class="rhc-rut">${r.rut}${r.empresa?` · ${r.empresa}`:''}</div>
+        <div class="rhc-sub">${r.rut}${r.materia?` · ${r.materia}`:''}</div>
       </div>
-      <div class="rhc-stats">
+      <div class="rhc-right">
         <div class="rhc-stat"><div class="sv">${fmtMonto(r.monto)}</div><div class="sl">Inversión Total</div></div>
         <div class="rhc-stat"><div class="sv">${r.count}</div><div class="sl">${r.count===1?'Trámite':'Trámites'}</div></div>
-        <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="goHistorial('${r.rut}')">Ver Historial →</button>
+        <button class="btn btn-ghost btn-sm" onclick="goHist('${r.rut}')">Ver historial →</button>
       </div>
     </div>
   </div>`).join('');
 }
-
-function goHistorial(rut){filterRut=rut;filterEstado='';searchQ='';view='contratos';loadView();}
+function goHist(rut){filterRut=rut;filterEstado='';filterMateria='';filterVisado='';filterObs='';searchQ='';view='contratos';loadView();}
 
 /* ── MODAL ── */
 async function openModal(id=null){
   editId=id;
   document.getElementById('modal-title').textContent=id?'Editar Registro':'Nuevo Registro';
+  // Populate datalist
+  const dl=document.getElementById('materias-list');
+  dl.innerHTML=globalMaterias.map(m=>`<option value="${m}">`).join('');
   const f=v=>document.getElementById(v);
   if(id){
     const c=await fetch(`/api/contratos/${id}`).then(r=>r.json());
     f('f-rut').value     =c.rut||'';
     f('f-nombre').value  =c.nombre||'';
-    f('f-empresa').value =c.empresa||'';
+    f('f-materia').value =c.materia||'';
     f('f-codigo').value  =c.codigo||'';
     f('f-desc').value    =c.descripcion||'';
     f('f-resp').value    =c.responsable||'';
@@ -514,11 +643,11 @@ async function openModal(id=null){
     f('f-obs-yn').value  =c.tiene_observacion?'true':'false';
     f('f-obs').value     =c.observaciones||'';
   } else {
-    ['f-rut','f-nombre','f-empresa','f-codigo','f-desc','f-resp','f-email','f-monto','f-inicio','f-fin','f-obs']
+    ['f-rut','f-nombre','f-materia','f-codigo','f-desc','f-resp','f-email','f-monto','f-inicio','f-fin','f-obs']
       .forEach(id=>f(id).value='');
-    f('f-etapa').value='0';f('f-estado').value='en_proceso';
-    f('f-pago').value='false';f('f-visado').value='pendiente';
-    f('f-devuelto').value='false';f('f-obs-yn').value='false';
+    f('f-etapa').value='0'; f('f-estado').value='en_proceso';
+    f('f-pago').value='false'; f('f-visado').value='pendiente';
+    f('f-devuelto').value='false'; f('f-obs-yn').value='false';
   }
   document.getElementById('modal-wrap').style.display='flex';
 }
@@ -528,7 +657,7 @@ async function guardar(){
   const f=id=>document.getElementById(id).value;
   const body={
     rut:f('f-rut').trim(), nombre:f('f-nombre').trim(),
-    empresa:f('f-empresa').trim(), codigo:f('f-codigo').trim(),
+    materia:f('f-materia').trim(), codigo:f('f-codigo').trim(),
     descripcion:f('f-desc').trim(), responsable:f('f-resp').trim(),
     email:f('f-email').trim(), monto:Number(f('f-monto'))||0,
     fecha_inicio:f('f-inicio'), fecha_fin:f('f-fin'),
@@ -541,23 +670,36 @@ async function guardar(){
   const url=editId?`/api/contratos/${editId}`:'/api/contratos';
   const method=editId?'PUT':'POST';
   const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(res.ok){closeModal();loadView();}
-  else{const e=await res.json();alert(e.error||'Error al guardar');}
+  if(res.ok){
+    closeModal(); loadView(); loadSidebarCounts();
+    // update materias list
+    const cd=await fetch('/api/chart-data').then(r=>r.json());
+    globalMaterias=[...new Set(cd.materias.map(m=>m.nombre))];
+  } else {
+    const e=await res.json(); alert(e.error||'Error al guardar');
+  }
 }
 
-/* ── DELETE ── */
 function askDel(id){delId=id;document.getElementById('confirm-wrap').style.display='flex';}
 function cancelDel(){delId=null;document.getElementById('confirm-wrap').style.display='none';}
 async function confirmDel(){
   if(!delId)return;
   await fetch(`/api/contratos/${delId}`,{method:'DELETE'});
-  cancelDel();loadView();
+  cancelDel(); loadView(); loadSidebarCounts();
 }
 
 document.getElementById('modal-wrap').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('confirm-wrap').addEventListener('click',function(e){if(e.target===this)cancelDel();});
 
-loadView();
+/* Init */
+(async()=>{
+  try{
+    const cd=await fetch('/api/chart-data').then(r=>r.json());
+    globalMaterias=[...new Set((cd.materias||[]).map(m=>m.nombre))];
+  }catch(e){}
+  await loadSidebarCounts();
+  loadView();
+})();
 </script>
 </body>
 </html>
