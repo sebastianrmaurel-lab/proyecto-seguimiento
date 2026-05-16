@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Base de datos interna (SQLite) - Luego la pasaremos a la "eterna" en Render
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///base_de_datos.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seguimiento_datos_user:9cWW3Gtd0ByVKxJELTyGYxRI52uoAZNZ@dpg-d84002ojo89c73acqpe0-a.oregon-postgres.render.com/seguimiento_datos'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
