@@ -1,15 +1,74 @@
 <!DOCTYPE html>
-<html>
-<head><title>Admin - Cargar Clientes</title></head>
-<body style="padding: 50px; font-family: sans-serif;">
-    <h1>Panel de Administración</h1>
-    <form method="POST">
-        <input type="text" name="rut" placeholder="RUT (ej: 11.111.111-1)" required><br><br>
-        <input type="text" name="nombre" placeholder="Nombre Completo" required><br><br>
-        <input type="text" name="tarea" placeholder="Tarea pendiente"><br><br>
-        <input type="text" name="estado" placeholder="Estado del Correo"><br><br>
-        <button type="submit">Guardar Cliente en Base de Datos</button>
-    </form>
-    <br><a href="/">Ir al Buscador</a>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; }
+        .card { max-width: 600px; margin: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="card p-4">
+        <h2 class="text-center mb-4">Ingresar Nuevo Cliente</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">RUT Cliente</label>
+                <input type="text" name="rut" class="form-control" placeholder="11.111.111-1" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nombre Completo</label>
+                <input type="text" name="nombre" class="form-control" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Etapa Actual</label>
+                    <select name="etapa" class="form-select">
+                        <option value="Etapa 1">Etapa 1</option>
+                        <option value="Etapa 2">Etapa 2</option>
+                        <option value="Etapa 3">Etapa 3</option>
+                        <option value="Etapa 4">Etapa 4</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Estado General</label>
+                    <select name="estado" class="form-select">
+                        <option value="En proceso">En proceso</option>
+                        <option value="Completado">Completado</option>
+                        <option value="Sin efecto">Sin efecto</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row text-center mb-3">
+                <div class="col-3">
+                    <label class="small d-block">Pago Imprev.</label>
+                    <select name="pago_imprevisto" class="form-select form-select-sm"><option>No</option><option>Si</option></select>
+                </div>
+                <div class="col-3">
+                    <label class="small d-block">Visado</label>
+                    <select name="visado" class="form-select form-select-sm"><option>No</option><option>Si</option></select>
+                </div>
+                <div class="col-3">
+                    <label class="small d-block">Devuelto</label>
+                    <select name="devuelto" class="form-select form-select-sm"><option>No</option><option>Si</option></select>
+                </div>
+                <div class="col-3">
+                    <label class="small d-block">Observación</label>
+                    <select name="observacion" class="form-select form-select-sm"><option>No</option><option>Si</option></select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Fecha Final de Entrega</label>
+                <input type="date" name="fecha_final" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Guardar en Base de Datos</button>
+            <a href="/" class="btn btn-link w-100 mt-2">Ir al Buscador</a>
+        </form>
+    </div>
 </body>
 </html>

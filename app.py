@@ -1,51 +1,84 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Configuración de la Base de Datos Interna (SQLite)
+# Base de datos interna (SQLite) - Luego la pasaremos a la "eterna" en Render
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///base_de_datos.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Definimos qué datos guardaremos de cada cliente
+# MODELO CON TODAS TUS ETAPAS
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rut = db.Column(db.String(12), unique=True, nullable=False)
-    nombre = db.Column(db.String(100))
-    tarea = db.Column(db.String(200))
-    estado_correo = db.Column(db.String(50))
+    nombre = db.Column(db.String(100), nullable=False)
+    etapa = db.Column(db.String(20)) # Etapa 1, 2, 3, 4
+    pago_imprevisto = db.Column(db.String(10)) # Si / No
+    visado = db.Column(db.String(10)) # Si / No
+    devuelto = db.Column(db.String(10)) # Si / No
+    observacion = db.Column(db.String(10)) # Si / No
+    estado = db.Column(db.String(20)) # En proceso, Completado, Sin efecto
+    fecha_final = db.Column(db.Date) # Para las alertas
 
-# Crear la base de datos y un cliente de prueba
+# CREAR BASE DE DATOS
 with app.app_context():
     db.create_all()
-    # Solo agregamos un ejemplo si la base está vacía
-    if not Cliente.query.filter_by(rut="12.345.678-9").first():
-        ejemplo = Cliente(rut="12.345.678-9", nombre="Juan Pérez", tarea="Enviar contrato", estado_correo="Leído")
-        db.session.add(ejemplo)
-        db.session.commit()
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    cliente_encontrado = None
+    cliente = None
+    alerta = None
+    color_alerta = "secondary"
+
     if request.method == 'POST':
         rut_buscado = request.form.get('rut')
-        cliente_encontrado = Cliente.query.filter_by(rut=rut_buscado).first()
-    
-    return render_template('index.html', cliente=cliente_encontrado)
+        cliente = Cliente.query.filter_by(rut=rut_buscado).first()
+        
+        if cliente and cliente.fecha_final:
+            # Lógica de Alertas por Fecha
+            hoy = datetime.now().date()
+            dias_faltantes = (cliente.fecha_final - hoy).days
+
+            if cliente.visado == "Si" and cliente.estado == "Completado":
+                alerta = "FINALIZADO"
+                color_alerta = "success" # Verde
+            elif dias_faltantes <= 7:
+                alerta = "CRÍTICO"
+                color_alerta = "danger" # Rojo
+            elif dias_faltantes <= 20:
+                alerta = "ADVERTENCIA"
+                color_alerta = "warning" # Amarillo
+            else:
+                alerta = "NORMAL"
+                color_alerta = "info" # Azul
+
+    return render_template('index.html', cliente=cliente, alerta=alerta, color=color_alerta)
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
-        nuevo_rut = request.form.get('rut')
-        nuevo_nombre = request.form.get('nombre')
-        nueva_tarea = request.form.get('tarea')
-        nuevo_estado = request.form.get('estado')
-        
-        # Guardamos en la base de datos interna
-        nuevo_cliente = Cliente(rut=nuevo_rut, nombre=nuevo_nombre, tarea=nueva_tarea, estado_correo=nuevo_estado)
+        # Recibir datos del formulario
+        fecha_str = request.form.get('fecha_final')
+        nueva_fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date() if fecha_str else None
+
+        nuevo_cliente = Cliente(
+            rut=request.form.get('rut'),
+            nombre=request.form.get('nombre'),
+            etapa=request.form.get('etapa'),
+            pago_imprevisto=request.form.get('pago_imprevisto'),
+            visado=request.form.get('visado'),
+            devuelto=request.form.get('devuelto'),
+            observacion=request.form.get('observacion'),
+            estado=request.form.get('estado'),
+            fecha_final=nueva_fecha
+        )
         db.session.add(nuevo_cliente)
         db.session.commit()
         return "<h3>Cliente Guardado con Éxito</h3><a href='/admin'>Volver</a>"
     
     return render_template('admin.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
