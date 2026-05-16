@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultar Estado — Seguimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f6f5f3;
+  --surface:#ffffff;
+  --border:#e5e3df;
+  --text:#1a1916;
+  --muted:#6b6860;
+  --accent:#1d4ed8;
+  --accent-light:#eff6ff;
+  --red:#dc2626;
+  --red-light:#fef2f2;
+  --amber:#d97706;
+  --amber-light:#fffbeb;
+  --green:#16a34a;
+  --green-light:#f0fdf4;
+  --gray:#6b7280;
+  --radius:12px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── Header ── */
+header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.logo{
+  font-family:'DM Serif Display',serif;
+  font-size:20px;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo-dot{
+  width:10px;height:10px;
+  border-radius:50%;
+  background:var(--accent);
+  display:inline-block;
+}
+.admin-link{
+  font-size:13px;
+  color:var(--muted);
+  text-decoration:none;
+  padding:6px 14px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  transition:all .15s;
+}
+.admin-link:hover{background:var(--surface);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero ── */
+.hero{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:5rem 1.5rem 3rem;
+  text-align:center;
+}
+.hero-eyebrow{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:1rem;
+  background:var(--accent-light);
+  padding:4px 14px;
+  border-radius:20px;
+}
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2rem,5vw,3.25rem);
+  font-weight:400;
+  line-height:1.15;
+  color:var(--text);
+  margin-bottom:.75rem;
+  max-width:580px;
+}
+.hero p{
+  font-size:16px;
+  color:var(--muted);
+  max-width:420px;
+  line-height:1.6;
+  margin-bottom:2.5rem;
+}
+
+/* ── Search box ── */
+.search-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:2rem;
+  width:100%;
+  max-width:520px;
+  box-shadow:0 4px 24px rgba(0,0,0,.06);
+}
+.search-label{
+  font-size:12px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:8px;
+}
+.search-row{
+  display:flex;
+  gap:8px;
+}
+.search-row input{
+  flex:1;
+  height:46px;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:0 14px;
+  font-size:14px;
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  outline:none;
+  transition:border-color .15s;
+}
+.search-row input:focus{
+  border-color:var(--accent);
+  background:var(--surface);
+}
+.search-row input::placeholder{color:#b0ae9e}
+.btn-search{
+  height:46px;
+  padding:0 22px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  font-family:'Inter',sans-serif;
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.btn-search:hover{background:#1e40af}
+.btn-search:active{transform:scale(.98)}
+
+/* ── Results ── */
+#results{
+  width:100%;
+  max-width:860px;
+  margin:2rem auto 4rem;
+  padding:0 1.5rem;
+}
+
+.result-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:1rem;
+}
+.result-count{
+  font-size:13px;
+  color:var(--muted);
+}
+.result-rut{
+  font-size:14px;
+  font-weight:600;
+  color:var(--text);
+  background:var(--accent-light);
+  padding:4px 12px;
+  border-radius:20px;
+  font-family:monospace;
+}
+
+/* Contract card */
+.contract-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:box-shadow .15s;
+}
+.contract-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}
+
+.card-top{
+  padding:1.25rem 1.5rem;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+}
+.card-main-info .empresa{
+  font-size:16px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.card-main-info .meta{
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.card-badges{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  flex-shrink:0;
+}
+
+/* Stage bar */
+.card-middle{
+  padding:.875rem 1.5rem;
+  border-top:1px solid var(--border);
+  background:#fafaf9;
+  display:flex;
+  align-items:center;
+  gap:1.5rem;
+  flex-wrap:wrap;
+}
+.stage-section{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
+}
+.stage-label{
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:var(--muted);
+}
+.stage-bar{
+  display:flex;
+  gap:4px;
+  align-items:center;
+}
+.stage-seg{
+  height:7px;
+  flex:1;
+  border-radius:4px;
+  background:#e5e3df;
+  transition:background .3s;
+}
+.stage-seg.done{background:var(--green)}
+.stage-seg.current{background:var(--accent)}
+.stage-name{
+  font-size:12px;
+  font-weight:600;
+  color:var(--accent);
+  margin-left:6px;
+  white-space:nowrap;
+}
+
+.info-pills{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.info-pill{
+  font-size:11px;
+  padding:3px 10px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  background:var(--surface);
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.info-pill.ok{border-color:#86efac;background:var(--green-light);color:#15803d}
+.info-pill.no{opacity:.6}
+.info-pill.warn{border-color:#fca5a5;background:var(--red-light);color:#b91c1c}
+
+/* card bottom - observaciones */
+.card-obs{
+  padding:.75rem 1.5rem;
+  border-top:1px solid var(--border);
+  font-size:13px;
+  color:var(--muted);
+  background:#fffdf5;
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+.card-obs .obs-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+
+/* Days remaining strip */
+.days-strip{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+}
+.days-num{
+  font-size:18px;
+  font-weight:700;
+  line-height:1;
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.3px;
+  white-space:nowrap;
+}
+.badge-proc{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.badge-done{background:var(--green-light);color:#15803d;border:1px solid #86efac}
+.badge-sinef{background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb}
+.badge-critico{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+.badge-advertencia{background:var(--amber-light);color:var(--amber);border:1px solid #fde68a}
+
+/* empty / error */
+.state-msg{
+  text-align:center;
+  padding:4rem 1rem;
+  color:var(--muted);
+}
+.state-msg .icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.state-msg h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:.5rem}
+.state-msg p{font-size:14px}
+
+.spinner{
+  width:24px;height:24px;
+  border:2.5px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:3rem auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+footer{
+  margin-top:auto;
+  padding:1.5rem;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+  background:var(--surface);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="logo-dot"></span> Seguimiento</div>
+  <a class="admin-link" href="/admin">⚙ Administración</a>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Portal de consulta</div>
+    <h1>Consulta el estado de tu contrato</h1>
+    <p>Ingresa tu RUT para ver el avance, etapas y alertas de todos tus contratos vigentes.</p>
+
+    <div class="search-card">
+      <label class="search-label">RUT del cliente</label>
+      <div class="search-row">
+        <input type="text" id="rut-input" placeholder="Ej: 12.345.678-9"
+               oninput="formatRut(this)" onkeydown="if(event.key==='Enter')buscar()">
+        <button class="btn-search" onclick="buscar()">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<footer>Sistema de Seguimiento de Contratos</footer>
+
+<script>
+const ETAPAS = ['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
+
+function formatRut(el){
+  let v = el.value.replace(/[^\dkK\-\.]/g,'');
+  el.value = v;
+}
+
+function fmtMonto(m){
+  if(!m) return '—';
+  return '$' + Number(m).toLocaleString('es-CL');
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  const [y,mo,da] = d.split('-');
+  return `${da}/${mo}/${y}`;
+}
+
+function badgeEstado(c){
+  if(c.alerta==='critico')
+    return `<span class="badge badge-critico">⚠ Crítico</span>`;
+  if(c.alerta==='advertencia')
+    return `<span class="badge badge-advertencia">⏰ Por vencer</span>`;
+  if(c.estado==='completado')
+    return `<span class="badge badge-done">✓ Completado</span>`;
+  if(c.estado==='sin_efecto')
+    return `<span class="badge badge-sinef">Sin efecto</span>`;
+  return `<span class="badge badge-proc">● En proceso</span>`;
+}
+
+function stageBar(etapa){
+  return ETAPAS.map((_,i)=>
+    `<div class="stage-seg ${i<etapa?'done':i===etapa?'current':''}"></div>`
+  ).join('');
+}
+
+function renderCard(c){
+  const d = c.dias_restantes;
+  const daysHtml = d !== null
+    ? `<div class="days-strip">
+        <span class="days-num" style="color:${d<=7?'var(--red)':d<=20?'var(--amber)':'var(--text)'}">
+          ${d<=0?'Vencido':d}
+        </span>
+        ${d>0?`<span style="font-size:12px;color:var(--muted)">días restantes</span>`:''}
+       </div>`
+    : '';
+
+  const pillVisado  = c.visado==='si'
+    ? `<span class="info-pill ok">✓ Visado</span>`
+    : `<span class="info-pill no">✗ Sin visar</span>`;
+  const pillDev = c.devuelto
+    ? `<span class="info-pill ok">✓ Devuelto</span>`
+    : `<span class="info-pill no">Devuelto: No</span>`;
+  const pillObs = c.tiene_observacion
+    ? `<span class="info-pill warn">⚠ Con observación</span>`
+    : `<span class="info-pill ok">Sin observación</span>`;
+  const pillPago = c.pago_imprevisto
+    ? `<span class="info-pill warn">$ Pago imprevisto</span>`
+    : '';
+
+  const obsHtml = c.tiene_observacion && c.observaciones
+    ? `<div class="card-obs">
+        <span class="obs-icon">💬</span>
+        <span>${c.observaciones}</span>
+       </div>` : '';
+
+  return `
+  <div class="contract-card">
+    <div class="card-top">
+      <div class="card-main-info">
+        <div class="empresa">${c.empresa}</div>
+        <div class="meta">
+          <span>📄 ${c.codigo||'Sin código'}</span>
+          ${c.descripcion?`<span>• ${c.descripcion}</span>`:''}
+          <span>• ${fmtMonto(c.monto)}</span>
+          ${c.fecha_fin?`<span>• Vence ${fmtDate(c.fecha_fin)}</span>`:''}
+        </div>
+      </div>
+      <div class="card-badges">
+        ${badgeEstado(c)}
+        ${daysHtml}
+      </div>
+    </div>
+
+    <div class="card-middle">
+      <div class="stage-section">
+        <div class="stage-label">Progreso</div>
+        <div class="stage-bar">
+          ${stageBar(c.etapa)}
+          <span class="stage-name">${ETAPAS[c.etapa]}</span>
+        </div>
+      </div>
+      <div class="info-pills">
+        ${pillVisado}
+        ${pillDev}
+        ${pillObs}
+        ${pillPago}
+      </div>
+    </div>
+
+    ${obsHtml}
+  </div>`;
+}
+
+async function buscar(){
+  const rut = document.getElementById('rut-input').value.trim();
+  const el = document.getElementById('results');
+  if(!rut){ el.innerHTML=''; return; }
+
+  el.innerHTML = '<div class="spinner"></div>';
+
+  try{
+    const res = await fetch(`/api/buscar?rut=${encodeURIComponent(rut)}`);
+    const data = await res.json();
+
+    if(!data.length){
+      el.innerHTML = `
+        <div class="state-msg">
+          <span class="icon">🔍</span>
+          <h3>No se encontraron contratos</h3>
+          <p>No hay contratos registrados para el RUT <strong>${rut}</strong>.</p>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="result-header">
+        <div class="result-count">${data.length} contrato${data.length!==1?'s':''} encontrado${data.length!==1?'s':''}</div>
+        <div class="result-rut">RUT: ${rut}</div>
+      </div>
+      ${data.map(renderCard).join('')}`;
+
+  }catch(e){
+    el.innerHTML = `
+      <div class="state-msg">
+        <span class="icon">⚠️</span>
+        <h3>Error de conexión</h3>
+        <p>No se pudo conectar con el servidor. Intenta nuevamente.</p>
+      </div>`;
+  }
+}
+</script>
+</body>
+</html>

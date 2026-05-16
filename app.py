@@ -1,84 +1,259 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
+import os
 
 app = Flask(__name__)
 
-# Base de datos interna (SQLite) - Luego la pasaremos a la "eterna" en Render
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seguimiento_datos_user:9cWW3Gtd0ByVKxJELTyGYxRI52uoAZNZ@dpg-d84002ojo89c73acqpe0-a.oregon-postgres.render.com/seguimiento_datos'
+# ── Base de datos ──────────────────────────────────────────────
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///seguimiento.db')
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
-# MODELO CON TODAS TUS ETAPAS
-class Cliente(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rut = db.Column(db.String(12), unique=True, nullable=False)
-    nombre = db.Column(db.String(100), nullable=False)
-    etapa = db.Column(db.String(20)) # Etapa 1, 2, 3, 4
-    pago_imprevisto = db.Column(db.String(10)) # Si / No
-    visado = db.Column(db.String(10)) # Si / No
-    devuelto = db.Column(db.String(10)) # Si / No
-    observacion = db.Column(db.String(10)) # Si / No
-    estado = db.Column(db.String(20)) # En proceso, Completado, Sin efecto
-    fecha_final = db.Column(db.Date) # Para las alertas
+# ── Modelo ─────────────────────────────────────────────────────
+class Contrato(db.Model):
+    __tablename__ = 'contratos'
 
-# CREAR BASE DE DATOS
+    id           = db.Column(db.Integer, primary_key=True)
+    rut          = db.Column(db.String(20), nullable=False, index=True)
+    empresa      = db.Column(db.String(200), nullable=False)
+    codigo       = db.Column(db.String(100))
+    descripcion  = db.Column(db.String(300))
+    responsable  = db.Column(db.String(150))
+    monto        = db.Column(db.BigInteger, default=0)
+
+    etapa        = db.Column(db.Integer, default=0)   # 0-4
+    estado       = db.Column(db.String(20), default='en_proceso')
+    # en_proceso | completado | sin_efecto
+
+    pago_imprevisto = db.Column(db.Boolean, default=False)
+    visado          = db.Column(db.String(10), default='pendiente')
+    # pendiente | si | no
+    devuelto        = db.Column(db.Boolean, default=False)
+    tiene_observacion = db.Column(db.Boolean, default=False)
+    observaciones   = db.Column(db.Text, default='')
+
+    fecha_inicio = db.Column(db.Date)
+    fecha_fin    = db.Column(db.Date)
+    creado_en    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def dias_restantes(self):
+        if not self.fecha_fin:
+            return None
+        return (self.fecha_fin - date.today()).days
+
+    def alerta(self):
+        d = self.dias_restantes()
+        if self.estado in ('completado', 'sin_efecto') or d is None:
+            return None
+        if d <= 7:
+            return 'critico'
+        if d <= 20:
+            return 'advertencia'
+        return None
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'rut': self.rut,
+            'empresa': self.empresa,
+            'codigo': self.codigo or '',
+            'descripcion': self.descripcion or '',
+            'responsable': self.responsable or '',
+            'monto': self.monto or 0,
+            'etapa': self.etapa,
+            'estado': self.estado,
+            'pago_imprevisto': self.pago_imprevisto,
+            'visado': self.visado,
+            'devuelto': self.devuelto,
+            'tiene_observacion': self.tiene_observacion,
+            'observaciones': self.observaciones or '',
+            'fecha_inicio': self.fecha_inicio.isoformat() if self.fecha_inicio else '',
+            'fecha_fin': self.fecha_fin.isoformat() if self.fecha_fin else '',
+            'dias_restantes': self.dias_restantes(),
+            'alerta': self.alerta(),
+        }
+
+
+# ── Helpers ────────────────────────────────────────────────────
+def parse_date(s):
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
+
+# ── Vistas HTML ────────────────────────────────────────────────
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+
+# ── API ────────────────────────────────────────────────────────
+
+# Dashboard stats
+@app.route('/api/stats')
+def api_stats():
+    total      = Contrato.query.count()
+    en_proceso = Contrato.query.filter_by(estado='en_proceso').count()
+    completado = Contrato.query.filter_by(estado='completado').count()
+    sin_efecto = Contrato.query.filter_by(estado='sin_efecto').count()
+
+    all_c   = Contrato.query.filter_by(estado='en_proceso').all()
+    alertas = sum(1 for c in all_c if c.alerta() == 'critico')
+    advertencias = sum(1 for c in all_c if c.alerta() == 'advertencia')
+
+    return jsonify({
+        'total': total,
+        'en_proceso': en_proceso,
+        'completado': completado,
+        'sin_efecto': sin_efecto,
+        'alertas': alertas,
+        'advertencias': advertencias,
+    })
+
+
+# Buscar por RUT (vista pública)
+@app.route('/api/buscar')
+def api_buscar():
+    rut = request.args.get('rut', '').strip()
+    if not rut:
+        return jsonify([])
+    contratos = Contrato.query.filter_by(rut=rut).order_by(Contrato.creado_en.desc()).all()
+    return jsonify([c.to_dict() for c in contratos])
+
+
+# Listar todos (admin)
+@app.route('/api/contratos')
+def api_contratos():
+    q      = request.args.get('q', '').strip()
+    estado = request.args.get('estado', '').strip()
+    rut    = request.args.get('rut', '').strip()
+    alerta_filter = request.args.get('alerta', '').strip()
+
+    query = Contrato.query
+
+    if rut:
+        query = query.filter(Contrato.rut == rut)
+    if estado:
+        query = query.filter(Contrato.estado == estado)
+    if q:
+        like = f'%{q}%'
+        query = query.filter(
+            db.or_(
+                Contrato.empresa.ilike(like),
+                Contrato.rut.ilike(like),
+                Contrato.codigo.ilike(like),
+                Contrato.descripcion.ilike(like),
+            )
+        )
+
+    contratos = query.order_by(Contrato.creado_en.desc()).all()
+
+    if alerta_filter == 'critico':
+        contratos = [c for c in contratos if c.alerta() == 'critico']
+    elif alerta_filter == 'advertencia':
+        contratos = [c for c in contratos if c.alerta() == 'advertencia']
+
+    return jsonify([c.to_dict() for c in contratos])
+
+
+# Resumen por RUT
+@app.route('/api/por-rut')
+def api_por_rut():
+    contratos = Contrato.query.all()
+    ruts = {}
+    for c in contratos:
+        if c.rut not in ruts:
+            ruts[c.rut] = {'rut': c.rut, 'empresa': c.empresa, 'count': 0, 'monto': 0}
+        ruts[c.rut]['count'] += 1
+        ruts[c.rut]['monto'] += c.monto or 0
+    return jsonify(sorted(ruts.values(), key=lambda x: -x['count']))
+
+
+# Obtener uno
+@app.route('/api/contratos/<int:id>')
+def api_get_contrato(id):
+    c = Contrato.query.get_or_404(id)
+    return jsonify(c.to_dict())
+
+
+# Crear
+@app.route('/api/contratos', methods=['POST'])
+def api_crear():
+    d = request.json
+    c = Contrato(
+        rut=d.get('rut', '').strip(),
+        empresa=d.get('empresa', '').strip(),
+        codigo=d.get('codigo', '').strip(),
+        descripcion=d.get('descripcion', '').strip(),
+        responsable=d.get('responsable', '').strip(),
+        monto=int(d.get('monto', 0) or 0),
+        etapa=int(d.get('etapa', 0)),
+        estado=d.get('estado', 'en_proceso'),
+        pago_imprevisto=bool(d.get('pago_imprevisto', False)),
+        visado=d.get('visado', 'pendiente'),
+        devuelto=bool(d.get('devuelto', False)),
+        tiene_observacion=bool(d.get('tiene_observacion', False)),
+        observaciones=d.get('observaciones', ''),
+        fecha_inicio=parse_date(d.get('fecha_inicio')),
+        fecha_fin=parse_date(d.get('fecha_fin')),
+    )
+    if not c.rut or not c.empresa:
+        return jsonify({'error': 'RUT y empresa son requeridos'}), 400
+    db.session.add(c)
+    db.session.commit()
+    return jsonify(c.to_dict()), 201
+
+
+# Actualizar
+@app.route('/api/contratos/<int:id>', methods=['PUT'])
+def api_actualizar(id):
+    c = Contrato.query.get_or_404(id)
+    d = request.json
+    c.rut               = d.get('rut', c.rut).strip()
+    c.empresa           = d.get('empresa', c.empresa).strip()
+    c.codigo            = d.get('codigo', c.codigo or '').strip()
+    c.descripcion       = d.get('descripcion', c.descripcion or '').strip()
+    c.responsable       = d.get('responsable', c.responsable or '').strip()
+    c.monto             = int(d.get('monto', c.monto or 0) or 0)
+    c.etapa             = int(d.get('etapa', c.etapa))
+    c.estado            = d.get('estado', c.estado)
+    c.pago_imprevisto   = bool(d.get('pago_imprevisto', c.pago_imprevisto))
+    c.visado            = d.get('visado', c.visado)
+    c.devuelto          = bool(d.get('devuelto', c.devuelto))
+    c.tiene_observacion = bool(d.get('tiene_observacion', c.tiene_observacion))
+    c.observaciones     = d.get('observaciones', c.observaciones or '')
+    c.fecha_inicio      = parse_date(d.get('fecha_inicio')) or c.fecha_inicio
+    c.fecha_fin         = parse_date(d.get('fecha_fin')) or c.fecha_fin
+    db.session.commit()
+    return jsonify(c.to_dict())
+
+
+# Eliminar
+@app.route('/api/contratos/<int:id>', methods=['DELETE'])
+def api_eliminar(id):
+    c = Contrato.query.get_or_404(id)
+    db.session.delete(c)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+# ── Init ───────────────────────────────────────────────────────
 with app.app_context():
     db.create_all()
-
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    cliente = None
-    alerta = None
-    color_alerta = "secondary"
-
-    if request.method == 'POST':
-        rut_buscado = request.form.get('rut')
-        cliente = Cliente.query.filter_by(rut=rut_buscado).first()
-        
-        if cliente and cliente.fecha_final:
-            # Lógica de Alertas por Fecha
-            hoy = datetime.now().date()
-            dias_faltantes = (cliente.fecha_final - hoy).days
-
-            if cliente.visado == "Si" and cliente.estado == "Completado":
-                alerta = "FINALIZADO"
-                color_alerta = "success" # Verde
-            elif dias_faltantes <= 7:
-                alerta = "CRÍTICO"
-                color_alerta = "danger" # Rojo
-            elif dias_faltantes <= 20:
-                alerta = "ADVERTENCIA"
-                color_alerta = "warning" # Amarillo
-            else:
-                alerta = "NORMAL"
-                color_alerta = "info" # Azul
-
-    return render_template('index.html', cliente=cliente, alerta=alerta, color=color_alerta)
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    if request.method == 'POST':
-        # Recibir datos del formulario
-        fecha_str = request.form.get('fecha_final')
-        nueva_fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date() if fecha_str else None
-
-        nuevo_cliente = Cliente(
-            rut=request.form.get('rut'),
-            nombre=request.form.get('nombre'),
-            etapa=request.form.get('etapa'),
-            pago_imprevisto=request.form.get('pago_imprevisto'),
-            visado=request.form.get('visado'),
-            devuelto=request.form.get('devuelto'),
-            observacion=request.form.get('observacion'),
-            estado=request.form.get('estado'),
-            fecha_final=nueva_fecha
-        )
-        db.session.add(nuevo_cliente)
-        db.session.commit()
-        return "<h3>Cliente Guardado con Éxito</h3><a href='/admin'>Volver</a>"
-    
-    return render_template('admin.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
