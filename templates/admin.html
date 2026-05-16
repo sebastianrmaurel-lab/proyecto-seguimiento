@@ -4,67 +4,67 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Administración — Seguimiento</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f6f5f3;--surface:#fff;--surface2:#fafaf9;--border:#e5e3df;
-  --text:#1a1916;--muted:#6b6860;--soft:#9b9888;
-  --accent:#003082;--accent-l:#eff4ff;
-  --red:#dc2626;--red-l:#fef2f2;
-  --amber:#d97706;--amber-l:#fffbeb;
-  --green:#16a34a;--green-l:#f0fdf4;
-  --sidebar:224px;
+  --bg:#f0efe9;--surface:#fff;--surface2:#fafaf8;--border:#e5e3dc;--border2:#d4d2cb;
+  --text:#18180f;--muted:#6b6858;--soft:#9b9888;
+  --navy:#002060;--navy2:#003082;--navy-l:#eef3ff;
+  --red:#b91c1c;--red-l:#fef2f2;
+  --amber:#b45309;--amber-l:#fefce8;
+  --green:#15803d;--green-l:#f0fdf4;
+  --purple:#6d28d9;--purple-l:#f5f3ff;
+  --sidebar:220px;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
-/* SIDEBAR */
-.sidebar{width:var(--sidebar);background:#18180f;color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:50}
-.sb-logo{padding:1.25rem 1.125rem 1rem;font-family:'DM Serif Display',serif;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px}
-.sb-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
-.sb-nav{padding:.625rem .5rem;flex:1;overflow-y:auto}
-.sb-sec{font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;padding:.625rem .75rem .25rem;margin-top:.5rem}
-.nav-item{display:flex;align-items:center;gap:9px;padding:.575rem .75rem;border-radius:7px;font-size:13px;color:rgba(255,255,255,.65);cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'Inter',sans-serif}
-.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav-item.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
-.nav-item .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0}
-.nav-count{margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,.12);padding:1px 6px;border-radius:10px}
-.nav-count.red{background:rgba(220,38,38,.6)}
-.nav-count.amber{background:rgba(217,119,6,.6)}
-.sb-foot{padding:.875rem;border-top:1px solid rgba(255,255,255,.08)}
-.back-link{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;padding:.45rem .5rem;border-radius:6px;transition:all .15s}
-.back-link:hover{color:#fff;background:rgba(255,255,255,.07)}
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:50;box-shadow:2px 0 12px rgba(0,0,0,.15)}
+.sb-logo{padding:1.125rem 1rem .875rem;font-family:'DM Serif Display',serif;font-size:17px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px}
+.sb-logo .dot{width:8px;height:8px;border-radius:50%;background:#4fa3f7;flex-shrink:0}
+.sb-nav{padding:.5rem .375rem;flex:1;overflow-y:auto}
+.sb-sec{font-size:9px;font-weight:700;letter-spacing:1.8px;color:rgba(255,255,255,.3);text-transform:uppercase;padding:.625rem .75rem .2rem;margin-top:.375rem}
+.nav-item{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;border-radius:7px;font-size:12.5px;color:rgba(255,255,255,.65);cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;font-family:'Inter',sans-serif}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff;font-weight:600}
+.nav-item .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0}
+.nc{margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,.15);padding:1px 6px;border-radius:10px;min-width:20px;text-align:center}
+.nc.r{background:rgba(220,38,38,.7)}.nc.a{background:rgba(217,119,6,.7)}.nc.g{background:rgba(21,128,61,.6)}
+.sb-foot{padding:.75rem;border-top:1px solid rgba(255,255,255,.1)}
+.back-link{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;padding:.4rem .5rem;border-radius:6px;transition:all .15s}
+.back-link:hover{color:#fff;background:rgba(255,255,255,.08)}
 
-/* MAIN */
-.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
-.topbar-title{font-size:15px;font-weight:700}
-.content{padding:1.375rem;flex:1}
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.topbar-title{font-size:14px;font-weight:700;color:var(--text)}
+.content{padding:1.25rem;flex:1}
 
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.375rem}
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
 .metric{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:.875rem 1rem;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
-.metric:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px)}
-.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.m-nav::before{background:var(--accent)}.m-amb::before{background:var(--amber)}.m-red::before{background:var(--red)}.m-grn::before{background:var(--green)}.m-sft::before{background:var(--soft)}.m-vis::before{background:#6d28d9}.m-obs::before{background:#d97706}
-.metric-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.375rem}
+.metric:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px)}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:2px 2px 0 0}
+.m-nav::before{background:var(--navy2)}.m-amb::before{background:#d97706}.m-red::before{background:var(--red)}.m-grn::before{background:var(--green)}.m-sft::before{background:var(--soft)}.m-vis::before{background:var(--purple)}.m-obs::before{background:var(--amber)}
+.metric-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.375rem}
 .metric-val{font-size:26px;font-weight:800;line-height:1}
-.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.m-nav .metric-val{color:var(--accent)}.m-amb .metric-val{color:var(--amber)}.m-red .metric-val{color:var(--red)}.m-grn .metric-val{color:var(--green)}.m-sft .metric-val{color:var(--muted)}.m-vis .metric-val{color:#6d28d9}.m-obs .metric-val{color:var(--amber)}
+.metric-sub{font-size:10px;color:var(--soft);margin-top:3px}
+.m-nav .metric-val{color:var(--navy2)}.m-amb .metric-val{color:var(--amber)}.m-red .metric-val{color:var(--red)}.m-grn .metric-val{color:var(--green)}.m-sft .metric-val{color:var(--amber)}.m-vis .metric-val{color:var(--purple)}.m-obs .metric-val{color:var(--amber)}
 
-/* PANELS */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.25rem}
+/* ── PANELS ── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:1.125rem}
 .panel-hdr{padding:.75rem 1.125rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
 .panel-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
 
-/* FILTER ROW */
-.filter-row{display:flex;gap:8px;padding:.75rem 1.125rem;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface2)}
-.filter-row input,.filter-row select{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
-.filter-row input:focus,.filter-row select:focus{border-color:var(--accent);background:var(--surface)}
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:7px;padding:.75rem 1.125rem;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface2)}
+.filter-row input,.filter-row select{border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--navy2);background:var(--surface)}
 .filter-row input{flex:1;min-width:180px}
 
-/* TABLE */
+/* ── TABLE ── */
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
@@ -72,50 +72,76 @@ td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle
 tr:last-child td{border-bottom:none}
 tbody tr{cursor:pointer;transition:background .1s}
 tbody tr:hover td{background:var(--surface2)}
-
-.stg-bar{display:flex;gap:3px}.stg-seg{width:16px;height:5px;border-radius:3px;background:#e5e3df}.stg-seg.done{background:var(--green)}.stg-seg.cur{background:var(--accent)}
-
+.stg-bar{display:flex;gap:3px}.stg-seg{width:16px;height:5px;border-radius:3px;background:#e5e3dc}.stg-seg.done{background:var(--green)}.stg-seg.cur{background:var(--navy2)}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid transparent}
-.b-proc{background:var(--accent-l);color:var(--accent);border-color:#bfdbfe}
-.b-done{background:var(--green-l);color:#15803d;border-color:#86efac}
+.b-proc{background:var(--navy-l);color:var(--navy2);border-color:#bfdbfe}
+.b-done{background:var(--green-l);color:var(--green);border-color:#86efac}
 .b-sinef{background:#f9fafb;color:#6b7280;border-color:#e5e7eb}
 .b-alert{background:var(--red-l);color:var(--red);border-color:#fca5a5}
 .b-warn{background:var(--amber-l);color:var(--amber);border-color:#fde68a}
-
 .flag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin:1px}
-.f-ok{background:var(--green-l);color:#15803d}.f-no{background:#f3f4f6;color:#9ca3af}.f-warn{background:var(--amber-l);color:#92400e}
-
-.act-btn{width:28px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;color:var(--muted);text-decoration:none}
+.f-ok{background:var(--green-l);color:var(--green)}.f-no{background:#f3f4f6;color:#9ca3af}.f-warn{background:var(--amber-l);color:#92400e}
+.act-btn{width:27px;height:27px;border:1.5px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;color:var(--muted);text-decoration:none}
 .act-btn:hover{background:var(--bg);color:var(--text)}
 .act-btn.del:hover{border-color:#fca5a5;background:var(--red-l);color:var(--red)}
-.act-btn.mail:hover{border-color:#bfdbfe;background:var(--accent-l);color:var(--accent)}
+.act-btn.mail:hover{border-color:var(--navy-l);background:var(--navy-l);color:var(--navy2)}
 
-/* MATERIAS CHART */
-.charts-2col{display:grid;grid-template-columns:1fr 1fr;gap:1.125rem;margin-bottom:1.25rem}
-@media(max-width:700px){.charts-2col{grid-template-columns:1fr}}
+/* ── CHARTS ── */
+.charts-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.125rem}
+@media(max-width:700px){.charts-2{grid-template-columns:1fr}}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem}
-.chart-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:.875rem}
-.chart-wrap{position:relative;height:200px}
-.chart-wrap.tall{height:280px}
+.chart-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:.75rem}
+.chart-wrap{position:relative;height:170px}
+.chart-wrap.tall{height:260px}
 
-/* MATERIAS BAR LIST */
-.mat-bar-item{display:flex;align-items:center;gap:8px;padding:.35rem 0;cursor:pointer;transition:opacity .15s}
-.mat-bar-item:hover{opacity:.75}
-.mat-bar-label{font-size:12px;font-weight:500;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mat-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
-.mat-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
-.mat-bar-count{font-size:11px;font-weight:700;color:var(--accent);min-width:24px;text-align:right}
+/* ── MAT BAR ── */
+.mat-item{display:flex;align-items:center;gap:8px;padding:.3rem 0;cursor:pointer;transition:opacity .15s}
+.mat-item:hover{opacity:.7}
+.mat-label{font-size:12px;font-weight:500;min-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mat-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.mat-fill{height:100%;background:var(--navy2);border-radius:4px}
+.mat-count{font-size:11px;font-weight:700;color:var(--navy2);min-width:22px;text-align:right}
 
-/* BUTTONS */
+/* ── RESPONSABLES ── */
+.resp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.875rem;margin-bottom:1.25rem}
+.resp-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;position:relative}
+.resp-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-color:var(--navy2)}
+.resp-card.active-card{border-color:var(--navy2);box-shadow:0 0 0 2px var(--navy-l)}
+.rc-avatar{width:42px;height:42px;border-radius:50%;background:var(--navy-l);color:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;margin-bottom:.625rem;flex-shrink:0}
+.rc-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.rc-cargo{font-size:11px;color:var(--muted);margin-bottom:.5rem}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr;gap:.25rem}
+.rc-stat{background:var(--bg);border-radius:6px;padding:.3rem .5rem;text-align:center}
+.rc-stat .sv{font-size:15px;font-weight:800;line-height:1}
+.rc-stat .sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.rc-del{position:absolute;top:.625rem;right:.625rem;width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.rc-del:hover{border-color:#fca5a5;background:var(--red-l);color:var(--red)}
+.add-resp-card{background:var(--surface);border:1.5px dashed var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;min-height:140px;color:var(--muted)}
+.add-resp-card:hover{border-color:var(--navy2);color:var(--navy2);background:var(--navy-l)}
+.add-resp-card span{font-size:2rem}
+.add-resp-card p{font-size:13px;font-weight:600}
+
+/* Resp detail panel */
+.resp-detail{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-top:1rem}
+.rd-hdr{padding:.875rem 1.125rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;display:flex;align-items:center;gap:1rem}
+.rd-avatar{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+.rd-name{font-size:18px;font-weight:800}
+.rd-sub{font-size:12px;opacity:.7;margin-top:2px}
+.rd-metrics{display:flex;gap:1.5rem;padding:.875rem 1.125rem;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+.rd-metric{text-align:center}
+.rd-metric .v{font-size:22px;font-weight:800;line-height:1}
+.rd-metric .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+
+/* ── BUTTONS ── */
 .btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
-.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#002060}
+.btn-primary{background:var(--navy2);color:#fff}.btn-primary:hover{background:var(--navy)}
 .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-ghost:hover{background:var(--bg)}
 .btn-danger{background:var(--red-l);color:var(--red);border:1px solid #fca5a5}.btn-danger:hover{background:#fecaca}
 .btn-sm{padding:5px 11px;font-size:12px}
 
-/* MODAL */
+/* ── MODAL ── */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
-.modal{background:var(--surface);border-radius:15px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.2)}
+.modal{background:var(--surface);border-radius:15px;width:100%;max-width:660px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.2)}
 .modal-hdr{padding:1.125rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-hdr h2{font-size:16px;font-weight:700}
 .close-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
@@ -127,10 +153,8 @@ tbody tr:hover td{background:var(--surface2)}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 .fg input,.fg select,.fg textarea{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);background:var(--surface)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--navy2);background:var(--surface)}
 .fg textarea{resize:vertical;min-height:65px}
-/* datalist combo */
-.fg input[list]{background:var(--bg)}
 .form-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding-top:.625rem;margin-bottom:.625rem;border-top:1px solid var(--border)}
 .modal-foot{padding:.875rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface)}
 
@@ -138,31 +162,29 @@ tbody tr:hover td{background:var(--surface2)}
 .confirm-modal h3{font-size:16px;font-weight:700;margin-bottom:.5rem}
 .confirm-modal p{font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.5}
 
-/* ALERT BANNERS */
+/* ── ALERT BANNERS ── */
 .ab{border-radius:8px;padding:.625rem 1rem;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.875rem;border:1px solid}
 .ab-red{background:var(--red-l);color:#991b1b;border-color:#fca5a5}
 .ab-amber{background:var(--amber-l);color:#92400e;border-color:#fde68a}
 .ab button{background:transparent;border:none;cursor:pointer;color:inherit;text-decoration:underline;font-size:13px;margin-left:6px}
 
-/* HISTORIAL */
-.rhc{border:1px solid var(--border);border-radius:11px;margin-bottom:.875rem;overflow:hidden}
-.rhc-hdr{padding:.875rem 1.125rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rhc-name{font-size:15px;font-weight:700}
-.rhc-sub{font-size:11px;font-family:monospace;color:var(--muted);margin-top:2px}
-.rhc-right{display:flex;gap:1rem;align-items:center}
-.rhc-stat .sv{font-size:17px;font-weight:800;color:var(--accent);text-align:center}
-.rhc-stat .sl{font-size:10px;color:var(--muted)}
+/* ── ACTIVE FILTER PILL ── */
+.af-pill{background:var(--navy-l);color:var(--navy2);border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:.875rem}
+.af-pill button{background:transparent;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1}
 
-.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
+/* ── HISTORIAL ── */
+.rhc{border:1px solid var(--border);border-radius:11px;margin-bottom:.75rem;overflow:hidden}
+.rhc-hdr{padding:.875rem 1.125rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.rhc-name{font-size:15px;font-weight:700}.rhc-sub{font-size:11px;font-family:monospace;color:var(--muted);margin-top:2px}
+.rhc-right{display:flex;gap:.875rem;align-items:center}
+.rhc-s .sv{font-size:16px;font-weight:800;color:var(--navy2);text-align:center}.rhc-s .sl{font-size:10px;color:var(--muted)}
+
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
 .empty-icon{font-size:2.25rem;margin-bottom:.75rem;display:block}
-a.eml{color:var(--accent);text-decoration:none;font-size:11px}
+a.eml{color:var(--navy2);text-decoration:none;font-size:11px}
 a.eml:hover{text-decoration:underline}
-
-/* active filter pill */
-.active-filter{background:var(--accent-l);color:var(--accent);border:1px solid #bfdbfe;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
-.active-filter button{background:transparent;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1}
 </style>
 </head>
 <body>
@@ -173,15 +195,14 @@ a.eml:hover{text-decoration:underline}
     <div class="sb-sec">Panel</div>
     <button class="nav-item" id="nav-dashboard"   onclick="switchView('dashboard')"><span class="ic">📊</span> Resumen General</button>
     <button class="nav-item" id="nav-contratos"   onclick="switchView('contratos')"><span class="ic">📋</span> Lista de Clientes</button>
+    <button class="nav-item" id="nav-responsables" onclick="switchView('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="nav-item" id="nav-materias"    onclick="switchView('materias')"><span class="ic">📂</span> Materias</button>
     <button class="nav-item" id="nav-ruts"        onclick="switchView('ruts')"><span class="ic">👥</span> Historial por RUT</button>
     <div class="sb-sec">Filtros rápidos</div>
-    <button class="nav-item" id="nav-critico"     onclick="filterView('critico')"><span class="ic">🔴</span> Críticos <span class="nav-count red" id="nc-crit">—</span></button>
-    <button class="nav-item" id="nav-advertencia" onclick="filterView('advertencia')"><span class="ic">🟡</span> Advertencias <span class="nav-count amber" id="nc-adv">—</span></button>
-    <button class="nav-item"                      onclick="filterView('visados')"><span class="ic">✅</span> Visados <span class="nav-count" id="nc-vis">—</span></button>
-    <button class="nav-item"                      onclick="filterView('obs')"><span class="ic">💬</span> Con observación <span class="nav-count" id="nc-obs">—</span></button>
-    <div class="sb-sec">Operaciones</div>
-    <button class="nav-item" onclick="openModal()"><span class="ic">➕</span> Agregar Cliente</button>
+    <button class="nav-item" id="nav-critico"     onclick="filterView('critico')"><span class="ic">🔴</span> Críticos <span class="nc r" id="nc-crit">—</span></button>
+    <button class="nav-item" id="nav-advertencia" onclick="filterView('advertencia')"><span class="ic">🟡</span> Advertencias <span class="nc a" id="nc-adv">—</span></button>
+    <button class="nav-item"                      onclick="filterView('visados')"><span class="ic">✅</span> Visados <span class="nc g" id="nc-vis">—</span></button>
+    <button class="nav-item"                      onclick="filterView('obs')"><span class="ic">💬</span> Con observación <span class="nc" id="nc-obs">—</span></button>
   </div>
   <div class="sb-foot">
     <a class="back-link" href="/">← Portal de Consulta</a>
@@ -191,14 +212,12 @@ a.eml:hover{text-decoration:underline}
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="view-title">Resumen General</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo Registro</button>
-    </div>
+    <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo Registro</button>
   </div>
   <div class="content" id="view-content"><div class="spinner"></div></div>
 </div>
 
-<!-- Modal -->
+<!-- Modal Contrato -->
 <div class="backdrop" id="modal-wrap" style="display:none">
 <div class="modal">
   <div class="modal-hdr">
@@ -213,21 +232,18 @@ a.eml:hover{text-decoration:underline}
     <div class="form-row">
       <div class="fg">
         <label>Materia</label>
-        <input id="f-materia" list="materias-list" placeholder="Ej: Contrata, Comisión Nacional...">
-        <datalist id="materias-list"></datalist>
+        <input id="f-materia" list="mat-list" placeholder="Ej: Contrata, Comisión Nacional...">
+        <datalist id="mat-list"></datalist>
       </div>
       <div class="fg"><label>N° Seguimiento / Código</label><input id="f-codigo" placeholder="SEG-2025-001"></div>
     </div>
     <div class="form-row">
-      <div class="fg"><label>Responsable</label><input id="f-resp" placeholder="Nombre del responsable"></div>
+      <div class="fg">
+        <label>Responsable</label>
+        <input id="f-resp" list="resp-list" placeholder="Seleccionar o escribir...">
+        <datalist id="resp-list"></datalist>
+      </div>
       <div class="fg"><label>Correo Electrónico</label><input id="f-email" type="email" placeholder="contacto@email.cl"></div>
-    </div>
-    <div class="form-row one">
-      <div class="fg"><label>Descripción del Trámite</label><input id="f-desc" placeholder="Breve descripción del servicio"></div>
-    </div>
-    <div class="form-row">
-      <div class="fg"><label>Monto Total ($)</label><input id="f-monto" type="number" placeholder="0" min="0"></div>
-      <div class="fg"></div>
     </div>
     <div class="form-row">
       <div class="fg"><label>Fecha de Ingreso</label><input id="f-inicio" type="date"></div>
@@ -281,12 +297,37 @@ a.eml:hover{text-decoration:underline}
 </div>
 </div>
 
+<!-- Modal Responsable -->
+<div class="backdrop" id="modal-resp" style="display:none">
+<div class="modal" style="max-width:420px">
+  <div class="modal-hdr">
+    <h2>Agregar Responsable</h2>
+    <button class="close-btn" onclick="document.getElementById('modal-resp').style.display='none'">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row one">
+      <div class="fg"><label>Nombre completo *</label><input id="r-nombre" placeholder="Ej: Sandra González"></div>
+    </div>
+    <div class="form-row one">
+      <div class="fg"><label>Cargo</label><input id="r-cargo" placeholder="Ej: Abogada, Analista..."></div>
+    </div>
+    <div class="form-row one">
+      <div class="fg"><label>Correo electrónico</label><input id="r-email" type="email" placeholder="sandra@org.cl"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="document.getElementById('modal-resp').style.display='none'">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarResp()">✓ Agregar</button>
+  </div>
+</div>
+</div>
+
 <!-- Confirm Delete -->
 <div class="backdrop" id="confirm-wrap" style="display:none">
   <div class="confirm-modal">
-    <div style="font-size:2.25rem;margin-bottom:.75rem">🗑</div>
-    <h3>Eliminar registro</h3>
-    <p>¿Seguro que deseas eliminar este registro? No se puede deshacer.</p>
+    <div style="font-size:2rem;margin-bottom:.625rem">🗑</div>
+    <h3 id="confirm-title">Eliminar registro</h3>
+    <p id="confirm-msg">¿Seguro que deseas eliminar? No se puede deshacer.</p>
     <div style="display:flex;gap:8px;justify-content:center">
       <button class="btn btn-ghost" onclick="cancelDel()">Cancelar</button>
       <button class="btn btn-danger" onclick="confirmDel()">Sí, eliminar</button>
@@ -296,26 +337,24 @@ a.eml:hover{text-decoration:underline}
 
 <script>
 const ETAPAS=['Etapa 0','Etapa 1','Etapa 2','Etapa 3','Etapa 4'];
-let view='dashboard', editId=null, delId=null;
-let filterEstado='', filterRut='', filterMateria='', filterVisado='', filterObs='', searchQ='';
-let globalMaterias=[];
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let view='dashboard', editId=null, delId=null, delType='contrato';
+let filterEstado='', filterRut='', filterMateria='', filterVisado='', filterObs='', filterResp='', searchQ='';
+let globalMaterias=[], globalResps=[], activeRespCard=null;
+let CH={};
 
-/* URL params al cargar */
+/* URL params */
 (function(){
   const p=new URLSearchParams(window.location.search);
   const f=p.get('filter');
-  if(['critico','advertencia','en_proceso','completado','sin_efecto'].includes(f)){
-    view='contratos'; filterEstado=f;
-  } else if(f==='visados'){
-    view='contratos'; filterVisado='si';
-  } else if(f==='obs'){
-    view='contratos'; filterObs='1';
-  }
+  if(['critico','advertencia','en_proceso','completado','sin_efecto'].includes(f)){view='contratos';filterEstado=f;}
+  else if(f==='visados'){view='contratos';filterVisado='si';}
+  else if(f==='obs'){view='contratos';filterObs='1';}
 })();
 
 /* Utils */
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return`${p[2]}/${p[1]}/${p[0]}`;}
-function fmtMonto(m){return m?'$'+Number(m).toLocaleString('es-CL'):'—';}
+function initial(n){return n?n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2):'?';}
 function stgBar(e){return ETAPAS.map((_,i)=>`<div class="stg-seg ${i<e?'done':i===e?'cur':''}"></div>`).join('');}
 function badgeFull(c){
   if(c.alerta==='critico')     return`<span class="badge b-alert">⚠ Crítico</span>`;
@@ -324,45 +363,43 @@ function badgeFull(c){
   if(c.estado==='sin_efecto')  return`<span class="badge b-sinef">Sin efecto</span>`;
   return`<span class="badge b-proc">● En proceso</span>`;
 }
+function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function switchView(v){
-  view=v; filterEstado=''; filterRut=''; filterMateria=''; filterVisado=''; filterObs=''; searchQ='';
+  view=v;filterEstado='';filterRut='';filterMateria='';filterVisado='';filterObs='';filterResp='';searchQ='';activeRespCard=null;
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
   loadView();
 }
 function filterView(f){
-  view='contratos'; filterEstado=''; filterMateria=''; filterVisado=''; filterObs='';
-  if(f==='critico')      filterEstado='critico';
+  view='contratos';filterEstado='';filterMateria='';filterVisado='';filterObs='';filterResp='';
+  if(f==='critico')       filterEstado='critico';
   else if(f==='advertencia') filterEstado='advertencia';
-  else if(f==='en_proceso'||f==='completado'||f==='sin_efecto') filterEstado=f;
-  else if(f==='visados') filterVisado='si';
-  else if(f==='obs')     filterObs='1';
+  else if(['en_proceso','completado','sin_efecto'].includes(f)) filterEstado=f;
+  else if(f==='visados')  filterVisado='si';
+  else if(f==='obs')      filterObs='1';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos')?.classList.add('active');
   loadView();
 }
-function filterByMateria(m){
-  view='contratos'; filterEstado=''; filterVisado=''; filterObs=''; filterMateria=m; searchQ='';
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('nav-contratos')?.classList.add('active');
-  document.getElementById('view-title').textContent='Lista de Clientes';
-  renderContratos();
-}
+function filterByMateria(m){view='contratos';filterEstado='';filterVisado='';filterObs='';filterResp='';filterMateria=m;searchQ='';document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));document.getElementById('nav-contratos')?.classList.add('active');loadView();}
+function filterByResp(r){view='contratos';filterEstado='';filterVisado='';filterObs='';filterMateria='';filterResp=r;searchQ='';document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));document.getElementById('nav-contratos')?.classList.add('active');loadView();}
+function clearFilters(){filterEstado='';filterMateria='';filterVisado='';filterObs='';filterResp='';searchQ='';renderContratos();}
 
 function loadView(){
-  const titles={dashboard:'Resumen General',contratos:'Lista de Clientes',materias:'Materias',ruts:'Historial por RUT'};
+  const titles={dashboard:'Resumen General',contratos:'Lista de Clientes',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=titles[view]||'Panel';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
+  killCH();
   document.getElementById('view-content').innerHTML='<div class="spinner"></div>';
-  if(view==='dashboard')  renderDashboard();
+  if(view==='dashboard')     renderDashboard();
   else if(view==='contratos') renderContratos();
+  else if(view==='responsables') renderResponsables();
   else if(view==='materias')  renderMaterias();
   else if(view==='ruts')      renderRuts();
 }
 
-/* Load sidebar counts */
 async function loadSidebarCounts(){
   try{
     const s=await fetch('/api/stats').then(r=>r.json());
@@ -375,20 +412,22 @@ async function loadSidebarCounts(){
 
 /* ── DASHBOARD ── */
 async function renderDashboard(){
-  const [stats,all]=await Promise.all([
+  const [stats,all,cd]=await Promise.all([
     fetch('/api/stats').then(r=>r.json()),
     fetch('/api/contratos').then(r=>r.json()),
+    fetch('/api/chart-data').then(r=>r.json()),
   ]);
   const crits=all.filter(c=>c.alerta==='critico');
   const warns=all.filter(c=>c.alerta==='advertencia');
   const el=document.getElementById('view-content');
+
   el.innerHTML=`
   <div class="metrics">
     <div class="metric m-nav" onclick="switchView('contratos')">
-      <div class="metric-lbl">Total Clientes</div><div class="metric-val">${stats.total}</div><div class="metric-sub">Fichas en el sistema</div>
+      <div class="metric-lbl">Total Clientes</div><div class="metric-val">${stats.total}</div><div class="metric-sub">Todos los trámites</div>
     </div>
     <div class="metric m-amb" onclick="filterView('en_proceso')">
-      <div class="metric-lbl">En proceso</div><div class="metric-val">${stats.en_proceso}</div><div class="metric-sub">Trámites activos</div>
+      <div class="metric-lbl">En proceso</div><div class="metric-val">${stats.en_proceso}</div><div class="metric-sub">Click → ver lista</div>
     </div>
     <div class="metric m-grn" onclick="filterView('completado')">
       <div class="metric-lbl">Completados</div><div class="metric-val">${stats.completado}</div><div class="metric-sub">Casos cerrados</div>
@@ -397,29 +436,30 @@ async function renderDashboard(){
       <div class="metric-lbl">Alertas Críticas</div><div class="metric-val">${stats.alertas}</div><div class="metric-sub">≤ 7 días</div>
     </div>
     <div class="metric m-sft" onclick="filterView('advertencia')">
-      <div class="metric-lbl">Advertencias</div><div class="metric-val" style="color:var(--amber)">${stats.advertencias}</div><div class="metric-sub">≤ 20 días</div>
+      <div class="metric-lbl">Advertencias</div><div class="metric-val">${stats.advertencias}</div><div class="metric-sub">≤ 20 días</div>
     </div>
     <div class="metric m-vis" onclick="filterView('visados')">
-      <div class="metric-lbl">Visados</div><div class="metric-val">${stats.visados}</div><div class="metric-sub">Click → ver listado</div>
+      <div class="metric-lbl">✅ Visados</div><div class="metric-val">${stats.visados}</div><div class="metric-sub">Click → ver listado</div>
     </div>
     <div class="metric m-obs" onclick="filterView('obs')">
-      <div class="metric-lbl">Con observación</div><div class="metric-val">${stats.con_obs}</div><div class="metric-sub">Click → ver listado</div>
+      <div class="metric-lbl">💬 Con observación</div><div class="metric-val">${stats.con_obs}</div><div class="metric-sub">Click → ver listado</div>
     </div>
   </div>
 
   ${crits.length?`<div class="ab ab-red">⚠ <strong>${crits.length} contrato${crits.length!==1?'s':''} crítico${crits.length!==1?'s':''}</strong> — vencen en ≤7 días.<button onclick="filterView('critico')">Ver listado →</button></div>`:''}
-  ${warns.length?`<div class="ab ab-amber">⏰ <strong>${warns.length} contrato${warns.length!==1?'s':''}</strong> por vencer en los próximos 20 días.<button onclick="filterView('advertencia')">Ver listado →</button></div>`:''}
+  ${warns.length?`<div class="ab ab-amber">⏰ <strong>${warns.length}</strong> por vencer en ≤20 días.<button onclick="filterView('advertencia')">Ver →</button></div>`:''}
 
   ${crits.length||warns.length?`
   <div class="panel">
     <div class="panel-hdr"><span class="panel-title">🔴 Requieren atención urgente</span></div>
     <table>
-      <thead><tr><th>Cliente</th><th>RUT</th><th>Materia</th><th>Vence</th><th>Días</th><th>Correo</th><th></th></tr></thead>
+      <thead><tr><th>Cliente</th><th>RUT</th><th>Materia</th><th>Responsable</th><th>Vence</th><th>Días</th><th>Correo</th><th></th></tr></thead>
       <tbody>
       ${[...crits,...warns].map(c=>`<tr onclick="openModal(${c.id})">
         <td><strong>${c.nombre}</strong></td>
         <td style="font-family:monospace;font-size:11px">${c.rut}</td>
         <td>${c.materia||'—'}</td>
+        <td>${c.responsable||'—'}</td>
         <td>${fmtDate(c.fecha_fin)}</td>
         <td style="font-weight:800;color:${c.alerta==='critico'?'var(--red)':'var(--amber)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</td>
         <td>${c.email?`<a class="eml" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a>`:'—'}</td>
@@ -428,10 +468,70 @@ async function renderDashboard(){
       </tbody>
     </table>
   </div>`:`
-  <div class="panel"><div style="text-align:center;padding:2.5rem;color:var(--muted)">
-    <div style="font-size:2.25rem;margin-bottom:.625rem">✅</div>
-    <strong>Sin alertas vigentes</strong><p style="font-size:13px;margin-top:.25rem">Todos los trámites se encuentran al día.</p>
-  </div></div>`}`;
+  <div class="panel"><div style="text-align:center;padding:2rem;color:var(--muted)">
+    <div style="font-size:2rem;margin-bottom:.5rem">✅</div>
+    <strong>Sin alertas vigentes</strong><p style="font-size:12px;margin-top:.25rem">Todos los trámites se encuentran al día.</p>
+  </div></div>`}
+
+  <div class="charts-2">
+    <div class="chart-card">
+      <div class="chart-lbl">Ingresos por mes</div>
+      <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-lbl">Estados</div>
+      <div class="chart-wrap"><canvas id="ch-est"></canvas></div>
+    </div>
+  </div>
+
+  <div id="ultimos-wrap"></div>`;
+
+  /* Charts */
+  const nowM=new Date().getMonth();
+  CH.mes=new Chart(document.getElementById('ch-mes').getContext('2d'),{
+    type:'bar',
+    data:{labels:MESES,datasets:[{label:'Contratos',data:cd.by_month,
+      backgroundColor:cd.by_month.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),borderRadius:4,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
+  });
+  CH.est=new Chart(document.getElementById('ch-est').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['En proceso','Completado','Sin efecto'],
+      datasets:[{data:[stats.en_proceso,stats.completado,stats.sin_efecto],
+      backgroundColor:['#003082','#15803d','#9ca3af'],borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8,boxWidth:10}}}}
+  });
+
+  /* Últimos ingresados */
+  const recientes=await fetch('/api/recientes?n=8').then(r=>r.json());
+  const uw=document.getElementById('ultimos-wrap');
+  uw.innerHTML=`
+  <div class="panel">
+    <div class="panel-hdr">
+      <span class="panel-title">🕐 Últimos ingresados</span>
+      <button onclick="switchView('contratos')" style="background:transparent;border:none;cursor:pointer;color:var(--navy2);font-size:12px;font-weight:600">Ver todos →</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Cliente / RUT</th><th>Materia</th><th>Responsable</th><th>Etapas</th><th>Estado</th><th>Fecha Ingreso</th><th>Fecha Fin</th><th>Días</th></tr></thead>
+      <tbody>
+      ${recientes.map(c=>{
+        const d=c.dias_restantes;
+        return`<tr onclick="openModal(${c.id})">
+          <td><strong>${c.nombre}</strong><div style="font-size:11px;font-family:monospace;color:var(--muted)">${c.rut}</div></td>
+          <td style="font-size:12px">${c.materia||'—'}</td>
+          <td style="font-size:12px">${c.responsable||'—'}</td>
+          <td><div class="stg-bar">${stgBar(c.etapa)}</div><div style="font-size:9px;color:var(--muted);margin-top:2px">E${c.etapa}</div></td>
+          <td>${badgeFull(c)}</td>
+          <td style="font-size:11px;color:var(--muted)">${c.creado_en||'—'}</td>
+          <td style="font-size:11px">${fmtDate(c.fecha_fin)}</td>
+          <td>${d!==null?`<span style="font-size:11px;font-weight:700;color:${d<=7?'var(--red)':d<=20?'var(--amber)':'var(--muted)'}">${d<=0?'Venc':d+'d'}</span>`:'<span style="color:var(--soft)">—</span>'}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
 }
 
 /* ── CONTRATOS ── */
@@ -444,32 +544,30 @@ async function renderContratos(){
   if(filterMateria) url+='&materia='+encodeURIComponent(filterMateria);
   if(filterVisado)  url+='&visado='+filterVisado;
   if(filterObs)     url+='&obs='+filterObs;
+  if(filterResp)    url+='&responsable='+encodeURIComponent(filterResp);
   if(searchQ)       url+='&q='+encodeURIComponent(searchQ);
-
   const data=await fetch(url).then(r=>r.json());
   const el=document.getElementById('view-content');
 
-  // active filter label
   let activeLabel='';
-  if(filterMateria) activeLabel=`Materia: ${filterMateria}`;
+  if(filterResp) activeLabel=`Responsable: ${filterResp}`;
+  else if(filterMateria) activeLabel=`Materia: ${filterMateria}`;
   else if(filterVisado) activeLabel='Solo visados';
   else if(filterObs) activeLabel='Con observación';
   else if(filterEstado) activeLabel=filterEstado.replace('_',' ');
 
-  // materias para select dinámico
-  const materiaOptions=globalMaterias.map(m=>`<option value="${m}">${m}</option>`).join('');
+  const matOpts=globalMaterias.map(m=>`<option value="${m}">${m}</option>`).join('');
+  const respOpts=globalResps.map(r=>`<option value="${r.nombre}">${r.nombre}</option>`).join('');
 
   el.innerHTML=`
-  ${activeLabel?`<div style="margin-bottom:.875rem"><span class="active-filter">${activeLabel} <button onclick="clearFilters()">✕</button></span></div>`:''}
+  ${activeLabel?`<div><span class="af-pill">${activeLabel} <button onclick="clearFilters()">✕</button></span></div>`:''}
   <div class="panel">
     <div class="panel-hdr">
       <span class="panel-title">Todos los Trámites <span style="font-size:12px;font-weight:400;color:var(--muted)">(${data.length})</span></span>
-      <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo</button>
     </div>
     <div class="filter-row">
-      <input placeholder="Buscar por Nombre, RUT, materia, código..." value="${searchQ}"
-        oninput="searchQ=this.value;renderContratos()">
-      <select onchange="filterEstado=this.value;filterMateria='';filterVisado='';filterObs='';renderContratos()">
+      <input placeholder="Buscar por Nombre, RUT, materia, código..." value="${searchQ}" oninput="searchQ=this.value;renderContratos()">
+      <select onchange="filterEstado=this.value;filterMateria='';filterVisado='';filterObs='';filterResp='';renderContratos()">
         <option value="" ${!filterEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${filterEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${filterEstado==='completado'?'selected':''}>Completados</option>
@@ -477,15 +575,17 @@ async function renderContratos(){
         <option value="critico" ${filterEstado==='critico'?'selected':''}>🔴 Críticos</option>
         <option value="advertencia" ${filterEstado==='advertencia'?'selected':''}>🟡 Advertencias</option>
       </select>
-      <select onchange="filterMateria=this.value;filterEstado='';filterVisado='';filterObs='';renderContratos()">
-        <option value="">Todas las materias</option>
-        ${materiaOptions}
+      <select onchange="filterMateria=this.value;filterEstado='';filterVisado='';filterObs='';filterResp='';renderContratos()">
+        <option value="">Todas las materias</option>${matOpts}
       </select>
-      ${filterEstado||filterMateria||filterVisado||filterObs||searchQ?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Limpiar</button>`:''}
+      <select onchange="filterResp=this.value;filterEstado='';filterMateria='';filterVisado='';filterObs='';renderContratos()">
+        <option value="">Todos los responsables</option>${respOpts}
+      </select>
+      ${filterEstado||filterMateria||filterVisado||filterObs||filterResp||searchQ?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
     </div>
     ${!data.length?`<div class="empty"><span class="empty-icon">📭</span>Sin registros</div>`:`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Cliente / RUT</th><th>Materia</th><th>Etapas</th><th>Estado</th><th>Fecha Ingreso</th><th>Fecha Fin</th><th>Flags</th><th></th></tr></thead>
+      <thead><tr><th>Cliente / RUT</th><th>Materia</th><th>Responsable</th><th>Etapas</th><th>Estado</th><th>Fecha Ingreso</th><th>Fecha Fin</th><th>Flags</th><th></th></tr></thead>
       <tbody>
       ${data.map(c=>`<tr onclick="openModal(${c.id})">
         <td>
@@ -493,17 +593,12 @@ async function renderContratos(){
           <div style="font-size:11px;font-family:monospace;color:var(--muted)">${c.rut}</div>
           ${c.email?`<div><a class="eml" href="mailto:${c.email}" onclick="event.stopPropagation()">✉ ${c.email}</a></div>`:''}
         </td>
-        <td>
-          ${c.materia?`<span style="font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)" onclick="event.stopPropagation();filterByMateria('${c.materia}')" title="Filtrar por ${c.materia}">${c.materia}</span>`:'<span style="color:var(--soft)">—</span>'}
-        </td>
-        <td>
-          <div class="stg-bar">${stgBar(c.etapa)}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">${ETAPAS[c.etapa]}</div>
-        </td>
+        <td>${c.materia?`<span style="font-size:12px;font-weight:600;color:var(--navy2);cursor:pointer" onclick="event.stopPropagation();filterByMateria('${c.materia}')">${c.materia}</span>`:'<span style="color:var(--soft)">—</span>'}</td>
+        <td>${c.responsable?`<span style="font-size:12px;font-weight:600;color:var(--navy2);cursor:pointer" onclick="event.stopPropagation();filterByResp('${c.responsable}')">${c.responsable}</span>`:'<span style="color:var(--soft)">—</span>'}</td>
+        <td><div class="stg-bar">${stgBar(c.etapa)}</div><div style="font-size:9px;color:var(--muted);margin-top:2px">${ETAPAS[c.etapa]}</div></td>
         <td>${badgeFull(c)}</td>
         <td style="font-size:11px;color:var(--muted)">${c.creado_en||'—'}</td>
-        <td style="font-size:11px;white-space:nowrap">
-          ${fmtDate(c.fecha_fin)}
+        <td style="font-size:11px;white-space:nowrap">${fmtDate(c.fecha_fin)}
           ${c.dias_restantes!==null&&c.estado==='en_proceso'?`<div style="font-size:10px;color:${c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</div>`:''}
         </td>
         <td onclick="event.stopPropagation()">
@@ -514,9 +609,9 @@ async function renderContratos(){
         </td>
         <td onclick="event.stopPropagation()">
           <div style="display:flex;gap:3px">
-            ${c.email?`<a class="act-btn mail" href="mailto:${c.email}" title="Enviar correo">✉</a>`:''}
+            ${c.email?`<a class="act-btn mail" href="mailto:${c.email}">✉</a>`:''}
             <button class="act-btn" onclick="openModal(${c.id})">✏</button>
-            <button class="act-btn del" onclick="askDel(${c.id})">🗑</button>
+            <button class="act-btn del" onclick="askDel(${c.id},'contrato')">🗑</button>
           </div>
         </td>
       </tr>`).join('')}
@@ -524,66 +619,144 @@ async function renderContratos(){
     </table></div>`}
   </div>`;
 
-  // set materia select value
-  const sel=el.querySelector('select:nth-child(3)');
-  if(sel&&filterMateria) sel.value=filterMateria;
+  // set selects
+  const sels=el.querySelectorAll('.filter-row select');
+  if(filterMateria&&sels[1]) sels[1].value=filterMateria;
+  if(filterResp&&sels[2]) sels[2].value=filterResp;
 }
 
-function clearFilters(){filterEstado='';filterMateria='';filterVisado='';filterObs='';searchQ='';renderContratos();}
+/* ── RESPONSABLES VIEW ── */
+async function renderResponsables(){
+  const [resps, cd]=await Promise.all([
+    fetch('/api/responsables').then(r=>r.json()),
+    fetch('/api/chart-data').then(r=>r.json()),
+  ]);
+  globalResps=resps;
+  const el=document.getElementById('view-content');
 
-/* ── MATERIAS VIEW ── */
+  /* Stats por responsable (usando contratos) */
+  const allC=await fetch('/api/contratos').then(r=>r.json());
+
+  el.innerHTML=`
+  <div class="resp-grid" id="resp-grid">
+    ${resps.map(r=>{
+      const mine=allC.filter(c=>c.responsable===r.nombre);
+      const crits=mine.filter(c=>c.alerta==='critico').length;
+      const proc=mine.filter(c=>c.estado==='en_proceso').length;
+      const done=mine.filter(c=>c.estado==='completado').length;
+      return`<div class="resp-card" id="rc-${r.id}" onclick="showRespDetail('${r.nombre}')">
+        <button class="rc-del" onclick="event.stopPropagation();askDel(${r.id},'responsable','${r.nombre}')" title="Eliminar">✕</button>
+        <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:.625rem">
+          <div class="rc-avatar">${initial(r.nombre)}</div>
+          <div>
+            <div class="rc-name">${r.nombre}</div>
+            <div class="rc-cargo">${r.cargo||'Sin cargo'}</div>
+          </div>
+        </div>
+        <div class="rc-stats">
+          <div class="rc-stat"><div class="sv" style="color:var(--navy2)">${mine.length}</div><div class="sl">Total</div></div>
+          <div class="rc-stat"><div class="sv" style="color:var(--amber)">${proc}</div><div class="sl">En proc.</div></div>
+          <div class="rc-stat"><div class="sv" style="color:var(--red)">${crits}</div><div class="sl">Críticos</div></div>
+          <div class="rc-stat"><div class="sv" style="color:var(--green)">${done}</div><div class="sl">Listos</div></div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="add-resp-card" onclick="document.getElementById('modal-resp').style.display='flex'">
+      <span>➕</span><p>Agregar responsable</p>
+    </div>
+  </div>
+  <div id="resp-detail-wrap"></div>`;
+}
+
+async function showRespDetail(nombre){
+  // toggle active card
+  document.querySelectorAll('.resp-card').forEach(c=>c.classList.remove('active-card'));
+  const s=await fetch(`/api/responsable-stats/${encodeURIComponent(nombre)}`).then(r=>r.json());
+  const wrap=document.getElementById('resp-detail-wrap');
+  const critsC=s.contratos.filter(c=>c.alerta==='critico');
+  const warnsC=s.contratos.filter(c=>c.alerta==='advertencia');
+  wrap.innerHTML=`
+  <div class="resp-detail">
+    <div class="rd-hdr">
+      <div class="rd-avatar">${initial(nombre)}</div>
+      <div>
+        <div class="rd-name">${nombre}</div>
+        <div class="rd-sub">Resumen de trámites asignados</div>
+      </div>
+      <button onclick="filterByResp('${nombre}')" class="btn btn-ghost btn-sm" style="margin-left:auto;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);color:#fff">Ver todos →</button>
+    </div>
+    <div class="rd-metrics">
+      <div class="rd-metric"><div class="v" style="color:var(--navy2)">${s.total}</div><div class="l">Total</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--amber)">${s.en_proceso}</div><div class="l">En proceso</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--red)">${s.criticos}</div><div class="l">Críticos</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--amber)">${s.advertencias}</div><div class="l">Advertencias</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--green)">${s.completado}</div><div class="l">Completados</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--purple)">${s.visados}</div><div class="l">Visados</div></div>
+      <div class="rd-metric"><div class="v" style="color:var(--amber)">${s.con_obs}</div><div class="l">Con obs.</div></div>
+    </div>
+    ${critsC.length?`<div class="ab ab-red" style="margin:1rem 1.125rem .5rem">⚠ <strong>${critsC.length} crítico${critsC.length!==1?'s':''}</strong> asignado${critsC.length!==1?'s':''} a ${nombre}</div>`:''}
+    ${warnsC.length?`<div class="ab ab-amber" style="margin:.5rem 1.125rem">⏰ <strong>${warnsC.length}</strong> por vencer</div>`:''}
+    ${s.contratos.length?`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Cliente / RUT</th><th>Materia</th><th>Etapas</th><th>Estado</th><th>Fecha Fin</th><th>Días</th></tr></thead>
+      <tbody>
+      ${s.contratos.map(c=>`<tr onclick="openModal(${c.id})">
+        <td><strong>${c.nombre}</strong><div style="font-size:11px;font-family:monospace;color:var(--muted)">${c.rut}</div></td>
+        <td style="font-size:12px">${c.materia||'—'}</td>
+        <td><div class="stg-bar">${stgBar(c.etapa)}</div></td>
+        <td>${badgeFull(c)}</td>
+        <td style="font-size:11px">${fmtDate(c.fecha_fin)}</td>
+        <td>${c.dias_restantes!==null?`<span style="font-size:11px;font-weight:700;color:${c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</span>`:'—'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`:`<div class="empty" style="padding:1.5rem">Sin trámites asignados</div>`}
+  </div>`;
+  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ── MATERIAS ── */
 async function renderMaterias(){
   const cd=await fetch('/api/chart-data').then(r=>r.json());
-  const el=document.getElementById('view-content');
   const mats=cd.materias||[];
   const max=mats.length?mats[0].count:1;
+  const el=document.getElementById('view-content');
 
   el.innerHTML=`
   <div class="panel">
-    <div class="panel-hdr">
-      <span class="panel-title">📂 Materias — Cuenta por tipo</span>
-      <span style="font-size:12px;color:var(--muted)">${mats.length} tipos distintos</span>
-    </div>
-    <div style="padding:1rem 1.25rem">
-      ${!mats.length?`<div class="empty"><span class="empty-icon">📂</span>Sin materias registradas</div>`:
-      mats.map(m=>`
-        <div class="mat-bar-item" onclick="filterByMateria('${m.nombre}')" title="Ver contratos de ${m.nombre}">
-          <div class="mat-bar-label">${m.nombre}</div>
-          <div class="mat-bar-track"><div class="mat-bar-fill" style="width:${Math.round(m.count/max*100)}%"></div></div>
-          <div class="mat-bar-count">${m.count}</div>
-        </div>`).join('')}
+    <div class="panel-hdr"><span class="panel-title">📂 Materias — Cuenta por tipo</span><span style="font-size:12px;color:var(--muted)">${mats.length} tipos</span></div>
+    <div style="padding:.875rem 1.125rem">
+      ${!mats.length?`<div class="empty"><span class="empty-icon">📂</span>Sin materias</div>`:
+      mats.map(m=>`<div class="mat-item" onclick="filterByMateria('${m.nombre}')">
+        <div class="mat-label">${m.nombre}</div>
+        <div class="mat-track"><div class="mat-fill" style="width:${Math.round(m.count/max*100)}%"></div></div>
+        <div class="mat-count">${m.count}</div>
+      </div>`).join('')}
     </div>
   </div>
-
-  <div class="charts-2col">
+  <div class="charts-2">
     <div class="chart-card">
       <div class="chart-lbl">Distribución de materias (top 10)</div>
       <div class="chart-wrap tall"><canvas id="ch-mat"></canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-lbl">Ingresos por mes</div>
-      <div class="chart-wrap"><canvas id="ch-mes"></canvas></div>
+      <div class="chart-wrap"><canvas id="ch-mes2"></canvas></div>
     </div>
   </div>`;
 
-  // Doughnut materias top 10
   const top10=mats.slice(0,10);
-  const colors=['#003082','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd','#16a34a','#d97706','#dc2626','#6d28d9'];
-  new Chart(document.getElementById('ch-mat').getContext('2d'),{
+  const colors=['#002060','#003082','#1d4ed8','#2563eb','#3b82f6','#60a5fa','#15803d','#d97706','#b91c1c','#6d28d9'];
+  CH.mat=new Chart(document.getElementById('ch-mat').getContext('2d'),{
     type:'doughnut',
-    data:{labels:top10.map(m=>m.nombre),datasets:[{data:top10.map(m=>m.count),backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    data:{labels:top10.map(m=>m.nombre),datasets:[{data:top10.map(m=>m.count),backgroundColor:colors,borderWidth:0,hoverOffset:5}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
-      plugins:{legend:{position:'right',labels:{font:{size:10},padding:8,boxWidth:10}}}}
+      plugins:{legend:{position:'right',labels:{font:{size:10},padding:6,boxWidth:10}}}}
   });
-
-  // Bar por mes
-  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const nowM=new Date().getMonth();
-  new Chart(document.getElementById('ch-mes').getContext('2d'),{
+  CH.mes2=new Chart(document.getElementById('ch-mes2').getContext('2d'),{
     type:'bar',
     data:{labels:MESES,datasets:[{label:'Contratos',data:cd.by_month,
-      backgroundColor:cd.by_month.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),
-      borderRadius:4,borderWidth:0}]},
+      backgroundColor:cd.by_month.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),borderRadius:4,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
   });
@@ -594,56 +767,40 @@ async function renderRuts(){
   const data=await fetch('/api/por-rut').then(r=>r.json());
   const el=document.getElementById('view-content');
   if(!data.length){el.innerHTML='<div class="empty"><span class="empty-icon">👥</span>Sin registros</div>';return;}
-  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-    <span style="font-size:13px;color:var(--muted)">${data.length} cliente${data.length!==1?'s':''} registrados</span>
-    <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo</button>
-  </div>`+
-  data.map(r=>`
+  el.innerHTML=data.map(r=>`
   <div class="rhc">
     <div class="rhc-hdr">
-      <div>
-        <div class="rhc-name">${r.nombre}</div>
-        <div class="rhc-sub">${r.rut}${r.materia?` · ${r.materia}`:''}</div>
-      </div>
+      <div><div class="rhc-name">${r.nombre}</div><div class="rhc-sub">${r.rut}${r.materia?` · ${r.materia}`:''}</div></div>
       <div class="rhc-right">
-        <div class="rhc-stat"><div class="sv">${fmtMonto(r.monto)}</div><div class="sl">Inversión Total</div></div>
-        <div class="rhc-stat"><div class="sv">${r.count}</div><div class="sl">${r.count===1?'Trámite':'Trámites'}</div></div>
+        <div class="rhc-s"><div class="sv">${r.count}</div><div class="sl">${r.count===1?'Trámite':'Trámites'}</div></div>
         <button class="btn btn-ghost btn-sm" onclick="goHist('${r.rut}')">Ver historial →</button>
       </div>
     </div>
   </div>`).join('');
 }
-function goHist(rut){filterRut=rut;filterEstado='';filterMateria='';filterVisado='';filterObs='';searchQ='';view='contratos';loadView();}
+function goHist(rut){filterRut=rut;filterEstado='';filterMateria='';filterVisado='';filterObs='';filterResp='';searchQ='';view='contratos';loadView();}
 
-/* ── MODAL ── */
+/* ── MODAL CONTRATO ── */
 async function openModal(id=null){
   editId=id;
   document.getElementById('modal-title').textContent=id?'Editar Registro':'Nuevo Registro';
-  // Populate datalist
-  const dl=document.getElementById('materias-list');
-  dl.innerHTML=globalMaterias.map(m=>`<option value="${m}">`).join('');
+  // datalists
+  document.getElementById('mat-list').innerHTML=globalMaterias.map(m=>`<option value="${m}">`).join('');
+  document.getElementById('resp-list').innerHTML=globalResps.map(r=>`<option value="${r.nombre}">`).join('');
   const f=v=>document.getElementById(v);
   if(id){
     const c=await fetch(`/api/contratos/${id}`).then(r=>r.json());
-    f('f-rut').value     =c.rut||'';
-    f('f-nombre').value  =c.nombre||'';
-    f('f-materia').value =c.materia||'';
-    f('f-codigo').value  =c.codigo||'';
-    f('f-desc').value    =c.descripcion||'';
-    f('f-resp').value    =c.responsable||'';
-    f('f-email').value   =c.email||'';
-    f('f-monto').value   =c.monto||'';
-    f('f-inicio').value  =c.fecha_inicio||'';
-    f('f-fin').value     =c.fecha_fin||'';
-    f('f-etapa').value   =c.etapa;
-    f('f-estado').value  =c.estado;
-    f('f-pago').value    =c.pago_imprevisto?'true':'false';
-    f('f-visado').value  =c.visado;
-    f('f-devuelto').value=c.devuelto?'true':'false';
-    f('f-obs-yn').value  =c.tiene_observacion?'true':'false';
-    f('f-obs').value     =c.observaciones||'';
+    f('f-rut').value    =c.rut||'';      f('f-nombre').value  =c.nombre||'';
+    f('f-materia').value=c.materia||'';  f('f-codigo').value  =c.codigo||'';
+    f('f-resp').value   =c.responsable||''; f('f-email').value=c.email||'';
+    f('f-inicio').value =c.fecha_inicio||''; f('f-fin').value =c.fecha_fin||'';
+    f('f-etapa').value  =c.etapa;        f('f-estado').value  =c.estado;
+    f('f-pago').value   =c.pago_imprevisto?'true':'false';
+    f('f-visado').value =c.visado;       f('f-devuelto').value=c.devuelto?'true':'false';
+    f('f-obs-yn').value =c.tiene_observacion?'true':'false';
+    f('f-obs').value    =c.observaciones||'';
   } else {
-    ['f-rut','f-nombre','f-materia','f-codigo','f-desc','f-resp','f-email','f-monto','f-inicio','f-fin','f-obs']
+    ['f-rut','f-nombre','f-materia','f-codigo','f-resp','f-email','f-inicio','f-fin','f-obs']
       .forEach(id=>f(id).value='');
     f('f-etapa').value='0'; f('f-estado').value='en_proceso';
     f('f-pago').value='false'; f('f-visado').value='pendiente';
@@ -658,8 +815,7 @@ async function guardar(){
   const body={
     rut:f('f-rut').trim(), nombre:f('f-nombre').trim(),
     materia:f('f-materia').trim(), codigo:f('f-codigo').trim(),
-    descripcion:f('f-desc').trim(), responsable:f('f-resp').trim(),
-    email:f('f-email').trim(), monto:Number(f('f-monto'))||0,
+    responsable:f('f-resp').trim(), email:f('f-email').trim(),
     fecha_inicio:f('f-inicio'), fecha_fin:f('f-fin'),
     etapa:Number(f('f-etapa')), estado:f('f-estado'),
     pago_imprevisto:f('f-pago')==='true', visado:f('f-visado'),
@@ -670,33 +826,62 @@ async function guardar(){
   const url=editId?`/api/contratos/${editId}`:'/api/contratos';
   const method=editId?'PUT':'POST';
   const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(res.ok){
-    closeModal(); loadView(); loadSidebarCounts();
-    // update materias list
-    const cd=await fetch('/api/chart-data').then(r=>r.json());
-    globalMaterias=[...new Set(cd.materias.map(m=>m.nombre))];
-  } else {
-    const e=await res.json(); alert(e.error||'Error al guardar');
-  }
+  if(res.ok){closeModal();await refreshGlobals();loadView();loadSidebarCounts();}
+  else{const e=await res.json();alert(e.error||'Error al guardar');}
 }
 
-function askDel(id){delId=id;document.getElementById('confirm-wrap').style.display='flex';}
+/* ── MODAL RESPONSABLE ── */
+async function guardarResp(){
+  const nombre=document.getElementById('r-nombre').value.trim();
+  const cargo=document.getElementById('r-cargo').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+  const res=await fetch('/api/responsables',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({nombre,cargo,email})});
+  if(res.ok){
+    document.getElementById('modal-resp').style.display='none';
+    ['r-nombre','r-cargo','r-email'].forEach(id=>document.getElementById(id).value='');
+    await refreshGlobals(); renderResponsables();
+  } else {const e=await res.json();alert(e.error||'Error');}
+}
+
+/* ── DELETE ── */
+function askDel(id,type='contrato',label=''){
+  delId=id; delType=type;
+  document.getElementById('confirm-title').textContent=type==='responsable'?'Eliminar responsable':'Eliminar registro';
+  document.getElementById('confirm-msg').textContent=type==='responsable'
+    ?`¿Eliminar al responsable "${label}"? Sus contratos no se eliminarán.`
+    :'¿Seguro que deseas eliminar este registro? No se puede deshacer.';
+  document.getElementById('confirm-wrap').style.display='flex';
+}
 function cancelDel(){delId=null;document.getElementById('confirm-wrap').style.display='none';}
 async function confirmDel(){
   if(!delId)return;
-  await fetch(`/api/contratos/${delId}`,{method:'DELETE'});
-  cancelDel(); loadView(); loadSidebarCounts();
+  const url=delType==='responsable'?`/api/responsables/${delId}`:`/api/contratos/${delId}`;
+  await fetch(url,{method:'DELETE'});
+  cancelDel(); await refreshGlobals(); loadView(); loadSidebarCounts();
 }
 
+/* ── Refresh globals ── */
+async function refreshGlobals(){
+  try{
+    const [cd,resps]=await Promise.all([
+      fetch('/api/chart-data').then(r=>r.json()),
+      fetch('/api/responsables').then(r=>r.json()),
+    ]);
+    globalMaterias=[...new Set((cd.materias||[]).map(m=>m.nombre))];
+    globalResps=resps;
+  }catch(e){}
+}
+
+/* Backdrop click */
 document.getElementById('modal-wrap').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('modal-resp').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
 document.getElementById('confirm-wrap').addEventListener('click',function(e){if(e.target===this)cancelDel();});
 
 /* Init */
 (async()=>{
-  try{
-    const cd=await fetch('/api/chart-data').then(r=>r.json());
-    globalMaterias=[...new Set((cd.materias||[]).map(m=>m.nombre))];
-  }catch(e){}
+  await refreshGlobals();
   await loadSidebarCounts();
   loadView();
 })();
