@@ -194,7 +194,7 @@ a.eml:hover{text-decoration:underline}
   <div class="sb-nav">
     <div class="sb-sec">Panel</div>
     <button class="nav-item" id="nav-dashboard"   onclick="switchView('dashboard')"><span class="ic">📊</span> Resumen General</button>
-    <button class="nav-item" id="nav-contratos"   onclick="switchView('contratos')"><span class="ic">📋</span> Lista de Clientes</button>
+    <button class="nav-item" id="nav-contratos"   onclick="switchView('contratos')"><span class="ic">📋</span> Lista</button>
     <button class="nav-item" id="nav-responsables" onclick="switchView('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="nav-item" id="nav-materias"    onclick="switchView('materias')"><span class="ic">📂</span> Materias</button>
     <button class="nav-item" id="nav-ruts"        onclick="switchView('ruts')"><span class="ic">👥</span> Historial por RUT</button>
@@ -387,7 +387,7 @@ function filterByResp(r){view='contratos';filterEstado='';filterVisado='';filter
 function clearFilters(){filterEstado='';filterMateria='';filterVisado='';filterObs='';filterResp='';searchQ='';renderContratos();}
 
 function loadView(){
-  const titles={dashboard:'Resumen General',contratos:'Lista de Clientes',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const titles={dashboard:'Resumen General',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=titles[view]||'Panel';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
