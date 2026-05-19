@@ -393,6 +393,13 @@ def api_eliminar_responsable(id):
 
 with app.app_context():
     db.create_all()
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text("ALTER TABLE contratos ADD COLUMN IF NOT EXISTS retrasado BOOLEAN DEFAULT FALSE"))
+            conn.execute(db.text("ALTER TABLE contratos ADD COLUMN IF NOT EXISTS etapas_json TEXT DEFAULT '[]'"))
+            conn.commit()
+    except Exception as e:
+        print(f"Auto-migracion: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)
