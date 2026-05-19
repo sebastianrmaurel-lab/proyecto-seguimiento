@@ -54,20 +54,27 @@ class Contrato(db.Model):
     etapas_json       = db.Column(db.Text, default='[]')
 
     def get_etapas(self):
+        DEFAULT = [
+            {'nombre': 'Etapa 0', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
+            {'nombre': 'Etapa 1', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
+            {'nombre': 'Etapa 2', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
+            {'nombre': 'Etapa 3', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
+            {'nombre': 'Etapa 4', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
+        ]
         try:
             etapas = json.loads(self.etapas_json or '[]')
-            # Asegurar estructura por defecto 5 etapas
             if not etapas:
-                etapas = [
-                    {'nombre': 'Etapa 0', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
-                    {'nombre': 'Etapa 1', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
-                    {'nombre': 'Etapa 2', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
-                    {'nombre': 'Etapa 3', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
-                    {'nombre': 'Etapa 4', 'completada': False, 'fecha': '', 'link': '', 'nota': ''},
-                ]
+                return DEFAULT
+            # ensure all fields exist
+            for e in etapas:
+                e.setdefault('nombre', 'Etapa')
+                e.setdefault('completada', False)
+                e.setdefault('fecha', '')
+                e.setdefault('link', '')
+                e.setdefault('nota', '')
             return etapas
         except:
-            return []
+            return DEFAULT
 
     def etapa_actual(self):
         etapas = self.get_etapas()

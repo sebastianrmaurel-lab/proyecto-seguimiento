@@ -413,8 +413,13 @@ function badgeFull(c){
 function retBadge(c){return c.retrasado?`<span class="badge b-ret">⏳ Retrasado</span>`:''}
 function etapasResumen(etapas){
   try{
-    if(!etapas||!etapas.length) return '—';
-    return etapas.map(e=>`<span class="etapa-chip ${e.completada?'ec-done':'ec-pend'}">${e.completada?'✓':''} ${e.nombre||''}</span>`).join('');
+    if(!etapas||!etapas.length) return '<span style="color:var(--soft);font-size:11px">Sin etapas</span>';
+    const anyDone = etapas.some(e=>e.completada);
+    if(!anyDone) return '<span style="color:var(--soft);font-size:11px">E0·E1·E2·E3·E4</span>';
+    return etapas.map(e=>{
+      const link = e.link?`<a href="${e.link}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;margin-left:2px" title="Abrir link">🔗</a>`:'';
+      return `<span class="etapa-chip ${e.completada?'ec-done':'ec-pend'}">${e.completada?'✓':''} ${e.nombre||''}${link}</span>`;
+    }).join('');
   }catch(e){return '—';}
 }
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}

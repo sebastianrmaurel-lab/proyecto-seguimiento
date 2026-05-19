@@ -473,7 +473,7 @@ async function loadRecientes(){
         return`<tr onclick="goAdmin('')">
           <td class="name-cell"><strong>${c.nombre}</strong><div class="rut">${c.rut}</div></td>
           <td style="font-family:monospace;font-size:11px">${c.codigo||'—'}</td>
-          <td><div class="stg">${stgMini(c.etapa)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">E${c.etapa}</div></td>
+          <td><div class="stg">${stgMini(c.etapa_actual||0)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">E${c.etapa_actual||0}</div></td>
           <td>${badgeE(c)}</td>
           <td style="font-size:11px;color:var(--muted)">${c.creado_en||'—'}</td>
           <td style="font-size:11px">${fmtDate(c.fecha_fin)}</td>
@@ -501,7 +501,7 @@ async function buscarRut(){
           ${badgeE(c)}
         </div>
         <div class="rut-card-body">
-          <div class="rsb">${['','','','',''].map((_,i)=>`<div class="rs ${i<c.etapa?'d':i===c.etapa?'a':''}"></div>`).join('')}</div>
+          <div class="rsb">${(c.etapas&&c.etapas.length?c.etapas:Array(5).fill({completada:false})).map((e,i)=>`<div class="rs ${e.completada?'d':i===(c.etapa_actual||0)?'a':''}"></div>`).join('')}</div>
           <div class="rc-flags">
             <span class="rf ${c.visado==='si'?'ok':c.visado==='no'?'bad':''}">${c.visado==='si'?'✓ Visado':c.visado==='no'?'✗ Visado':'Vis. pend.'}</span>
             ${c.devuelto?`<span class="rf ok">↩ Dev.</span>`:''}
