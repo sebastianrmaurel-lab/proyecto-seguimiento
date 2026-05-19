@@ -4,7 +4,10 @@ from datetime import datetime, date
 import os, json, base64, hashlib
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'seguimiento-secret-2025')
+app.secret_key = os.environ.get('SECRET_KEY', 'seguimiento-secret-2025-fixed')
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 dias
 
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///seguimiento.db')
 if DATABASE_URL.startswith("postgres://"):
@@ -137,6 +140,7 @@ def login():
     if request.method == 'POST':
         pwd = request.json.get('password','') if request.is_json else request.form.get('password','')
         if pwd == ADMIN_PASSWORD:
+            session.permanent = True
             session['auth'] = True
             return jsonify({'ok': True}) if request.is_json else redirect('/admin')
         return jsonify({'error': 'Contraseña incorrecta'}), 401
@@ -393,13 +397,18 @@ def api_eliminar_responsable(id):
 
 with app.app_context():
     db.create_all()
-    try:
-        with db.engine.connect() as conn:
-            conn.execute(db.text("ALTER TABLE contratos ADD COLUMN IF NOT EXISTS retrasado BOOLEAN DEFAULT FALSE"))
-            conn.execute(db.text("ALTER TABLE contratos ADD COLUMN IF NOT EXISTS etapas_json TEXT DEFAULT '[]'"))
-            conn.commit()
-    except Exception as e:
-        print(f"Auto-migracion: {e}")
+    # Auto-migracion columnas nuevas
+    migrations = [
+        "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS retrasado BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS etapas_json TEXT DEFAULT '[]'",
+    ]
+    for sql in migrations:
+        try:
+            with db.engine.begin() as conn:
+                conn.execute(db.text(sql))
+            print(f"Migracion OK: {sql[:50]}")
+        except Exception as e:
+            print(f"Migracion skip: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)
