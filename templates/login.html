@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso — Seguimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f0efe9;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e5e3dc;border-radius:16px;padding:2.5rem;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.logo{font-family:'DM Serif Display',serif;font-size:22px;color:#18180f;text-align:center;margin-bottom:.375rem}
+.logo span{display:inline-block;width:10px;height:10px;border-radius:50%;background:#002060;margin-right:8px;vertical-align:middle}
+.sub{text-align:center;font-size:13px;color:#6b6858;margin-bottom:2rem}
+label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b6858;display:block;margin-bottom:5px}
+input{width:100%;border:1.5px solid #e5e3dc;border-radius:9px;padding:10px 13px;font-size:14px;font-family:'Inter',sans-serif;outline:none;background:#f0efe9;color:#18180f;transition:border-color .15s;margin-bottom:1rem}
+input:focus{border-color:#002060;background:#fff}
+button{width:100%;background:#002060;color:#fff;border:none;border-radius:9px;padding:11px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s}
+button:hover{background:#003082}
+.err{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:1rem;display:none}
+.pub{text-align:center;margin-top:1rem;font-size:12px;color:#9b9888}
+.pub a{color:#002060;text-decoration:none}
+.pub a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span></span>Seguimiento</div>
+  <div class="sub">Acceso a administración</div>
+  <div class="err" id="err">Contraseña incorrecta</div>
+  <label>Contraseña</label>
+  <input type="password" id="pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">Ingresar</button>
+  <div class="pub"><a href="/">← Volver al portal público</a></div>
+</div>
+<script>
+async function login(){
+  const pwd = document.getElementById('pwd').value;
+  const res = await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
+  if(res.ok){ window.location.href='/admin'; }
+  else{ document.getElementById('err').style.display='block'; }
+}
+</script>
+</body>
+</html>
