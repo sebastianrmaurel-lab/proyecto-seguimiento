@@ -412,8 +412,10 @@ function badgeFull(c){
 }
 function retBadge(c){return c.retrasado?`<span class="badge b-ret">⏳ Retrasado</span>`:''}
 function etapasResumen(etapas){
-  if(!etapas||!etapas.length) return '—';
-  return etapas.map(e=>`<span class="etapa-chip ${e.completada?'ec-done':'ec-pend'}">${e.completada?'✓':''} ${e.nombre}</span>`).join('');
+  try{
+    if(!etapas||!etapas.length) return '—';
+    return etapas.map(e=>`<span class="etapa-chip ${e.completada?'ec-done':'ec-pend'}">${e.completada?'✓':''} ${e.nombre||''}</span>`).join('');
+  }catch(e){return '—';}
 }
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
@@ -469,15 +471,19 @@ async function loadCounts(){
 
 /* ── DASHBOARD ── */
 async function renderDashboard(){
-  const [stats,all,cd,rec]=await Promise.all([
-    fetch('/api/stats').then(r=>r.json()),
-    fetch('/api/contratos').then(r=>r.json()),
-    fetch('/api/chart-data').then(r=>r.json()),
-    fetch('/api/recientes?n=8').then(r=>r.json()),
-  ]);
+  const el=document.getElementById('vc');
+  let stats,all,cd,rec;
+  try{
+    stats = await fetch('/api/stats').then(r=>{if(!r.ok)throw new Error(r.status);return r.json();});
+    all   = await fetch('/api/contratos').then(r=>r.json());
+    cd    = await fetch('/api/chart-data').then(r=>r.json());
+    rec   = await fetch('/api/recientes?n=8').then(r=>r.json());
+  }catch(e){
+    el.innerHTML='<div class="empty">❌ Error al cargar. <button onclick="loadView()" style="border:none;background:transparent;color:var(--navy2);cursor:pointer;text-decoration:underline;font-size:12px">Reintentar</button></div>';
+    console.error('Dashboard error:',e);return;
+  }
   const crits=all.filter(c=>c.alerta==='critico');
   const warns=all.filter(c=>c.alerta==='advertencia');
-  const el=document.getElementById('vc');
 
   el.innerHTML=`
   <div class="metrics">
@@ -856,7 +862,7 @@ function showTab(t){
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   document.getElementById(t).classList.add('active');
   const tabs=document.querySelectorAll('.tab');
-  const tabMap={t-datos:0,'t-etapas':1,'t-adjuntos':2,'t-historial':3};
+  const tabMap={'t-datos':0,'t-etapas':1,'t-adjuntos':2,'t-historial':3};
   tabs[tabMap[t]]?.classList.add('active');
 }
 
