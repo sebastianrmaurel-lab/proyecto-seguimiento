@@ -472,7 +472,7 @@ async function loadCounts(){
     document.getElementById('nc-obs').textContent=s.con_obs;
     document.getElementById('nc-ret').textContent=s.retrasados;
     document.getElementById('nc-dev').textContent=s.devueltos||0;
-    document.getElementById('nc-imp').textContent=s.imprevistos||0;
+    document.getElementById('nc-imp').textContent=s.imprevisto||0;
   }catch(e){}
 }
 
@@ -504,7 +504,7 @@ async function renderDashboard(){
     <div class="metric m-v" onclick="fv('visados')"><div class="mlbl">✅ Visados</div><div class="mval">${stats.visados}</div></div>
     <div class="metric m-o" onclick="fv('obs')"><div class="mlbl">💬 Con obs.</div><div class="mval">${stats.con_obs}</div></div>
     <div class="metric m-dev" onclick="fv('devuelto')"><div class="mlbl">↩ Devueltos</div><div class="mval">${stats.devueltos||0}</div></div>
-    <div class="metric m-imp" onclick="fv('imprevisto')"><div class="mlbl">💲 Imprevisto</div><div class="mval">${stats.imprevistos||0}</div></div>
+    <div class="metric m-imp" onclick="fv('imprevisto')"><div class="mlbl">💲 Imprevisto</div><div class="mval">${stats.imprevisto||0}</div></div>
   </div>
 
   ${vencs.length?`<div class="ab ab-r">💀 <strong>${vencs.length} vencido${vencs.length!==1?'s':''}</strong> — fecha límite superada.<button onclick="fv('vencido')">Ver →</button></div>`:''}
@@ -558,9 +558,9 @@ async function renderDashboard(){
   const barOpts=(data)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:8}},grid:{display:false}}}});
   CH.mes=new Chart(document.getElementById('ch-mes').getContext('2d'),{
-    type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month,
-      backgroundColor:cd.by_month.map((_,i)=>i===nowM?'rgba(0,32,96,1)':'rgba(0,32,96,.4)'),borderRadius:4,borderWidth:0}]},
-    options:barOpts(cd.by_month)});
+    type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month_contrato,
+      backgroundColor:cd.by_month_contrato.map((_,i)=>i===nowM?'rgba(0,32,96,1)':'rgba(0,32,96,.4)'),borderRadius:4,borderWidth:0}]},
+    options:barOpts(cd.by_month_contrato)});
   CH.mes2=new Chart(document.getElementById('ch-mes2').getContext('2d'),{
     type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month_ingreso,
       backgroundColor:cd.by_month_ingreso.map((_,i)=>i===nowM?'rgba(21,128,61,1)':'rgba(21,128,61,.4)'),borderRadius:4,borderWidth:0}]},
@@ -582,7 +582,7 @@ async function renderContratos(){
   if(fRet)   url+='&retrasado='+fRet;
   if(fDev)   url+='&devuelto='+fDev;
   if(fImp)   url+='&imprevisto='+fImp;
-  if(fEtapa) url+='&etapa_nombre='+encodeURIComponent(fEtapa);
+  if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
   if(sq)     url+='&q='+encodeURIComponent(sq);
 
   const el=document.getElementById('vc');
@@ -693,7 +693,7 @@ async function exportarExcel(){
   if(fRet) url+='&retrasado='+fRet;
   if(fDev) url+='&devuelto='+fDev;
   if(fImp) url+='&imprevisto='+fImp;
-  if(fEtapa) url+='&etapa_nombre='+encodeURIComponent(fEtapa);
+  if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
   if(sq) url+='&q='+encodeURIComponent(sq);
   const data=await fetch(url).then(r=>r.json());
   const rows=data.map(c=>({
@@ -704,7 +704,7 @@ async function exportarExcel(){
     PagoImprevisto:c.pago_imprevisto?'Sí':'No',
     Ingreso:c.creado_en, FechaFin:fmtD(c.fecha_fin),
     DiasRestantes:c.dias_restantes,
-    EtapaActual:c.etapa_nombre,
+    EtapaActual:c.etapa_actual,
     EtapasCompletadas:c.etapas.filter(e=>e.completada).map(e=>e.nombre).join(', '),
     NumSeguimiento:c.num_seguimiento,
   }));
@@ -817,7 +817,7 @@ async function renderMaterias(){
     type:'doughnut',data:{labels:top10.map(m=>m.nombre),datasets:[{data:top10.map(m=>m.count),backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{font:{size:9},padding:5,boxWidth:9}}}}
   });
-  const etNoms=cd.etapas_nombres||[];
+  const etNoms=cd.etapas||[];
   CH.etapa=new Chart(document.getElementById('ch-etapa').getContext('2d'),{
     type:'bar',data:{labels:etNoms.map(e=>e.nombre),datasets:[{data:etNoms.map(e=>e.count),backgroundColor:'rgba(0,32,96,.7)',borderRadius:4,borderWidth:0}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
@@ -1098,7 +1098,7 @@ async function refreshGlobals(){
     ]);
     gMats=[...new Set((cd.materias||[]).map(m=>m.nombre))];
     gResps=resps;
-    gEtapaNombres=[...new Set((cd.etapas_nombres||[]).map(e=>e.nombre))];
+    gEtapaNombres=[...new Set((cd.etapas||[]).map(e=>e.nombre))];
   }catch(e){}
 }
 
