@@ -531,12 +531,7 @@ async function renderDashboard(){
 
   <div class="c2">
     <div class="cc"><div class="cc-lbl">Ingresos por mes — Fecha inicio contrato</div><div class="cw"><canvas id="ch-mes"></canvas></div></div>
-    <div class="cc"><div class="cc-lbl">Estados</div><div class="cw"><canvas id="ch-est"></canvas></div></div>
-  </div>
-
-  <div class="c2">
-    <div class="cc"><div class="cc-lbl">Por etapa (etapa más alta completada)</div><div class="cw"><canvas id="ch-etapa"></canvas></div></div>
-    <div class="cc"><div class="cc-lbl">Flags globales</div><div class="cw"><canvas id="ch-flags"></canvas></div></div>
+    <div class="cc"><div class="cc-lbl">Ingresos por mes — Fecha ingreso web</div><div class="cw"><canvas id="ch-mes2"></canvas></div></div>
   </div>
 
   <div class="panel">
@@ -566,30 +561,10 @@ async function renderDashboard(){
     type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month_contrato,
       backgroundColor:cd.by_month_contrato.map((_,i)=>i===nowM?'rgba(0,32,96,1)':'rgba(0,32,96,.4)'),borderRadius:4,borderWidth:0}]},
     options:barOpts(cd.by_month_contrato)});
-  CH.est=new Chart(document.getElementById('ch-est').getContext('2d'),{
-    type:'doughnut',
-    data:{labels:['En proceso','Completado','Sin efecto','Vencido'],
-      datasets:[{data:[stats.en_proceso,stats.completado,stats.sin_efecto,stats.vencidos||0],
-      backgroundColor:['#003082','#15803d','#9ca3af','#dc2626'],borderWidth:0,hoverOffset:5}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
-      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:6,boxWidth:9}}}}
-  });
-  const etNoms=cd.etapas||[];
-  CH.etapa=new Chart(document.getElementById('ch-etapa').getContext('2d'),{
-    type:'bar',
-    data:{labels:etNoms.map(e=>e.nombre),datasets:[{data:etNoms.map(e=>e.count),
-      backgroundColor:'rgba(0,32,96,.7)',borderRadius:4,borderWidth:0}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},y:{ticks:{font:{size:9}},grid:{display:false}}}}
-  });
-  CH.flags=new Chart(document.getElementById('ch-flags').getContext('2d'),{
-    type:'bar',
-    data:{labels:['Visados','Con obs.','Devueltos','Imprevisto','Retrasados'],
-      datasets:[{data:[stats.visados,stats.con_obs,stats.devueltos||0,stats.imprevisto||0,stats.retrasados||0],
-      backgroundColor:['#15803d','#b45309','#0891b2','#7c3aed','#dc2626'],borderRadius:4,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
-  });
+  CH.mes2=new Chart(document.getElementById('ch-mes2').getContext('2d'),{
+    type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month_ingreso,
+      backgroundColor:cd.by_month_ingreso.map((_,i)=>i===nowM?'rgba(21,128,61,1)':'rgba(21,128,61,.4)'),borderRadius:4,borderWidth:0}]},
+    options:barOpts(cd.by_month_ingreso)});
 }
 
 /* ── CONTRATOS ── */
@@ -639,7 +614,7 @@ async function renderContratos(){
     <div class="frow">
       <input placeholder="Buscar nombre, RUT, materia, unidad..." value="${sq}"
         oninput="sq=this.value;renderContratos()">
-      <select onchange="fEstado=this.value;fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';renderContratos()">
+      <select onchange="fEstado=this.value;renderContratos()">
         <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${fEstado==='completado'?'selected':''}>Completado</option>
@@ -648,13 +623,13 @@ async function renderContratos(){
         <option value="critico" ${fEstado==='critico'?'selected':''}>🔴 Críticos</option>
         <option value="advertencia" ${fEstado==='advertencia'?'selected':''}>🟡 Advertencias</option>
       </select>
-      <select onchange="fMat=this.value;fEstado='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';renderContratos()">
+      <select onchange="fMat=this.value;renderContratos()">
         <option value="">Todas las materias</option>${matOpts}
       </select>
-      <select onchange="fResp=this.value;fEstado='';fMat='';fVis='';fObs='';fRet='';fDev='';fImp='';fEtapa='';renderContratos()">
+      <select onchange="fResp=this.value;renderContratos()">
         <option value="">Todos los responsables</option>${rOpts}
       </select>
-      <select onchange="fEtapa=this.value;fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';renderContratos()">
+      <select onchange="fEtapa=this.value;renderContratos()">
         <option value="">Todas las etapas</option>${eOpts}
       </select>
       ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
