@@ -44,6 +44,7 @@ class Contrato(db.Model):
     retrasado         = db.Column(db.Boolean, default=False)
     tiene_observacion = db.Column(db.Boolean, default=False)
     observaciones     = db.Column(db.Text, default='')   # notas internas
+    ocultar_estado    = db.Column(db.Boolean, default=False)
     fecha_inicio      = db.Column(db.Date)
     fecha_fin         = db.Column(db.Date)
     creado_en         = db.Column(db.DateTime, default=datetime.utcnow)
@@ -112,6 +113,7 @@ class Contrato(db.Model):
             'retrasado': self.retrasado,
             'tiene_observacion': self.tiene_observacion,
             'observaciones': self.observaciones or '',
+            'ocultar_estado': self.ocultar_estado or False,
             'fecha_inicio': self.fecha_inicio.isoformat() if self.fecha_inicio else '',
             'fecha_fin': self.fecha_fin.isoformat() if self.fecha_fin else '',
             'creado_en': self.creado_en.strftime('%d/%m/%Y %H:%M') if self.creado_en else '',
@@ -132,6 +134,16 @@ class Historial(db.Model):
     def to_dict(self):
         return {'id': self.id, 'accion': self.accion,
                 'detalle': self.detalle or '',
+                'creado_en': self.creado_en.strftime('%d/%m/%Y %H:%M')}
+
+class Nota(db.Model):
+    __tablename__ = 'notas'
+    id          = db.Column(db.Integer, primary_key=True)
+    contrato_id = db.Column(db.Integer, db.ForeignKey('contratos.id', ondelete='CASCADE'), nullable=False)
+    texto       = db.Column(db.Text, nullable=False)
+    creado_en   = db.Column(db.DateTime, default=datetime.utcnow)
+    def to_dict(self):
+        return {'id': self.id, 'texto': self.texto,
                 'creado_en': self.creado_en.strftime('%d/%m/%Y %H:%M')}
 
 def parse_date(s):
@@ -214,16 +226,22 @@ def api_chart_data():
         ea = c.etapa_actual()
         key = ea if ea else 'Sin etapa'
         etapas_count[key] = etapas_count.get(key, 0) + 1
-    # Materias
+    # Materias con desglose
     materias = {}
     for c in all_c:
         m = c.materia or 'Sin materia'
-        materias[m] = materias.get(m, 0) + 1
+        if m not in materias:
+            materias[m] = {'nombre': m, 'count': 0, 'en_proceso': 0, 'completado': 0, 'visados': 0}
+        materias[m]['count'] += 1
+        if c.estado == 'en_proceso': materias[m]['en_proceso'] += 1
+        if c.estado == 'completado': materias[m]['completado'] += 1
+        if c.visado == 'si': materias[m]['visados'] += 1
+    materias_list = sorted(materias.values(), key=lambda x: -x['count'])
     return jsonify({
         'by_month_contrato': by_month_contrato,
         'by_month_ingreso': by_month_ingreso,
         'etapas': [{'nombre':k,'count':v} for k,v in sorted(etapas_count.items(), key=lambda x:-x[1])],
-        'materias': [{'nombre':k,'count':v} for k,v in sorted(materias.items(), key=lambda x:-x[1])],
+        'materias': materias_list,
     })
 
 @app.route('/api/buscar')
@@ -325,6 +343,7 @@ def api_crear():
         devuelto=bool(d.get('devuelto',False)),
         retrasado=bool(d.get('retrasado',False)),
         tiene_observacion=bool(d.get('tiene_observacion',False)),
+        ocultar_estado=bool(d.get('ocultar_estado',False)),
         observaciones=d.get('observaciones',''),
         etapas_json=json.dumps(etapas),
         fecha_inicio=parse_date(d.get('fecha_inicio')),
@@ -356,6 +375,7 @@ def api_actualizar(id):
     c.devuelto=bool(d.get('devuelto',c.devuelto))
     c.retrasado=bool(d.get('retrasado',c.retrasado))
     c.tiene_observacion=bool(d.get('tiene_observacion',c.tiene_observacion))
+    c.ocultar_estado=bool(d.get('ocultar_estado',c.ocultar_estado or False))
     c.observaciones=d.get('observaciones',c.observaciones or '')
     c.fecha_inicio=parse_date(d.get('fecha_inicio')) or c.fecha_inicio
     c.fecha_fin=parse_date(d.get('fecha_fin')) or c.fecha_fin
@@ -392,6 +412,29 @@ def api_del_hist(id):
     db.session.delete(h); db.session.commit()
     return jsonify({'ok':True})
 
+# ── Notas ─────────────────────────────────────────────────────────
+@app.route('/api/contratos/<int:id>/notas')
+def api_get_notas(id):
+    Contrato.query.get_or_404(id)
+    return jsonify([n.to_dict() for n in
+        Nota.query.filter_by(contrato_id=id).order_by(Nota.creado_en.desc()).all()])
+
+@app.route('/api/contratos/<int:id>/notas', methods=['POST'])
+def api_add_nota(id):
+    Contrato.query.get_or_404(id)
+    d = request.json
+    texto = d.get('texto','').strip()
+    if not texto: return jsonify({'error':'Texto requerido'}), 400
+    n = Nota(contrato_id=id, texto=texto)
+    db.session.add(n); db.session.commit()
+    return jsonify(n.to_dict()), 201
+
+@app.route('/api/notas/<int:id>', methods=['DELETE'])
+def api_del_nota(id):
+    n = Nota.query.get_or_404(id)
+    db.session.delete(n); db.session.commit()
+    return jsonify({'ok':True})
+
 # ── Responsables ─────────────────────────────────────────────────
 @app.route('/api/responsables')
 def api_responsables():
@@ -422,6 +465,7 @@ with app.app_context():
         "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS unidad VARCHAR(200)",
         "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS num_seguimiento VARCHAR(200)",
         "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS devuelto BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE contratos ADD COLUMN IF NOT EXISTS ocultar_estado BOOLEAN DEFAULT FALSE",
     ]
     for sql in migrations:
         try:
