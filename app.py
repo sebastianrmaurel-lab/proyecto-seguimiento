@@ -282,11 +282,13 @@ def api_contratos():
     dev_f      = request.args.get('devuelto','').strip()
     imp_f      = request.args.get('imprevisto','').strip()
     etapa_f    = request.args.get('etapa','').strip()
+    unidad_f   = request.args.get('unidad','').strip()
 
     query = Contrato.query
     if rut:       query = query.filter(Contrato.rut == rut)
     if estado:    query = query.filter(Contrato.estado == estado)
     if materia_f: query = query.filter(Contrato.materia == materia_f)
+    if unidad_f:  query = query.filter(Contrato.unidad == unidad_f)
     if visado_f == 'si':  query = query.filter(Contrato.visado == 'si')
     if visado_f == 'no':  query = query.filter(Contrato.visado != 'si')
     if obs_f == '1':      query = query.filter(Contrato.tiene_observacion == True)
