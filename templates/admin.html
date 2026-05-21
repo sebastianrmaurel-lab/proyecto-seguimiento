@@ -212,6 +212,7 @@ tbody tr:hover td{background:var(--s2)}
 .spinner{width:18px;height:18px;border:2.5px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin .7s linear infinite;margin:.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:13px}
+.pg-btn{height:28px;min-width:28px;padding:0 7px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}.pg-btn:hover:not(:disabled){background:var(--navy-l);border-color:var(--navy2);color:var(--navy2)}.pg-btn.active{background:var(--navy2);border-color:var(--navy2);color:#fff}.pg-btn:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -388,6 +389,7 @@ let view='dashboard', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
+let gPage=1;
 
 /* URL params */
 (function(){
@@ -424,7 +426,7 @@ function etapasHtml(etapas){
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function sv(v){
-  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';
+  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
   document.getElementById('btn-exp').style.display=v==='contratos'?'flex':'none';
@@ -446,7 +448,7 @@ function fv(f){
 function fByMat(m){view='contratos';clearAllF();fMat=m;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByResp(r){view='contratos';clearAllF();fResp=r;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByEtapa(e){view='contratos';clearAllF();fEtapa=e;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
-function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';}
+function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;}
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
@@ -609,6 +611,30 @@ async function renderContratos(){
   else if(fImp) albl='Pago imprevisto';
   else if(fEstado) albl=fEstado.replace('_',' ');
 
+  // Paginación
+  const PER_PAGE=25;
+  const totalPages=Math.max(1,Math.ceil(data.length/PER_PAGE));
+  if(gPage>totalPages) gPage=1;
+  const pageData=data.slice((gPage-1)*PER_PAGE, gPage*PER_PAGE);
+
+  function paginationHtml(){
+    if(totalPages<=1) return '';
+    const btns=[];
+    btns.push(`<button class="pg-btn" ${gPage===1?'disabled':''} onclick="gPage--;renderContratos()">‹</button>`);
+    for(let i=1;i<=totalPages;i++){
+      if(i===1||i===totalPages||Math.abs(i-gPage)<=2){
+        btns.push(`<button class="pg-btn ${i===gPage?'active':''}" onclick="gPage=${i};renderContratos()">${i}</button>`);
+      } else if(Math.abs(i-gPage)===3){
+        btns.push(`<span style="padding:0 4px;color:var(--muted)">…</span>`);
+      }
+    }
+    btns.push(`<button class="pg-btn" ${gPage===totalPages?'disabled':''} onclick="gPage++;renderContratos()">›</button>`);
+    return `<div style="display:flex;align-items:center;gap:4px;padding:.75rem 1rem;border-top:1px solid var(--border);justify-content:space-between;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted)">Mostrando ${(gPage-1)*PER_PAGE+1}–${Math.min(gPage*PER_PAGE,data.length)} de ${data.length}</span>
+      <div style="display:flex;gap:3px">${btns.join('')}</div>
+    </div>`;
+  }
+
   el.innerHTML=`
   ${albl?`<div><span class="af">${albl} <button onclick="clearFilters()">✕</button></span></div>`:''}
   <div class="panel">
@@ -617,8 +643,8 @@ async function renderContratos(){
     </div>
     <div class="frow">
       <input placeholder="Buscar nombre, RUT, materia, unidad..." value="${sq}"
-        oninput="sq=this.value;debounceSearch()" id="search-inp">
-      <select onchange="fEstado=this.value;renderContratos()">
+        oninput="sq=this.value;gPage=1;debounceSearch()" id="search-inp">
+      <select onchange="fEstado=this.value;gPage=1;renderContratos()">
         <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${fEstado==='completado'?'selected':''}>Completado</option>
@@ -627,16 +653,16 @@ async function renderContratos(){
         <option value="critico" ${fEstado==='critico'?'selected':''}>🔴 Críticos</option>
         <option value="advertencia" ${fEstado==='advertencia'?'selected':''}>🟡 Advertencias</option>
       </select>
-      <select onchange="fMat=this.value;renderContratos()">
+      <select onchange="fMat=this.value;gPage=1;renderContratos()">
         <option value="">Todas las materias</option>${matOpts}
       </select>
-      <select onchange="fResp=this.value;renderContratos()">
+      <select onchange="fResp=this.value;gPage=1;renderContratos()">
         <option value="">Todos los responsables</option>${rOpts}
       </select>
-      <select onchange="fEtapa=this.value;renderContratos()">
+      <select onchange="fEtapa=this.value;gPage=1;renderContratos()">
         <option value="">Todas las etapas</option>${eOpts}
       </select>
-      <select onchange="fUnidad=this.value;renderContratos()">
+      <select onchange="fUnidad=this.value;gPage=1;renderContratos()">
         <option value="">Todas las unidades</option>${uOpts}
       </select>
       ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||fUnidad||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
@@ -649,7 +675,7 @@ async function renderContratos(){
         <th>Ingreso</th><th>Fin</th><th></th>
       </tr></thead>
       <tbody>
-      ${data.map(c=>`<tr onclick="openModal(${c.id})">
+      ${pageData.map(c=>`<tr onclick="openModal(${c.id})">
         <td>
           <strong>${c.nombre}</strong>
           <div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div>
@@ -669,14 +695,15 @@ async function renderContratos(){
           ${c.dias_restantes!==null&&!c.ocultar_estado&&c.estado==='en_proceso'?`<div style="font-size:10px;color:${c.dias_restantes<=0?'var(--red)':c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</div>`:''}
         </td>
         <td onclick="event.stopPropagation()">
-          <div style="display:flex;gap:3px">
+          ${isViewer?'':`<div style="display:flex;gap:3px">
             <button class="act-btn" onclick="openModal(${c.id})">✏</button>
             <button class="act-btn del" onclick="askDel(${c.id},'contrato')">🗑</button>
-          </div>
+          </div>`}
         </td>
       </tr>`).join('')}
       </tbody>
-    </table></div>`}
+    </table></div>
+    ${paginationHtml()}`}
   </div>`;
 
   // set select values
@@ -684,6 +711,7 @@ async function renderContratos(){
   if(fMat&&sels[1]) sels[1].value=fMat;
   if(fResp&&sels[2]) sels[2].value=fResp;
   if(fEtapa&&sels[3]) sels[3].value=fEtapa;
+  if(fUnidad&&sels[4]) sels[4].value=fUnidad;
 }
 
 /* ── EXPORTAR ── */
