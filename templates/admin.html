@@ -387,7 +387,6 @@ const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','
 let view='dashboard', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',sq='';
 let gMats=[],gResps=[],gEtapaNombres=[],activeEtapas=[],CH={};
-let isViewer=false; // se actualiza en init
 
 /* URL params */
 (function(){
@@ -663,10 +662,10 @@ async function renderContratos(){
           ${c.dias_restantes!==null&&!c.ocultar_estado&&c.estado==='en_proceso'?`<div style="font-size:10px;color:${c.dias_restantes<=0?'var(--red)':c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</div>`:''}
         </td>
         <td onclick="event.stopPropagation()">
-          ${isViewer?'':`<div style="display:flex;gap:3px">
+          <div style="display:flex;gap:3px">
             <button class="act-btn" onclick="openModal(${c.id})">✏</button>
             <button class="act-btn del" onclick="askDel(${c.id},'contrato')">🗑</button>
-          </div>`}
+          </div>
         </td>
       </tr>`).join('')}
       </tbody>
@@ -732,7 +731,7 @@ async function renderResponsables(){
       const done=mine.filter(c=>c.estado==='completado').length;
       const ret=mine.filter(c=>c.retrasado).length;
       return`<div class="rc" onclick="showRD('${r.nombre}')">
-        ${isViewer?'':` <button class="rc-del" onclick="event.stopPropagation();askDel(${r.id},'responsable','${r.nombre}')">✕</button>`}
+        <button class="rc-del" onclick="event.stopPropagation();askDel(${r.id},'responsable','${r.nombre}')">✕</button>
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
           <div class="rca">${ini(r.nombre)}</div>
           <div><div class="rcn">${r.nombre}</div><div class="rcc">${r.cargo||'Sin cargo'}</div></div>
@@ -883,9 +882,9 @@ async function cargarRutsList(){
 
 /* ── MODAL CONTRATO ── */
 async function openModal(id=null){
-  if(isViewer) return; // viewer no puede editar
+  if(isViewer && !id) return; // viewer no puede crear nuevo
   editId=id;
-  document.getElementById('modal-title').textContent=id?'Editar Registro':'Nuevo Registro';
+  document.getElementById('modal-title').textContent=id?(isViewer?'Ver Registro':'Editar Registro'):'Nuevo Registro';
   document.getElementById('mat-list').innerHTML=gMats.map(m=>`<option value="${m}">`).join('');
   document.getElementById('resp-list').innerHTML=gResps.map(r=>`<option value="${r.nombre}">`).join('');
   showTab('datos');
@@ -918,6 +917,27 @@ async function openModal(id=null){
     document.getElementById('notas-list').innerHTML='<div class="empty">Guarda el registro primero.</div>';
   }
   document.getElementById('modal-wrap').style.display='flex';
+
+  // Si es viewer: deshabilitar todos los campos y ocultar botón guardar
+  const modal=document.querySelector('.modal');
+  const saveBtn=document.querySelector('.mf .btn-primary');
+  if(isViewer){
+    modal.querySelectorAll('input,select,textarea,button.btn-green').forEach(el=>{
+      el.disabled=true;
+      el.style.opacity='0.7';
+      el.style.cursor='not-allowed';
+    });
+    // Deshabilitar checks de etapas y botones eliminar etapa
+    modal.querySelectorAll('.etapa-check,.etapa-del').forEach(el=>{
+      el.style.pointerEvents='none';el.style.opacity='0.5';
+    });
+    if(saveBtn) saveBtn.style.display='none';
+  } else {
+    modal.querySelectorAll('input,select,textarea,button.btn-green').forEach(el=>{
+      el.disabled=false; el.style.opacity=''; el.style.cursor='';
+    });
+    if(saveBtn) saveBtn.style.display='';
+  }
 }
 
 function defEtapas(){
@@ -1076,7 +1096,6 @@ async function guardarResp(){
 
 /* DELETE */
 function askDel(id,type='contrato',label='',cb=null){
-  if(isViewer) return; // viewer no puede eliminar
   delId=id; delType=type; delCb=cb;
   document.getElementById('cfm-title').textContent=type==='responsable'?'Eliminar responsable':'Eliminar registro';
   document.getElementById('cfm-msg').textContent=type==='responsable'
@@ -1112,20 +1131,6 @@ document.getElementById('cfm-wrap').addEventListener('click',function(e){if(e.ta
 
 /* INIT */
 (async()=>{
-  const me = await fetch('/api/me').then(r=>r.json()).catch(()=>({role:'admin'}));
-  isViewer = me.role === 'viewer';
-  if(isViewer){
-    // Ocultar botón nuevo registro
-    document.querySelector('.btn-primary[onclick="openModal()"]').style.display='none';
-    // Ocultar botón exportar (opcional, puedes quitar esta línea si quieres que puedan exportar)
-    document.getElementById('btn-exp').style.display='none';
-    // Agregar badge visual
-    const tb=document.querySelector('.topbar');
-    const badge=document.createElement('span');
-    badge.style.cssText='font-size:10px;background:#fefce8;color:#b45309;border:1px solid #fde68a;border-radius:20px;padding:2px 10px;font-weight:700';
-    badge.textContent='👁 Solo lectura';
-    tb.appendChild(badge);
-  }
   await refreshGlobals();
   await loadCounts();
   loadView();
