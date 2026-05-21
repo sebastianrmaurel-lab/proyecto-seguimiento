@@ -390,6 +390,7 @@ let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
 let gPage=1;
+let gUrgPage=1;
 
 /* URL params */
 (function(){
@@ -514,13 +515,33 @@ async function renderDashboard(){
   ${crits.length?`<div class="ab ab-r">⚠ <strong>${crits.length} crítico${crits.length!==1?'s':''}</strong> — vencen en ≤7 días.<button onclick="fv('critico')">Ver →</button></div>`:''}
   ${warns.length?`<div class="ab ab-a">⏰ <strong>${warns.length}</strong> por vencer en ≤20 días.<button onclick="fv('advertencia')">Ver →</button></div>`:''}
 
-  ${vencs.length||crits.length||warns.length?`
-  <div class="panel">
+  ${(()=>{
+    const urgList=[...vencs,...crits,...warns];
+    if(!urgList.length) return `<div class="panel"><div class="empty">✅ Sin alertas urgentes — todos al día</div></div>`;
+    const URG_PER_PAGE=10;
+    const urgTotalPages=Math.max(1,Math.ceil(urgList.length/URG_PER_PAGE));
+    if(gUrgPage>urgTotalPages) gUrgPage=1;
+    const urgPage=urgList.slice((gUrgPage-1)*URG_PER_PAGE, gUrgPage*URG_PER_PAGE);
+    const urgPagBtn=()=>{
+      if(urgTotalPages<=1) return '';
+      let b=[];
+      b.push(`<button class="pg-btn" ${gUrgPage===1?'disabled':''} onclick="gUrgPage--;renderDashboard()">‹</button>`);
+      for(let i=1;i<=urgTotalPages;i++){
+        if(i===1||i===urgTotalPages||Math.abs(i-gUrgPage)<=2) b.push(`<button class="pg-btn ${i===gUrgPage?'active':''}" onclick="gUrgPage=${i};renderDashboard()">${i}</button>`);
+        else if(Math.abs(i-gUrgPage)===3) b.push(`<span style="padding:0 4px;color:var(--muted)">…</span>`);
+      }
+      b.push(`<button class="pg-btn" ${gUrgPage===urgTotalPages?'disabled':''} onclick="gUrgPage++;renderDashboard()">›</button>`);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.5rem">
+        <span style="font-size:11px;color:var(--muted)">Mostrando ${(gUrgPage-1)*URG_PER_PAGE+1}–${Math.min(gUrgPage*URG_PER_PAGE,urgList.length)} de ${urgList.length}</span>
+        <div style="display:flex;gap:3px">${b.join('')}</div>
+      </div>`;
+    };
+    return `<div class="panel">
     <div class="ph"><span class="ph-title">🔴 Atención urgente (vencidos + críticos + advertencias)</span></div>
     <div class="tw"><table>
       <thead><tr><th>Nombre / RUT</th><th>Materia</th><th>Responsable</th><th>Vence</th><th>Días</th><th></th></tr></thead>
       <tbody>
-      ${[...vencs,...crits,...warns].map(c=>`<tr onclick="openModal(${c.id})">
+      ${urgPage.map(c=>`<tr onclick="openModal(${c.id})">
         <td><strong>${c.nombre}</strong><div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div></td>
         <td style="font-size:11px">${c.materia||'—'}</td>
         <td style="font-size:11px">${c.responsable||'—'}</td>
@@ -530,7 +551,9 @@ async function renderDashboard(){
       </tr>`).join('')}
       </tbody>
     </table></div>
-  </div>`:`<div class="panel"><div class="empty">✅ Sin alertas urgentes — todos al día</div></div>`}
+    ${urgPagBtn()}
+  </div>`;
+  })()}
 
   <div class="c2">
     <div class="cc"><div class="cc-lbl">Ingresos por mes — Fecha inicio contrato</div><div class="cw"><canvas id="ch-mes"></canvas></div></div>
