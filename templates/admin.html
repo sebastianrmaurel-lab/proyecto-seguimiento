@@ -385,8 +385,8 @@ tbody tr:hover td{background:var(--s2)}
 <script>
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let view='dashboard', editId=null, delId=null, delType='contrato', delCb=null;
-let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',sq='';
-let gMats=[],gResps=[],gEtapaNombres=[],activeEtapas=[],CH={};
+let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
+let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 
 /* URL params */
 (function(){
@@ -423,14 +423,14 @@ function etapasHtml(etapas){
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function sv(v){
-  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';sq='';
+  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
   document.getElementById('btn-exp').style.display=v==='contratos'?'flex':'none';
   loadView();
 }
 function fv(f){
-  view='contratos';fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';
+  view='contratos';fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';
   if(['critico','advertencia','vencido','en_proceso','completado','sin_efecto'].includes(f)) fEstado=f;
   else if(f==='visados') fVis='si';
   else if(f==='obs') fObs='1';
@@ -445,7 +445,7 @@ function fv(f){
 function fByMat(m){view='contratos';clearAllF();fMat=m;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByResp(r){view='contratos';clearAllF();fResp=r;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByEtapa(e){view='contratos';clearAllF();fEtapa=e;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
-function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';sq='';}
+function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';}
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
@@ -583,6 +583,7 @@ async function renderContratos(){
   if(fDev)   url+='&devuelto='+fDev;
   if(fImp)   url+='&imprevisto='+fImp;
   if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
+  if(fUnidad) url+='&unidad='+encodeURIComponent(fUnidad);
   if(sq)     url+='&q='+encodeURIComponent(sq);
 
   const el=document.getElementById('vc');
@@ -593,11 +594,13 @@ async function renderContratos(){
   const matOpts=gMats.map(m=>`<option value="${m}">${m}</option>`).join('');
   const rOpts=gResps.map(r=>`<option value="${r.nombre}">${r.nombre}</option>`).join('');
   const eOpts=gEtapaNombres.map(e=>`<option value="${e}">${e}</option>`).join('');
+  const uOpts=gUnidades.map(u=>`<option value="${u}">${u}</option>`).join('');
 
   let albl='';
   if(fResp) albl=`Responsable: ${fResp}`;
   else if(fMat) albl=`Materia: ${fMat}`;
   else if(fEtapa) albl=`Etapa: ${fEtapa}`;
+  else if(fUnidad) albl=`Unidad: ${fUnidad}`;
   else if(fVis) albl='Visados';
   else if(fObs) albl='Con observación';
   else if(fRet) albl='Retrasados';
@@ -632,7 +635,10 @@ async function renderContratos(){
       <select onchange="fEtapa=this.value;renderContratos()">
         <option value="">Todas las etapas</option>${eOpts}
       </select>
-      ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
+      <select onchange="fUnidad=this.value;renderContratos()">
+        <option value="">Todas las unidades</option>${uOpts}
+      </select>
+      ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||fUnidad||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
     </div>
     ${!data.length?`<div class="empty">📭 Sin registros</div>`:`
     <div class="tw"><table>
@@ -694,6 +700,7 @@ async function exportarExcel(){
   if(fDev) url+='&devuelto='+fDev;
   if(fImp) url+='&imprevisto='+fImp;
   if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
+  if(fUnidad) url+='&unidad='+encodeURIComponent(fUnidad);
   if(sq) url+='&q='+encodeURIComponent(sq);
   const data=await fetch(url).then(r=>r.json());
   const rows=data.map(c=>({
@@ -1119,6 +1126,9 @@ async function refreshGlobals(){
       fetch('/api/responsables').then(r=>r.json()),
     ]);
     gMats=[...new Set((cd.materias||[]).map(m=>m.nombre))];
+    // get unidades from contratos
+    const allC=await fetch('/api/contratos').then(r=>r.json()).catch(()=>[]);
+    gUnidades=[...new Set(allC.map(c=>c.unidad).filter(Boolean))].sort();
     gResps=resps;
     gEtapaNombres=[...new Set((cd.etapas||[]).map(e=>e.nombre))];
   }catch(e){}
