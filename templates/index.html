@@ -110,6 +110,19 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 .qs-label{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
 .qs-val{font-size:15px;font-weight:800}
 .divider{height:1px;background:var(--border);margin:.25rem 0}
+
+/* ── PAGINADOR alertas ── */
+.pag-wrap{display:flex;align-items:center;justify-content:space-between;padding:.625rem 1.125rem;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;gap:.5rem}
+.pag-info{font-size:11px;color:var(--muted)}
+.pag-info strong{color:var(--text)}
+.pag-controls{display:flex;align-items:center;gap:3px}
+.pag-btn{width:28px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;color:var(--muted);transition:all .15s}
+.pag-btn:hover:not(:disabled){background:var(--navy-l);border-color:var(--navy);color:var(--navy)}
+.pag-btn:disabled{opacity:.35;cursor:not-allowed}
+.pag-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.pag-btn.ellipsis{border:none;background:transparent;cursor:default;color:var(--muted)}
+.pag-btn.ellipsis:hover{background:transparent;color:var(--muted)}
+
 .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:1.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty-sm{text-align:center;padding:1.25rem .5rem;color:var(--soft);font-size:12px}
@@ -235,7 +248,10 @@ footer{border-top:1px solid var(--border);background:var(--surface);padding:.75r
 
 <script>
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const ALERTAS_PAGE_SIZE = 10;
 let CH={};
+let alertasLista = [];
+let alertasPage  = 1;
 
 function goAdmin(filter){
   window.location.href=filter?'/admin?filter='+filter:'/admin';
@@ -260,6 +276,86 @@ function etapasStg(etapas){
 }
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
+/* ── Paginador alertas ── */
+function buildAlertasPag(total, page){
+  const totalPages = Math.ceil(total / ALERTAS_PAGE_SIZE);
+  if(totalPages <= 1) return '';
+  const from = (page-1)*ALERTAS_PAGE_SIZE + 1;
+  const to   = Math.min(page*ALERTAS_PAGE_SIZE, total);
+
+  function btns(){
+    const arr=[];
+    const delta=1;
+    let left =Math.max(2, page-delta);
+    let right=Math.min(totalPages-1, page+delta);
+
+    arr.push(page===1
+      ? `<button class="pag-btn active">1</button>`
+      : `<button class="pag-btn" onclick="goAlertaPage(1)">1</button>`);
+
+    if(left>2) arr.push(`<button class="pag-btn ellipsis">…</button>`);
+    for(let i=left;i<=right;i++){
+      arr.push(i===page
+        ? `<button class="pag-btn active">${i}</button>`
+        : `<button class="pag-btn" onclick="goAlertaPage(${i})">${i}</button>`);
+    }
+    if(right<totalPages-1) arr.push(`<button class="pag-btn ellipsis">…</button>`);
+    if(totalPages>1){
+      arr.push(page===totalPages
+        ? `<button class="pag-btn active">${totalPages}</button>`
+        : `<button class="pag-btn" onclick="goAlertaPage(${totalPages})">${totalPages}</button>`);
+    }
+    return arr.join('');
+  }
+
+  return `<div class="pag-wrap">
+    <div class="pag-info">Mostrando <strong>${from}–${to}</strong> de <strong>${total}</strong></div>
+    <div class="pag-controls">
+      <button class="pag-btn" onclick="goAlertaPage(${page-1})" ${page===1?'disabled':''}>‹</button>
+      ${btns()}
+      <button class="pag-btn" onclick="goAlertaPage(${page+1})" ${page===totalPages?'disabled':''}>›</button>
+    </div>
+  </div>`;
+}
+
+function renderAlertasPage(){
+  const el  = document.getElementById('alertas-main-wrap');
+  const total = alertasLista.length;
+  const totalPages = Math.max(1, Math.ceil(total/ALERTAS_PAGE_SIZE));
+  if(alertasPage > totalPages) alertasPage = totalPages;
+  const slice = alertasLista.slice(
+    (alertasPage-1)*ALERTAS_PAGE_SIZE,
+    alertasPage*ALERTAS_PAGE_SIZE
+  );
+
+  el.innerHTML = slice.map(c=>{
+    const d=c.dias_restantes;
+    const isCrit=c.alerta==='critico'||c.alerta==='vencido';
+    return`<div class="alert-list-item" onclick="goAdmin('${c.alerta}')">
+      <div class="ali-left">
+        <div class="emp">${c.nombre}</div>
+        <div class="sub">
+          <span><i class="bi bi-card-text"></i> ${c.num_seguimiento||c.codigo||c.rut}</span>
+          <span><i class="bi bi-calendar-x"></i> Vence ${fmtDate(c.fecha_fin)}</span>
+        </div>
+      </div>
+      <div class="ali-right">
+        ${badgeE(c)}
+        <div style="text-align:center">
+          <div class="days-big ${isCrit?'red':'amber'}">${d<=0?'Venc':d}</div>
+          <div class="days-unit">${d>0?'días':''}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + buildAlertasPag(total, alertasPage);
+}
+
+function goAlertaPage(p){
+  alertasPage = p;
+  renderAlertasPage();
+  document.getElementById('alertas-panel').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
 async function loadAll(){
   document.getElementById('ts').textContent='Actualizando...';
   await Promise.all([loadStats(),loadCharts(),loadRecientes(),loadAlertas(),loadQuick()]);
@@ -283,8 +379,6 @@ async function loadCharts(){
   ]);
   killCH();
   const now=new Date().getMonth();
-
-  // FIX: cd.by_month_contrato (no by_month)
   const byMonth = cd.by_month_contrato || cd.by_month || Array(12).fill(0);
   CH.mes=new Chart(document.getElementById('ch-mes').getContext('2d'),{
     type:'bar',
@@ -294,7 +388,6 @@ async function loadCharts(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
   });
-
   CH.est=new Chart(document.getElementById('ch-est').getContext('2d'),{
     type:'doughnut',
     data:{labels:['En proceso','Completado','Sin efecto','Vencido'],
@@ -303,8 +396,6 @@ async function loadCharts(){
     options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
       plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8,boxWidth:10}}}}
   });
-
-  // FIX: cd.etapas es [{nombre, count}], no array de números
   const etapas = cd.etapas || [];
   CH.etapa=new Chart(document.getElementById('ch-etapa').getContext('2d'),{
     type:'bar',
@@ -313,8 +404,6 @@ async function loadCharts(){
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#ece9e2'}},y:{ticks:{font:{size:9}},grid:{display:false}}}}
   });
-
-  // Flags desde stats (ya los tiene el API)
   CH.flags=new Chart(document.getElementById('ch-flags').getContext('2d'),{
     type:'bar',
     data:{labels:['Visados','Con obs.','Devueltos','Imprevisto','Retrasados'],
@@ -338,28 +427,12 @@ async function loadAlertas(){
     if(!lista.length){
       el1.innerHTML=`<div class="all-ok"><i class="bi bi-check-circle-fill"></i><span>Sin alertas activas — todos al día</span></div>`;
     } else {
-      el1.innerHTML=lista.map(c=>{
-        const d=c.dias_restantes;
-        const isCrit=c.alerta==='critico'||c.alerta==='vencido';
-        return`<div class="alert-list-item" onclick="goAdmin('${c.alerta}')">
-          <div class="ali-left">
-            <div class="emp">${c.nombre}</div>
-            <div class="sub">
-              <span><i class="bi bi-card-text"></i> ${c.num_seguimiento||c.codigo||c.rut}</span>
-              <span><i class="bi bi-calendar-x"></i> Vence ${fmtDate(c.fecha_fin)}</span>
-            </div>
-          </div>
-          <div class="ali-right">
-            ${badgeE(c)}
-            <div style="text-align:center">
-              <div class="days-big ${isCrit?'red':'amber'}">${d<=0?'Venc':d}</div>
-              <div class="days-unit">${d>0?'días':''}</div>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      alertasLista = lista;
+      alertasPage  = 1;
+      renderAlertasPage();
     }
 
+    // Sidebar — solo top 5, sin paginador
     if(!lista.length){
       el2.innerHTML=`<div class="all-ok"><i class="bi bi-check-circle-fill"></i><span>Sin alertas</span></div>`;
     } else {
