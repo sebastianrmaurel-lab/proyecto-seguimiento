@@ -15,7 +15,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'admin123')
+VIEWER_PASSWORD = os.environ.get('VIEWER_PASSWORD', 'viewer123')
 
 # ── Modelos ─────────────────────────────────────────────────────
 class Responsable(db.Model):
@@ -162,6 +163,12 @@ def login():
         if pwd == ADMIN_PASSWORD:
             session.permanent = True
             session['auth'] = True
+            session['role'] = 'admin'
+            return jsonify({'ok':True}) if request.is_json else redirect('/admin')
+        if pwd == VIEWER_PASSWORD:
+            session.permanent = True
+            session['auth'] = True
+            session['role'] = 'viewer'
             return jsonify({'ok':True}) if request.is_json else redirect('/admin')
         return jsonify({'error':'Contraseña incorrecta'}), 401
     return render_template('login.html')
@@ -177,6 +184,17 @@ def index(): return render_template('index.html')
 def admin():
     if not session.get('auth'): return redirect('/login')
     return render_template('admin.html')
+
+@app.route('/api/me')
+def api_me():
+    if not session.get('auth'): return jsonify({'role':'none'}), 401
+    return jsonify({'role': session.get('role','admin')})
+
+def require_admin():
+    """Returns 403 response if current user is not admin, else None."""
+    if session.get('role') != 'admin':
+        return jsonify({'error':'Sin permisos'}), 403
+    return None
 
 # ── Stats ───────────────────────────────────────────────────────
 @app.route('/api/stats')
@@ -328,6 +346,8 @@ def api_get(id): return jsonify(Contrato.query.get_or_404(id).to_dict())
 
 @app.route('/api/contratos', methods=['POST'])
 def api_crear():
+    err = require_admin()
+    if err: return err
     d = request.json
     etapas = d.get('etapas', [])
     if not etapas:
@@ -357,6 +377,8 @@ def api_crear():
 
 @app.route('/api/contratos/<int:id>', methods=['PUT'])
 def api_actualizar(id):
+    err = require_admin()
+    if err: return err
     c = Contrato.query.get_or_404(id); d = request.json
     cambios = []
     def chk(f, v):
@@ -389,6 +411,8 @@ def api_actualizar(id):
 
 @app.route('/api/contratos/<int:id>', methods=['DELETE'])
 def api_eliminar(id):
+    err = require_admin()
+    if err: return err
     c = Contrato.query.get_or_404(id); db.session.delete(c); db.session.commit()
     return jsonify({'ok':True})
 
@@ -408,6 +432,8 @@ def api_add_hist(id):
 
 @app.route('/api/historial/<int:id>', methods=['DELETE'])
 def api_del_hist(id):
+    err = require_admin()
+    if err: return err
     h = Historial.query.get_or_404(id)
     db.session.delete(h); db.session.commit()
     return jsonify({'ok':True})
@@ -421,6 +447,8 @@ def api_get_notas(id):
 
 @app.route('/api/contratos/<int:id>/notas', methods=['POST'])
 def api_add_nota(id):
+    err = require_admin()
+    if err: return err
     Contrato.query.get_or_404(id)
     d = request.json
     texto = d.get('texto','').strip()
@@ -431,6 +459,8 @@ def api_add_nota(id):
 
 @app.route('/api/notas/<int:id>', methods=['DELETE'])
 def api_del_nota(id):
+    err = require_admin()
+    if err: return err
     n = Nota.query.get_or_404(id)
     db.session.delete(n); db.session.commit()
     return jsonify({'ok':True})
@@ -442,6 +472,8 @@ def api_responsables():
 
 @app.route('/api/responsables', methods=['POST'])
 def api_crear_resp():
+    err = require_admin()
+    if err: return err
     d = request.json; nombre = d.get('nombre','').strip()
     if not nombre: return jsonify({'error':'Nombre requerido'}), 400
     if Responsable.query.filter_by(nombre=nombre).first():
@@ -452,6 +484,8 @@ def api_crear_resp():
 
 @app.route('/api/responsables/<int:id>', methods=['DELETE'])
 def api_del_resp(id):
+    err = require_admin()
+    if err: return err
     r = Responsable.query.get_or_404(id); db.session.delete(r); db.session.commit()
     return jsonify({'ok':True})
 
