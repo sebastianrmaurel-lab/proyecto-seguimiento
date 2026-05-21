@@ -188,10 +188,9 @@ def admin():
 @app.route('/api/me')
 def api_me():
     if not session.get('auth'): return jsonify({'role':'none'}), 401
-    return jsonify({'role': session.get('role','admin')})
+    return jsonify({'role': session.get('role', 'admin')})
 
 def require_admin():
-    """Returns 403 response if current user is not admin, else None."""
     if session.get('role') != 'admin':
         return jsonify({'error':'Sin permisos'}), 403
     return None
