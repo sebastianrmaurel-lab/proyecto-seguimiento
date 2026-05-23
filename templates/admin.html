@@ -1590,16 +1590,10 @@ async function renderHistorico(){
     </div>
   </div>
 
-  <!-- Gráficos: completados por mes + flags históricos -->
-  <div class="hi-2col">
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">📅 Completados/Visados por mes</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-mes" height="180"></canvas></div>
-    </div>
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
-    </div>
+  <!-- Gráfico flags históricos solo -->
+  <div class="hi-box">
+    <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
+    <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
   </div>
 
   <!-- Top rankings -->
@@ -1622,21 +1616,29 @@ async function renderHistorico(){
       }
     </div>
 
-    <!-- Top vencidos por responsable -->
+    <!-- Top vencidos por unidad -->
     <div class="hi-box" style="margin-bottom:0">
       <div class="hi-box-h">
-        <span class="hi-box-title">💀 Más vencidos históricos por responsable</span>
+        <span class="hi-box-title">💀 Más vencidos históricos por unidad</span>
         <span style="font-size:10px;color:var(--muted)">${vencTotal.length} total</span>
       </div>
-      ${topVenc.length===0
-        ?`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin vencidos registrados</div>`
-        :topVenc.map((r,i)=>`<div class="hi-top-row">
+      ${(()=>{
+        const porUnidad={};
+        all.forEach(c=>{
+          const u=c.unidad||'Sin unidad';
+          if(!porUnidad[u]) porUnidad[u]={nombre:u,vencidos:0,total:0};
+          porUnidad[u].total++;
+          if(c.alerta==='vencido'||(c.dias_restantes!=null&&c.dias_restantes<0)) porUnidad[u].vencidos++;
+        });
+        const topU=Object.values(porUnidad).sort((a,b)=>b.vencidos-a.vencidos).filter(u=>u.vencidos>0).slice(0,5);
+        if(!topU.length) return`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin vencidos registrados</div>`;
+        return topU.map((u,i)=>`<div class="hi-top-row">
           <div class="hi-top-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
-          <div style="flex:1;font-size:12px;font-weight:700">${r.nombre}</div>
-          <span class="hi-pill red">${r.vencidos} venc.</span>
-          <span class="hi-pill gray" style="margin-left:4px">${r.total} total</span>
-        </div>`).join('')
-      }
+          <div style="flex:1;font-size:12px;font-weight:700">${u.nombre}</div>
+          <span class="hi-pill red">${u.vencidos} venc.</span>
+          <span class="hi-pill gray" style="margin-left:4px">${u.total} total</span>
+        </div>`).join('');
+      })()}
     </div>
 
   </div>
@@ -1679,27 +1681,6 @@ async function renderHistorico(){
     </div>
   </div>
   `;
-
-  // ── Chart: Completados por mes ──
-  const ctxM=document.getElementById('hi-ch-mes');
-  if(ctxM){
-    const nowM=new Date().getMonth();
-    new Chart(ctxM.getContext('2d'),{
-      type:'bar',
-      data:{
-        labels:MESES,
-        datasets:[{
-          data:porMes,
-          backgroundColor:porMes.map((_,i)=>i===nowM?'rgba(21,128,61,1)':'rgba(21,128,61,.45)'),
-          borderRadius:5,borderWidth:0
-        }]
-      },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' completados'}}},
-        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
-      }
-    });
-  }
 
   // ── Chart: Flags históricos ──
   const ctxF=document.getElementById('hi-ch-flags');
