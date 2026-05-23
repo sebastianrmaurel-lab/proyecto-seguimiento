@@ -13,7 +13,6 @@
   --blue:#1a56db;
   --blue-l:#e8efff;
   --surface:#ffffff;
-  --bg:#ffffff;
   --border:#e2e0d8;
   --text:#12110e;
   --muted:#6b6858;
@@ -44,8 +43,7 @@ header{
 }
 .logo{
   font-family:'Playfair Display',serif;
-  font-size:18px;
-  color:#fff;
+  font-size:18px;color:#fff;
   display:flex;align-items:center;gap:10px;
 }
 .logo-pulse{
@@ -69,39 +67,49 @@ header{
 }
 .admin-link:hover{color:#fff;border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.07)}
 
-/* ── HERO CENTRADO ── */
+/* ── HERO ── */
 .hero{
-  flex:1;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:2rem 1.5rem 6rem;
+  padding:4rem 1.5rem 4rem;
+  transition:padding .4s ease;
 }
-
-.hero-label{
-  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--soft);
-  margin-bottom:1.25rem;
+.hero.compact{
+  padding:1.75rem 1.5rem 1.75rem;
+}
+@media(max-width:600px){
+  .hero{padding:2.5rem 1rem 2.5rem}
+  .hero.compact{padding:1.25rem 1rem}
 }
 
 .hero h1{
   font-family:'Playfair Display',serif;
-  font-size:clamp(1.9rem,4vw,2.75rem);
+  font-size:clamp(1.75rem,4vw,2.6rem);
   font-weight:700;
   color:var(--navy);
-  margin-bottom:2.25rem;
+  margin-bottom:1.75rem;
   letter-spacing:-.3px;
   text-align:center;
+  transition:all .4s ease;
+}
+.hero.compact h1{
+  font-size:clamp(1.2rem,2.5vw,1.6rem);
+  margin-bottom:1rem;
 }
 
 /* ── SEARCH CARD ── */
+.search-wrap{
+  width:100%;max-width:580px;
+  position:relative;
+}
 .search-card{
   background:#fff;
   border:1.5px solid #dde3f0;
   border-radius:60px;
-  padding:6px 6px 6px 22px;
-  width:100%;max-width:560px;
+  padding:6px 6px 6px 20px;
+  width:100%;
   display:flex;align-items:center;gap:8px;
   box-shadow:0 4px 32px rgba(0,40,120,.1), 0 1px 4px rgba(0,0,0,.06);
   transition:box-shadow .2s, border-color .2s;
@@ -121,6 +129,19 @@ header{
   min-width:0;
 }
 .search-card input::placeholder{color:#b5b3a8;font-weight:400}
+
+/* Botón limpiar ✕ */
+.btn-clear{
+  width:26px;height:26px;border-radius:50%;
+  border:none;background:#f0eff0;
+  color:var(--muted);font-size:13px;
+  cursor:pointer;flex-shrink:0;
+  display:none;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.btn-clear:hover{background:#e0dfe0;color:var(--text)}
+.btn-clear.visible{display:flex}
+
 .btn-search{
   height:42px;padding:0 22px;
   background:var(--navy2);color:#fff;
@@ -134,17 +155,28 @@ header{
 .btn-search:active{transform:scale(.97)}
 
 .search-hint{
-  margin-top:1rem;
+  margin-top:.875rem;
   font-size:11px;color:var(--soft);
   text-align:center;
+  transition:opacity .3s;
 }
+.search-hint.hidden{opacity:0;pointer-events:none}
 
 /* ── RESULTS ── */
 .results-wrap{
   width:100%;max-width:1160px;
   margin:0 auto;
   padding:0 1.5rem 2.5rem;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .3s ease, transform .3s ease;
+  pointer-events:none;
 }
+.results-wrap.visible{
+  opacity:1;transform:translateY(0);
+  pointer-events:all;
+}
+@media(max-width:600px){.results-wrap{padding:0 .75rem 2rem}}
 
 .panel{
   background:var(--surface);
@@ -203,10 +235,9 @@ tbody tr:hover td{background:#f8f8f5}
 .pg-btn.active{background:var(--navy2);border-color:var(--navy2);color:#fff}
 .pg-btn:disabled{opacity:.35;cursor:not-allowed}
 
-footer{padding:1.25rem;text-align:center;font-size:11px;color:var(--soft);border-top:1px solid var(--border)}
+footer{padding:1.25rem;text-align:center;font-size:11px;color:var(--soft);border-top:1px solid var(--border);margin-top:auto}
 
 /* Animaciones entrada */
-.hero-label{animation:fadeUp .5s ease both}
 .hero h1{animation:fadeUp .5s .08s ease both}
 .search-card{animation:fadeUp .5s .16s ease both}
 .search-hint{animation:fadeUp .4s .28s ease both}
@@ -221,28 +252,29 @@ footer{padding:1.25rem;text-align:center;font-size:11px;color:var(--soft);border
     Seguimiento
   </div>
   <a class="admin-link" href="/admin">⚙ Administración</a>
-
 </header>
 
 <div class="hero" id="hero-section">
   <h1>Consulta</h1>
-
-  <div class="search-card">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b5b3a8" stroke-width="2.5" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input
-      type="text"
-      id="search-inp"
-      placeholder="Nombre, RUT, materia, unidad..."
-      oninput="debounceSearch()"
-      onkeydown="if(event.key==='Enter')buscar()"
-      autocomplete="off"
-    >
-    <button class="btn-search" onclick="buscar()">Buscar</button>
+  <div class="search-wrap">
+    <div class="search-card">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b5b3a8" stroke-width="2.5" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input
+        type="text"
+        id="search-inp"
+        placeholder="Nombre, RUT, materia, unidad..."
+        oninput="onInput()"
+        onkeydown="if(event.key==='Enter')buscar()"
+        autocomplete="off"
+      >
+      <button class="btn-clear" id="btn-clear" onclick="limpiar()" title="Limpiar">✕</button>
+      <button class="btn-search" onclick="buscar()">Buscar</button>
+    </div>
   </div>
-  <div class="search-hint">Escribe para buscar en tiempo real</div>
+  <div class="search-hint" id="search-hint">Escribe para buscar en tiempo real</div>
 </div>
 
-<div class="results-wrap" id="results-wrap" style="display:none">
+<div class="results-wrap" id="results-wrap">
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">
@@ -290,15 +322,26 @@ function diasHtml(c){
   return`<div style="font-size:10px;color:var(--soft)">${c.dias_restantes}d</div>`;
 }
 
+function setCompact(on){
+  const hero=document.getElementById('hero-section');
+  const hint=document.getElementById('search-hint');
+  const wrap=document.getElementById('results-wrap');
+  if(on){
+    hero.classList.add('compact');
+    hint.classList.add('hidden');
+    wrap.classList.add('visible');
+    // scroll suave a resultados
+    setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  } else {
+    hero.classList.remove('compact');
+    hint.classList.remove('hidden');
+    wrap.classList.remove('visible');
+  }
+}
+
 function renderTable(){
   const el=document.getElementById('results-body');
-  const wrap=document.getElementById('results-wrap');
-  wrap.style.display='block';
-
-  // Contraer hero cuando hay resultados
-  const hero=document.getElementById('hero-section');
-  hero.style.paddingTop='1.5rem';
-  hero.style.paddingBottom='1.5rem';
+  setCompact(true);
 
   if(!gData.length){
     document.getElementById('panel-title').textContent='Sin resultados';
@@ -309,15 +352,18 @@ function renderTable(){
   const totalPages=Math.max(1,Math.ceil(gData.length/PER_PAGE));
   if(gPage>totalPages) gPage=1;
   const pageData=gData.slice((gPage-1)*PER_PAGE,gPage*PER_PAGE);
-  document.getElementById('panel-title').innerHTML=`${gData.length} resultado${gData.length!==1?'s':''} encontrado${gData.length!==1?'s':''}`;
+  document.getElementById('panel-title').innerHTML=
+    `${gData.length} resultado${gData.length!==1?'s':''} encontrado${gData.length!==1?'s':''}`;
 
   function pgHtml(){
     if(totalPages<=1) return'';
     const b=[];
     b.push(`<button class="pg-btn" ${gPage===1?'disabled':''} onclick="gPage--;renderTable()">‹</button>`);
     for(let i=1;i<=totalPages;i++){
-      if(i===1||i===totalPages||Math.abs(i-gPage)<=2) b.push(`<button class="pg-btn ${i===gPage?'active':''}" onclick="gPage=${i};renderTable()">${i}</button>`);
-      else if(Math.abs(i-gPage)===3) b.push(`<span style="padding:0 4px;color:var(--soft)">…</span>`);
+      if(i===1||i===totalPages||Math.abs(i-gPage)<=2)
+        b.push(`<button class="pg-btn ${i===gPage?'active':''}" onclick="gPage=${i};renderTable()">${i}</button>`);
+      else if(Math.abs(i-gPage)===3)
+        b.push(`<span style="padding:0 4px;color:var(--soft)">…</span>`);
     }
     b.push(`<button class="pg-btn" ${gPage===totalPages?'disabled':''} onclick="gPage++;renderTable()">›</button>`);
     return`<div style="display:flex;align-items:center;gap:4px;padding:.875rem 1.25rem;border-top:1px solid var(--border);justify-content:space-between;flex-wrap:wrap">
@@ -354,28 +400,40 @@ function renderTable(){
 
 async function buscar(){
   const q=document.getElementById('search-inp').value.trim();
-  const wrap=document.getElementById('results-wrap');
-  const hero=document.getElementById('hero-section');
-  if(!q){
-    gData=[];
-    wrap.style.display='none';
-    hero.style.paddingTop='';
-    hero.style.paddingBottom='';
-    return;
-  }
-  wrap.style.display='block';
+  if(!q){ limpiar(); return; }
+
+  setCompact(true);
   document.getElementById('results-body').innerHTML='<div class="spinner"></div>';
+  document.getElementById('panel-title').textContent='Buscando...';
+
   try{
-    const res=await fetch(`/api/contratos?q=${encodeURIComponent(q)}`);
+    // endpoint dedicado para búsqueda pública
+    const res=await fetch(`/api/buscar?q=${encodeURIComponent(q)}`);
     gData=await res.json();
     gPage=1;
     renderTable();
   }catch(e){
-    document.getElementById('results-body').innerHTML=`<div class="state-box"><span class="icon">⚠️</span><p>Error de conexión.</p></div>`;
+    document.getElementById('results-body').innerHTML=
+      `<div class="state-box"><span class="icon">⚠️</span><p>Error de conexión. Intenta nuevamente.</p></div>`;
   }
 }
 
-function debounceSearch(){clearTimeout(_timer);_timer=setTimeout(buscar,320);}
+function limpiar(){
+  document.getElementById('search-inp').value='';
+  document.getElementById('btn-clear').classList.remove('visible');
+  gData=[];
+  setCompact(false);
+  document.getElementById('results-body').innerHTML='';
+  document.getElementById('search-inp').focus();
+}
+
+function onInput(){
+  const val=document.getElementById('search-inp').value;
+  const btn=document.getElementById('btn-clear');
+  val ? btn.classList.add('visible') : btn.classList.remove('visible');
+  clearTimeout(_timer);
+  _timer=setTimeout(buscar,320);
+}
 </script>
 </body>
 </html>
