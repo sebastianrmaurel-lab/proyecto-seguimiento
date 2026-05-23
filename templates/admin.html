@@ -1376,16 +1376,16 @@ async function renderTiempoReal(){
   </div>`:''}
   `;
 
-  // ── Chart: Estados actuales ──
+  // ── Chart: Estados activos (sin resueltos) ──
   const ctxE = document.getElementById('rt-ch-estados');
   if(ctxE){
     new Chart(ctxE.getContext('2d'),{
       type:'bar',
       data:{
-        labels:['Resueltos','En proceso','Vencidos\nactivos','Críticos\nactivos','Advertencias\nactivas'],
+        labels:['En proceso','Vencidos','Críticos','Advertencias'],
         datasets:[{
-          data:[completados.length, enProceso.length, vencActivos.length, critActivos.length, advActivos.length],
-          backgroundColor:['#15803d','#003082','#dc2626','#ef4444','#d97706'],
+          data:[enProceso.length, vencActivos.length, critActivos.length, advActivos.length],
+          backgroundColor:['#003082','#dc2626','#ef4444','#d97706'],
           borderRadius:6,
           borderWidth:0,
         }]
@@ -1401,23 +1401,20 @@ async function renderTiempoReal(){
     });
   }
 
-  // ── Chart: Flags y alertas ──
+  // ── Chart: Flags activas (sin visados ni dev. resueltos) ──
   const ctxF = document.getElementById('rt-ch-flags');
   if(ctxF){
-    const visados  = all.filter(c=>c.visado==='si').length;
-    const conObs   = all.filter(c=>c.tiene_observacion).length;
-    const devTotal = all.filter(c=>c.devuelto).length;
-    const devAct   = devActivos.length;
-    const devRes   = devResueltos.length;
-    const imprev   = all.filter(c=>c.pago_imprevisto).length;
-    const retras   = all.filter(c=>c.retrasado).length;
+    // solo activos: no resueltos
+    const conObs = all.filter(c=>c.tiene_observacion && !esResuelto(c)).length;
+    const imprev = all.filter(c=>c.pago_imprevisto   && !esResuelto(c)).length;
+    const retras = all.filter(c=>c.retrasado         && !esResuelto(c)).length;
     new Chart(ctxF.getContext('2d'),{
       type:'bar',
       data:{
-        labels:['Visados','Con obs.','Dev. activos','Dev. resueltos','Imprevisto','Retrasados'],
+        labels:['Dev. activos','Con obs.','Imprevisto','Retrasados'],
         datasets:[{
-          data:[visados, conObs, devAct, devRes, imprev, retras],
-          backgroundColor:['#15803d','#d97706','#dc2626','#4ade80','#7c3aed','#0891b2'],
+          data:[devActivos.length, conObs, imprev, retras],
+          backgroundColor:['#dc2626','#d97706','#7c3aed','#0891b2'],
           borderRadius:6,
           borderWidth:0,
         }]
