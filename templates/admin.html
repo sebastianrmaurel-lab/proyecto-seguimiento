@@ -1122,109 +1122,316 @@ async function renderTiempoReal(){
     return;
   }
 
-  /* ── LÓGICA REAL:
-     Un registro "devuelto" con estado completado O visado='si' → NO cuenta como devuelto activo.
-     Un registro "vencido" con estado completado O visado='si' → NO cuenta como vencido activo.
-     Estas son las métricas LIMPIAS de tiempo real.
-  ── */
+  // Lógica limpia: completado o visado = resuelto → no cuenta como problema
   const esResuelto = c => c.estado==='completado' || c.visado==='si';
 
-  // Devueltos activos = devuelto=true y NO resuelto
-  const devActivos  = all.filter(c=>c.devuelto && !esResuelto(c));
-  // Devueltos ya resueltos (completado o visado) — no problemáticos
-  const devResueltos= all.filter(c=>c.devuelto && esResuelto(c));
+  const devActivos   = all.filter(c=>c.devuelto && !esResuelto(c));
+  const devResueltos = all.filter(c=>c.devuelto && esResuelto(c));
+  const vencActivos  = all.filter(c=>c.alerta==='vencido' && !esResuelto(c));
+  const vencResueltos= all.filter(c=>c.alerta==='vencido' && esResuelto(c));
+  const critActivos  = all.filter(c=>c.alerta==='critico' && !esResuelto(c));
+  const advActivos   = all.filter(c=>c.alerta==='advertencia' && !esResuelto(c));
+  const completados  = all.filter(c=>esResuelto(c));
+  const enProceso    = all.filter(c=>c.estado==='en_proceso' && !esResuelto(c));
+  const total        = all.length;
+  const pct          = v => total>0?Math.round(v/total*100):0;
 
-  // Vencidos activos = alerta vencido y NO resuelto
-  const vencActivos = all.filter(c=>c.alerta==='vencido' && !esResuelto(c));
-  // Vencidos pero ya resueltos
-  const vencResueltos=all.filter(c=>c.alerta==='vencido' && esResuelto(c));
-
-  // Críticos activos (≤7d) y NO resueltos
-  const critActivos = all.filter(c=>c.alerta==='critico' && !esResuelto(c));
-  // Advertencias activas y NO resueltas
-  const advActivos  = all.filter(c=>c.alerta==='advertencia' && !esResuelto(c));
-
-  // En proceso real (no completado, no sin_efecto, no resuelto)
-  const enProceso   = all.filter(c=>c.estado==='en_proceso' && !esResuelto(c));
-  // Completados (estado=completado o visado=si)
-  const completados = all.filter(c=>esResuelto(c));
-  // Pendientes sin fecha fin
-  const sinFecha    = all.filter(c=>!c.fecha_fin && c.estado==='en_proceso' && !esResuelto(c));
-
-  // Retrasados activos = retrasado=true y NO resuelto
-  const retActivos  = all.filter(c=>c.retrasado && !esResuelto(c));
-
-  const now=Date.now();
-
-  function trRT(c,badge=''){
-    const dias=c.dias_restantes;
-    const diasHtml=c.alerta==='vencido'
-      ?`<span style="font-weight:800;color:var(--red)">VENCIDO</span>`
-      :dias!=null?`${dias}d`:'—';
-    return`<tr onclick="openModal(${c.id})" style="cursor:pointer">
-      <td><strong>${c.nombre}</strong><div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div></td>
-      <td style="font-size:11px">${c.materia||'—'}</td>
-      <td style="font-size:11px">${c.responsable||'—'}</td>
-      <td style="font-size:11px">${fmtD(c.fecha_fin)}</td>
-      <td>${diasHtml}</td>
-      <td>${badge||badgeFull(c)}</td>
-      <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openModal(${c.id})">✏</button></td>
-    </tr>`;
-  }
-
-  function panelTabla(titulo,lista,badge='',emptyMsg='Sin registros en esta categoría'){
-    if(!lista.length) return`<div class="panel"><div class="ph"><span class="ph-title">${titulo}</span><span style="font-size:11px;color:var(--muted)">0</span></div><div class="empty">${emptyMsg}</div></div>`;
-    return`<div class="panel">
-      <div class="ph"><span class="ph-title">${titulo}</span><span class="badge b-proc" style="font-size:10px">${lista.length}</span></div>
-      <div class="tw"><table>
-        <thead><tr><th>Nombre / RUT</th><th>Materia</th><th>Responsable</th><th>Vence</th><th>Días</th><th>Estado</th><th></th></tr></thead>
-        <tbody>${lista.map(c=>trRT(c,badge)).join('')}</tbody>
-      </table></div>
-    </div>`;
-  }
-
-  // Último refresh
   const hora=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
+  // Urgentes: vencidos + críticos (los que realmente necesitan acción)
+  const urgentes=[...vencActivos,...critActivos].slice(0,8);
+
+  function diasBadge(c){
+    if(c.alerta==='vencido') return`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5">VENCIDO</span>`;
+    if(c.dias_restantes!=null) return`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#fefce8;color:#b45309;border:1px solid #fde68a">${c.dias_restantes}d</span>`;
+    return'—';
+  }
+
   el.innerHTML=`
-  <!-- TOPBAR INFO -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-weight:700">
-        <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite"></span>
-        EN VIVO — actualizado ${hora}
-      </span>
+  <style>
+    @keyframes tr-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+    .rt-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;background:#f0fdf4;color:#15803d;border:1px solid #86efac;padding:3px 12px;border-radius:20px}
+    .rt-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:tr-pulse 1.5s infinite}
+    .rt-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem}
+    .rt-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.125rem;position:relative;overflow:hidden;transition:all .15s;cursor:pointer}
+    .rt-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    .rt-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px}
+    .rt-kpi.red::after{background:linear-gradient(90deg,#dc2626,#ef4444)}
+    .rt-kpi.amber::after{background:linear-gradient(90deg,#d97706,#f59e0b)}
+    .rt-kpi.green::after{background:linear-gradient(90deg,#15803d,#22c55e)}
+    .rt-kpi.blue::after{background:linear-gradient(90deg,#0891b2,#06b6d4)}
+    .rt-kpi.navy::after{background:linear-gradient(90deg,#002060,#003082)}
+    .rt-kpi-icon{font-size:22px;margin-bottom:.375rem;line-height:1}
+    .rt-kpi-val{font-size:32px;font-weight:800;line-height:1;margin-bottom:.2rem}
+    .rt-kpi.red .rt-kpi-val{color:#dc2626}
+    .rt-kpi.amber .rt-kpi-val{color:#d97706}
+    .rt-kpi.green .rt-kpi-val{color:#15803d}
+    .rt-kpi.blue .rt-kpi-val{color:#0891b2}
+    .rt-kpi.navy .rt-kpi-val{color:#002060}
+    .rt-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+    .rt-kpi-sub{font-size:10px;color:var(--soft);margin-top:.25rem}
+    .rt-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+    @media(max-width:700px){.rt-2col{grid-template-columns:1fr}}
+    .rt-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .rt-box-h{padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:space-between}
+    .rt-box-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+    .rt-box-body{padding:.875rem 1rem}
+    .rt-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:.625rem}
+    .rt-bar-row:last-child{margin-bottom:0}
+    .rt-bar-lbl{font-size:11px;font-weight:600;width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+    .rt-bar-track{flex:1;height:8px;background:var(--border);border-radius:6px;overflow:hidden}
+    .rt-bar-fill{height:100%;border-radius:6px;transition:width .4s ease}
+    .rt-bar-num{font-size:11px;font-weight:800;min-width:24px;text-align:right}
+    .rt-urg-row{display:flex;align-items:center;gap:.75rem;padding:.6rem .875rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+    .rt-urg-row:last-child{border-bottom:none}
+    .rt-urg-row:hover{background:var(--s2)}
+    .rt-urg-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+    .rt-urg-name{font-size:12px;font-weight:700;line-height:1.2}
+    .rt-urg-sub{font-size:10px;color:var(--muted);margin-top:1px}
+    .rt-donut-wrap{display:flex;align-items:center;gap:1.25rem;padding:.25rem 0}
+    .rt-donut-canvas{width:110px;height:110px;flex-shrink:0}
+    .rt-legend{display:flex;flex-direction:column;gap:.5rem;flex:1}
+    .rt-leg-row{display:flex;align-items:center;gap:7px;font-size:11px}
+    .rt-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .rt-leg-lbl{flex:1;color:var(--muted)}
+    .rt-leg-val{font-weight:800;font-size:12px}
+    .rt-pct-bar{margin-bottom:1rem}
+    .rt-pct-lbl{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:.3rem}
+    .rt-pct-track{height:10px;background:var(--border);border-radius:6px;overflow:hidden;display:flex}
+    .rt-pct-seg{height:100%;transition:width .5s ease}
+    .rt-empty-ok{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;font-size:12px;color:var(--green);font-weight:600;background:var(--green-l);border-radius:8px;border:1px solid #86efac}
+  </style>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="rt-live"><span class="rt-dot"></span>EN VIVO — ${hora}</span>
+      ${(vencActivos.length+critActivos.length)>0
+        ?`<span style="font-size:11px;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:3px 10px;border-radius:20px">⚠ ${vencActivos.length+critActivos.length} requieren acción</span>`
+        :`<span style="font-size:11px;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;padding:3px 10px;border-radius:20px">✅ Todo al día</span>`}
     </div>
     <button class="btn btn-ghost btn-sm" onclick="renderTiempoReal()">↻ Actualizar</button>
   </div>
-  <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
 
-  <!-- MÉTRICAS REALES -->
-  <div class="metrics" style="margin-bottom:1.125rem">
-    <div class="metric m-g" style="cursor:default"><div class="mlbl">✅ Resueltos</div><div class="mval">${completados.length}</div></div>
-    <div class="metric m-a" style="cursor:default"><div class="mlbl">● En proceso</div><div class="mval">${enProceso.length}</div></div>
-    <div class="metric m-venc" style="cursor:default"><div class="mlbl">💀 Vencidos activos</div><div class="mval">${vencActivos.length}</div></div>
-    <div class="metric m-r" style="cursor:default"><div class="mlbl">⚠ Críticos activos</div><div class="mval">${critActivos.length}</div></div>
-    <div class="metric m-s" style="cursor:default"><div class="mlbl">⏰ Advertencias activas</div><div class="mval" style="color:var(--amber)">${advActivos.length}</div></div>
-    <div class="metric m-dev" style="cursor:default"><div class="mlbl">↩ Devueltos activos</div><div class="mval">${devActivos.length}</div></div>
-    <div class="metric m-dev" style="cursor:default;--m-dev:#0891b2"><div class="mlbl">↩✅ Dev. resueltos</div><div class="mval" style="color:#15803d">${devResueltos.length}</div></div>
-    <div class="metric m-r" style="cursor:default;opacity:.6"><div class="mlbl">⏳ Retrasados activos</div><div class="mval">${retActivos.length}</div></div>
+  <!-- KPI cards -->
+  <div class="rt-kpi-grid">
+    <div class="rt-kpi red" onclick="fv('vencido')">
+      <div class="rt-kpi-icon">💀</div>
+      <div class="rt-kpi-val">${vencActivos.length}</div>
+      <div class="rt-kpi-lbl">Vencidos activos</div>
+      <div class="rt-kpi-sub">${vencResueltos.length} ya resueltos (no cuentan)</div>
+    </div>
+    <div class="rt-kpi red" onclick="fv('critico')">
+      <div class="rt-kpi-icon">⚠️</div>
+      <div class="rt-kpi-val">${critActivos.length}</div>
+      <div class="rt-kpi-lbl">Críticos activos</div>
+      <div class="rt-kpi-sub">Vencen en ≤ 7 días</div>
+    </div>
+    <div class="rt-kpi amber" onclick="fv('devuelto')">
+      <div class="rt-kpi-icon">↩</div>
+      <div class="rt-kpi-val">${devActivos.length}</div>
+      <div class="rt-kpi-lbl">Devueltos activos</div>
+      <div class="rt-kpi-sub">${devResueltos.length} completados/visados (no cuentan)</div>
+    </div>
+    <div class="rt-kpi amber" onclick="fv('advertencia')">
+      <div class="rt-kpi-icon">⏰</div>
+      <div class="rt-kpi-val">${advActivos.length}</div>
+      <div class="rt-kpi-lbl">Advertencias activas</div>
+      <div class="rt-kpi-sub">Vencen en ≤ 20 días</div>
+    </div>
+    <div class="rt-kpi green" onclick="fv('completado')">
+      <div class="rt-kpi-icon">✅</div>
+      <div class="rt-kpi-val">${completados.length}</div>
+      <div class="rt-kpi-lbl">Resueltos</div>
+      <div class="rt-kpi-sub">${pct(completados.length)}% del total</div>
+    </div>
+    <div class="rt-kpi navy" onclick="fv('en_proceso')">
+      <div class="rt-kpi-icon">📋</div>
+      <div class="rt-kpi-val">${enProceso.length}</div>
+      <div class="rt-kpi-lbl">En proceso</div>
+      <div class="rt-kpi-sub">De ${total} totales</div>
+    </div>
   </div>
 
-  ${devResueltos.length?`<div class="ab" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:.5rem .875rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
-    ✅ <strong>${devResueltos.length} devuelto${devResueltos.length!==1?'s':''}</strong> ya completado${devResueltos.length!==1?'s':''} o visados — <em>no cuentan como problema</em>
-  </div>`:''}
-  ${vencResueltos.length?`<div class="ab" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:.5rem .875rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
-    ✅ <strong>${vencResueltos.length} vencido${vencResueltos.length!==1?'s':''}</strong> con fecha expirada pero ya completado${vencResueltos.length!==1?'s':''}/visados — <em>no se contabilizan</em>
-  </div>`:''}
+  <!-- Barra de progreso global -->
+  <div class="rt-box" style="margin-bottom:1rem">
+    <div class="rt-box-h"><span class="rt-box-title">📊 Composición general (tiempo real)</span><span style="font-size:11px;color:var(--muted)">${total} registros</span></div>
+    <div class="rt-box-body">
+      <div style="display:flex;gap:0;height:14px;border-radius:8px;overflow:hidden;margin-bottom:.75rem">
+        <div style="width:${pct(completados.length)}%;background:#15803d;transition:width .5s" title="Resueltos ${completados.length}"></div>
+        <div style="width:${pct(enProceso.length)}%;background:#003082;transition:width .5s" title="En proceso ${enProceso.length}"></div>
+        <div style="width:${pct(advActivos.length)}%;background:#d97706;transition:width .5s" title="Advertencias ${advActivos.length}"></div>
+        <div style="width:${pct(critActivos.length)}%;background:#ef4444;transition:width .5s" title="Críticos ${critActivos.length}"></div>
+        <div style="width:${pct(vencActivos.length)}%;background:#7f1d1d;transition:width .5s" title="Vencidos ${vencActivos.length}"></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.625rem 1.25rem">
+        ${[
+          ['#15803d','Resueltos',completados.length],
+          ['#003082','En proceso',enProceso.length],
+          ['#d97706','Advertencias',advActivos.length],
+          ['#ef4444','Críticos activos',critActivos.length],
+          ['#7f1d1d','Vencidos activos',vencActivos.length],
+          ['#0891b2','Devueltos activos',devActivos.length],
+        ].map(([col,lbl,val])=>`
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0"></span>
+            <span style="font-size:10px;color:var(--muted)">${lbl}</span>
+            <span style="font-size:11px;font-weight:800;color:var(--text)">${val}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
 
-  <!-- SECCIONES -->
-  ${panelTabla('💀 Vencidos activos — requieren acción',vencActivos,'','✅ Ningún vencido sin resolver')}
-  ${panelTabla('⚠ Críticos activos (≤7 días)',critActivos,'','✅ Sin críticos pendientes')}
-  ${panelTabla('↩ Devueltos activos — pendientes de reingreso',devActivos,'','✅ Todos los devueltos están resueltos')}
-  ${panelTabla('⏰ Advertencias activas (≤20 días)',advActivos,'','✅ Sin advertencias pendientes')}
-  ${sinFecha.length?panelTabla('📅 En proceso sin fecha límite asignada',sinFecha,'',''):''}
+  <!-- GRÁFICOS -->
+  <div class="rt-2col" style="margin-bottom:1rem">
+
+    <!-- Gráfico: Estados actuales (barras) -->
+    <div class="rt-box">
+      <div class="rt-box-h"><span class="rt-box-title">📊 Estados actuales (lógica real)</span></div>
+      <div class="rt-box-body" style="padding:.875rem 1rem">
+        <canvas id="rt-ch-estados" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico: Flags / alertas (barras) -->
+    <div class="rt-box">
+      <div class="rt-box-h"><span class="rt-box-title">🚩 Flags y alertas activas</span></div>
+      <div class="rt-box-body" style="padding:.875rem 1rem">
+        <canvas id="rt-ch-flags" height="180"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 2 columnas: urgentes + devueltos activos -->
+  <div class="rt-2col">
+
+    <!-- Urgentes -->
+    <div class="rt-box">
+      <div class="rt-box-h">
+        <span class="rt-box-title">🔴 Urgentes — vencidos + críticos</span>
+        <span style="font-size:10px;font-weight:800;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;padding:2px 8px;border-radius:20px">${vencActivos.length+critActivos.length}</span>
+      </div>
+      ${urgentes.length===0
+        ?`<div class="rt-box-body"><div class="rt-empty-ok">✅ Sin urgentes pendientes</div></div>`
+        :urgentes.map(c=>{
+          const isVenc=c.alerta==='vencido';
+          const bgAv=isVenc?'#fef2f2':'#fefce8';
+          const colAv=isVenc?'#b91c1c':'#b45309';
+          return`<div class="rt-urg-row" onclick="openModal(${c.id})">
+            <div class="rt-urg-av" style="background:${bgAv};color:${colAv}">${ini(c.nombre)}</div>
+            <div style="flex:1;min-width:0">
+              <div class="rt-urg-name">${c.nombre}</div>
+              <div class="rt-urg-sub">${c.materia||'—'} · ${c.responsable||'—'}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">${diasBadge(c)}<div style="font-size:9px;color:var(--soft);margin-top:2px">${fmtD(c.fecha_fin)}</div></div>
+          </div>`;
+        }).join('')
+      }
+      ${urgentes.length>0&&(vencActivos.length+critActivos.length)>8
+        ?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('vencido')">Ver todos →</button></div>`:''}
+    </div>
+
+    <!-- Devueltos activos -->
+    <div class="rt-box">
+      <div class="rt-box-h">
+        <span class="rt-box-title">↩ Devueltos activos</span>
+        <span style="font-size:10px;font-weight:800;background:#e0f2fe;color:#0891b2;border:1px solid #7dd3fc;padding:2px 8px;border-radius:20px">${devActivos.length}</span>
+      </div>
+      ${devResueltos.length>0?`<div style="margin:.625rem .875rem 0;padding:.4rem .75rem;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:10px;color:#15803d;font-weight:600">✅ ${devResueltos.length} devuelto${devResueltos.length!==1?'s':''} completado${devResueltos.length!==1?'s':''}/visados — no se contabilizan</div>`:''}
+      ${devActivos.length===0
+        ?`<div class="rt-box-body"><div class="rt-empty-ok">✅ Sin devueltos pendientes</div></div>`
+        :devActivos.slice(0,8).map(c=>`<div class="rt-urg-row" onclick="openModal(${c.id})">
+            <div class="rt-urg-av" style="background:#e0f2fe;color:#0891b2">${ini(c.nombre)}</div>
+            <div style="flex:1;min-width:0">
+              <div class="rt-urg-name">${c.nombre}</div>
+              <div class="rt-urg-sub">${c.materia||'—'} · ${c.responsable||'—'}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">${diasBadge(c)}<div style="font-size:9px;color:var(--soft);margin-top:2px">${fmtD(c.fecha_fin)}</div></div>
+          </div>`).join('')
+      }
+      ${devActivos.length>8?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('devuelto')">Ver todos →</button></div>`:''}
+    </div>
+
+  </div>
+
+  <!-- Advertencias activas -->
+  ${advActivos.length>0?`
+  <div class="rt-box">
+    <div class="rt-box-h">
+      <span class="rt-box-title">⏰ Advertencias activas — vencen en ≤ 20 días</span>
+      <span style="font-size:10px;font-weight:800;background:#fefce8;color:#b45309;border:1px solid #fde68a;padding:2px 8px;border-radius:20px">${advActivos.length}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0">
+      ${advActivos.slice(0,6).map(c=>`<div class="rt-urg-row" onclick="openModal(${c.id})">
+        <div class="rt-urg-av" style="background:#fefce8;color:#b45309">${ini(c.nombre)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="rt-urg-name">${c.nombre}</div>
+          <div class="rt-urg-sub">${c.responsable||'—'}</div>
+        </div>
+        ${diasBadge(c)}
+      </div>`).join('')}
+    </div>
+    ${advActivos.length>6?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('advertencia')">Ver todas (${advActivos.length}) →</button></div>`:''}
+  </div>`:''}
   `;
+
+  // ── Chart: Estados actuales ──
+  const ctxE = document.getElementById('rt-ch-estados');
+  if(ctxE){
+    new Chart(ctxE.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:['Resueltos','En proceso','Vencidos\nactivos','Críticos\nactivos','Advertencias\nactivas'],
+        datasets:[{
+          data:[completados.length, enProceso.length, vencActivos.length, critActivos.length, advActivos.length],
+          backgroundColor:['#15803d','#003082','#dc2626','#ef4444','#d97706'],
+          borderRadius:6,
+          borderWidth:0,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
+        scales:{
+          y:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#ece9e2'}},
+          x:{ticks:{font:{size:10}}, grid:{display:false}}
+        }
+      }
+    });
+  }
+
+  // ── Chart: Flags y alertas ──
+  const ctxF = document.getElementById('rt-ch-flags');
+  if(ctxF){
+    const visados  = all.filter(c=>c.visado==='si').length;
+    const conObs   = all.filter(c=>c.tiene_observacion).length;
+    const devTotal = all.filter(c=>c.devuelto).length;
+    const devAct   = devActivos.length;
+    const devRes   = devResueltos.length;
+    const imprev   = all.filter(c=>c.pago_imprevisto).length;
+    const retras   = all.filter(c=>c.retrasado).length;
+    new Chart(ctxF.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:['Visados','Con obs.','Dev. activos','Dev. resueltos','Imprevisto','Retrasados'],
+        datasets:[{
+          data:[visados, conObs, devAct, devRes, imprev, retras],
+          backgroundColor:['#15803d','#d97706','#dc2626','#4ade80','#7c3aed','#0891b2'],
+          borderRadius:6,
+          borderWidth:0,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
+        scales:{
+          y:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#ece9e2'}},
+          x:{ticks:{font:{size:10}}, grid:{display:false}}
+        }
+      }
+    });
+  }
 }
 
 /* GUARDAR */
