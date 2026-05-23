@@ -221,7 +221,6 @@ tbody tr:hover td{background:var(--s2)}
   <div class="sb-logo"><span class="dot"></span> Seguimiento</div>
   <div class="sb-nav">
     <div class="sb-sec">Panel</div>
-    <button class="ni" id="nav-dashboard"    onclick="sv('dashboard')"><span class="ic">📊</span> Resumen General</button>
     <button class="ni" id="nav-tiemporeal"   onclick="sv('tiemporeal')"><span class="ic">🟢</span> Tiempo Real</button>
     <button class="ni" id="nav-historico"    onclick="sv('historico')"><span class="ic">🕰</span> Histórico</button>
     <button class="ni" id="nav-contratos"    onclick="sv('contratos')"><span class="ic">📋</span> Lista</button>
@@ -387,7 +386,7 @@ tbody tr:hover td{background:var(--s2)}
 
 <script>
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-let view='dashboard', editId=null, delId=null, delType='contrato', delCb=null;
+let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
@@ -455,7 +454,7 @@ function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev=''
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
-  const T={dashboard:'Resumen General',tiemporeal:'Tiempo Real',historico:'Histórico',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const T={tiemporeal:'Tiempo Real',historico:'Histórico',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
@@ -1287,11 +1286,14 @@ async function renderTiempoReal(){
   <!-- GRÁFICOS -->
   <div class="rt-2col" style="margin-bottom:1rem">
 
-    <!-- Gráfico: Estados actuales (barras) -->
+    <!-- Gráfico: Estados actuales (donut) -->
     <div class="rt-box">
-      <div class="rt-box-h"><span class="rt-box-title">📊 Estados actuales (lógica real)</span></div>
-      <div class="rt-box-body" style="padding:.875rem 1rem">
-        <canvas id="rt-ch-estados" height="180"></canvas>
+      <div class="rt-box-h"><span class="rt-box-title">🔵 Estados activos</span></div>
+      <div class="rt-box-body" style="padding:.875rem 1rem;display:flex;align-items:center;gap:1.5rem">
+        <div style="position:relative;width:150px;height:150px;flex-shrink:0">
+          <canvas id="rt-ch-estados"></canvas>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;flex:1" id="rt-estados-legend"></div>
       </div>
     </div>
 
@@ -1378,29 +1380,32 @@ async function renderTiempoReal(){
   </div>`:''}
   `;
 
-  // ── Chart: Estados activos (sin resueltos) ──
+  // ── Chart: Estados activos (donut) ──
   const ctxE = document.getElementById('rt-ch-estados');
   if(ctxE){
+    const eLabels=['En proceso','Vencidos','Críticos','Advertencias'];
+    const eData=[enProceso.length, vencActivos.length, critActivos.length, advActivos.length];
+    const eColors=['#003082','#dc2626','#ef4444','#d97706'];
     new Chart(ctxE.getContext('2d'),{
-      type:'bar',
+      type:'doughnut',
       data:{
-        labels:['En proceso','Vencidos','Críticos','Advertencias'],
-        datasets:[{
-          data:[enProceso.length, vencActivos.length, critActivos.length, advActivos.length],
-          backgroundColor:['#003082','#dc2626','#ef4444','#d97706'],
-          borderRadius:6,
-          borderWidth:0,
-        }]
+        labels:eLabels,
+        datasets:[{data:eData,backgroundColor:eColors,borderWidth:2,borderColor:'#fff',hoverOffset:4}]
       },
       options:{
         responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
-        scales:{
-          y:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#ece9e2'}},
-          x:{ticks:{font:{size:10}}, grid:{display:false}}
-        }
+        cutout:'68%',
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}`}}}
       }
     });
+    // Leyenda manual
+    const leg=document.getElementById('rt-estados-legend');
+    if(leg) leg.innerHTML=eLabels.map((l,i)=>`
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="width:11px;height:11px;border-radius:3px;background:${eColors[i]};flex-shrink:0"></span>
+        <span style="font-size:11px;color:var(--muted);flex:1">${l}</span>
+        <span style="font-size:12px;font-weight:800;color:var(--text)">${eData[i]}</span>
+      </div>`).join('');
   }
 
   // ── Chart: Flags activas (sin visados ni dev. resueltos) ──
@@ -1470,6 +1475,13 @@ async function renderHistorico(){
     if(c.retrasado) porResp[r].retrasados++;
   });
   const respRows=Object.values(porResp).sort((a,b)=>b.total-a.total);
+
+  // Por mes — ingresados (creado_en = fecha registro en sistema)
+  const porMesIngreso=Array(12).fill(0);
+  all.forEach(c=>{
+    const f=c.creado_en;
+    if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMesIngreso[m]++;}
+  });
 
   // Por mes — cuántos se completaron/visaron (basado en fecha_fin como proxy)
   const porMes=Array(12).fill(0);
@@ -1590,10 +1602,16 @@ async function renderHistorico(){
     </div>
   </div>
 
-  <!-- Gráfico flags históricos solo -->
-  <div class="hi-box">
-    <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
-    <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
+  <!-- Gráficos: ingresados por mes + flags históricos -->
+  <div class="hi-2col">
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h"><span class="hi-box-title">📅 Ingresados por mes</span></div>
+      <div class="hi-box-body"><canvas id="hi-ch-mes" height="180"></canvas></div>
+    </div>
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
+      <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
+    </div>
   </div>
 
   <!-- Top rankings -->
@@ -1681,6 +1699,27 @@ async function renderHistorico(){
     </div>
   </div>
   `;
+
+  // ── Chart: Ingresados por mes ──
+  const ctxM=document.getElementById('hi-ch-mes');
+  if(ctxM){
+    const nowM=new Date().getMonth();
+    new Chart(ctxM.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:MESES,
+        datasets:[{
+          data:porMesIngreso,
+          backgroundColor:porMesIngreso.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),
+          borderRadius:5,borderWidth:0
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' ingresados'}}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
+      }
+    });
+  }
 
   // ── Chart: Flags históricos ──
   const ctxF=document.getElementById('hi-ch-flags');
