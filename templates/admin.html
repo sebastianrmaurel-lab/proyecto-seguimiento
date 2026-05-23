@@ -1404,9 +1404,9 @@ async function renderTiempoReal(){
     // Leyenda manual
     const leg=document.getElementById('rt-estados-legend');
     if(leg) leg.innerHTML=eLabels.map((l,i)=>`
-      <div style="display:flex;align-items:center;gap:7px">
+      <div style="display:flex;align-items:center;gap:6px">
         <span style="width:11px;height:11px;border-radius:3px;background:${eColors[i]};flex-shrink:0"></span>
-        <span style="font-size:11px;color:var(--muted);flex:1">${l}</span>
+        <span style="font-size:11px;color:var(--muted)">${l}</span>
         <span style="font-size:12px;font-weight:800;color:var(--text)">${eData[i]}</span>
       </div>`).join('');
   }
@@ -1605,16 +1605,10 @@ async function renderHistorico(){
     </div>
   </div>
 
-  <!-- Gráficos: ingresados por mes + flags históricos -->
-  <div class="hi-2col">
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">📅 Ingresados por mes</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-mes" height="180"></canvas></div>
-    </div>
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
-    </div>
+  <!-- Gráficos: flags históricos -->
+  <div class="hi-box" style="margin-bottom:1rem">
+    <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
+    <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
   </div>
 
   <!-- Top rankings -->
@@ -1702,27 +1696,6 @@ async function renderHistorico(){
     </div>
   </div>
   `;
-
-  // ── Chart: Ingresados por mes ──
-  const ctxM=document.getElementById('hi-ch-mes');
-  if(ctxM){
-    const nowM=new Date().getMonth();
-    new Chart(ctxM.getContext('2d'),{
-      type:'bar',
-      data:{
-        labels:MESES,
-        datasets:[{
-          data:porMesIngreso,
-          backgroundColor:porMesIngreso.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),
-          borderRadius:5,borderWidth:0
-        }]
-      },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' ingresados'}}},
-        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
-      }
-    });
-  }
 
   // ── Chart: Flags históricos ──
   const ctxF=document.getElementById('hi-ch-flags');
