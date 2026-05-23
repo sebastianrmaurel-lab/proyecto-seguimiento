@@ -222,6 +222,7 @@ tbody tr:hover td{background:var(--s2)}
   <div class="sb-nav">
     <div class="sb-sec">Panel</div>
     <button class="ni" id="nav-dashboard"    onclick="sv('dashboard')"><span class="ic">📊</span> Resumen General</button>
+    <button class="ni" id="nav-tiemporeal"   onclick="sv('tiemporeal')"><span class="ic">🟢</span> Tiempo Real</button>
     <button class="ni" id="nav-contratos"    onclick="sv('contratos')"><span class="ic">📋</span> Lista</button>
     <button class="ni" id="nav-responsables" onclick="sv('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="ni" id="nav-materias"     onclick="sv('materias')"><span class="ic">📂</span> Materias</button>
@@ -453,13 +454,14 @@ function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev=''
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
-  const T={dashboard:'Resumen General',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const T={dashboard:'Resumen General',tiemporeal:'Tiempo Real',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
   killCH();
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
+  else if(view==='tiemporeal') renderTiempoReal();
   else if(view==='contratos') renderContratos();
   else if(view==='responsables') renderResponsables();
   else if(view==='materias')  renderMaterias();
@@ -1104,6 +1106,125 @@ async function delNota(id){
   if(!confirm('¿Eliminar esta nota?')) return;
   await fetch(`/api/notas/${id}`,{method:'DELETE'});
   loadNotas(editId);
+}
+
+/* ── TIEMPO REAL ── */
+async function renderTiempoReal(){
+  const el=document.getElementById('vc');
+  let all,stats;
+  try{
+    [all,stats]=await Promise.all([
+      fetch('/api/contratos').then(r=>r.json()),
+      fetch('/api/stats').then(r=>r.json()),
+    ]);
+  }catch(e){
+    el.innerHTML=`<div class="empty">❌ Error al cargar. <button onclick="loadView()" class="btn btn-ghost btn-sm" style="margin-top:.5rem">Reintentar</button></div>`;
+    return;
+  }
+
+  /* ── LÓGICA REAL:
+     Un registro "devuelto" con estado completado O visado='si' → NO cuenta como devuelto activo.
+     Un registro "vencido" con estado completado O visado='si' → NO cuenta como vencido activo.
+     Estas son las métricas LIMPIAS de tiempo real.
+  ── */
+  const esResuelto = c => c.estado==='completado' || c.visado==='si';
+
+  // Devueltos activos = devuelto=true y NO resuelto
+  const devActivos  = all.filter(c=>c.devuelto && !esResuelto(c));
+  // Devueltos ya resueltos (completado o visado) — no problemáticos
+  const devResueltos= all.filter(c=>c.devuelto && esResuelto(c));
+
+  // Vencidos activos = alerta vencido y NO resuelto
+  const vencActivos = all.filter(c=>c.alerta==='vencido' && !esResuelto(c));
+  // Vencidos pero ya resueltos
+  const vencResueltos=all.filter(c=>c.alerta==='vencido' && esResuelto(c));
+
+  // Críticos activos (≤7d) y NO resueltos
+  const critActivos = all.filter(c=>c.alerta==='critico' && !esResuelto(c));
+  // Advertencias activas y NO resueltas
+  const advActivos  = all.filter(c=>c.alerta==='advertencia' && !esResuelto(c));
+
+  // En proceso real (no completado, no sin_efecto, no resuelto)
+  const enProceso   = all.filter(c=>c.estado==='en_proceso' && !esResuelto(c));
+  // Completados (estado=completado o visado=si)
+  const completados = all.filter(c=>esResuelto(c));
+  // Pendientes sin fecha fin
+  const sinFecha    = all.filter(c=>!c.fecha_fin && c.estado==='en_proceso' && !esResuelto(c));
+
+  // Retrasados activos = retrasado=true y NO resuelto
+  const retActivos  = all.filter(c=>c.retrasado && !esResuelto(c));
+
+  const now=Date.now();
+
+  function trRT(c,badge=''){
+    const dias=c.dias_restantes;
+    const diasHtml=c.alerta==='vencido'
+      ?`<span style="font-weight:800;color:var(--red)">VENCIDO</span>`
+      :dias!=null?`${dias}d`:'—';
+    return`<tr onclick="openModal(${c.id})" style="cursor:pointer">
+      <td><strong>${c.nombre}</strong><div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div></td>
+      <td style="font-size:11px">${c.materia||'—'}</td>
+      <td style="font-size:11px">${c.responsable||'—'}</td>
+      <td style="font-size:11px">${fmtD(c.fecha_fin)}</td>
+      <td>${diasHtml}</td>
+      <td>${badge||badgeFull(c)}</td>
+      <td onclick="event.stopPropagation()"><button class="act-btn" onclick="openModal(${c.id})">✏</button></td>
+    </tr>`;
+  }
+
+  function panelTabla(titulo,lista,badge='',emptyMsg='Sin registros en esta categoría'){
+    if(!lista.length) return`<div class="panel"><div class="ph"><span class="ph-title">${titulo}</span><span style="font-size:11px;color:var(--muted)">0</span></div><div class="empty">${emptyMsg}</div></div>`;
+    return`<div class="panel">
+      <div class="ph"><span class="ph-title">${titulo}</span><span class="badge b-proc" style="font-size:10px">${lista.length}</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>Nombre / RUT</th><th>Materia</th><th>Responsable</th><th>Vence</th><th>Días</th><th>Estado</th><th></th></tr></thead>
+        <tbody>${lista.map(c=>trRT(c,badge)).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  // Último refresh
+  const hora=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  el.innerHTML=`
+  <!-- TOPBAR INFO -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-weight:700">
+        <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite"></span>
+        EN VIVO — actualizado ${hora}
+      </span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="renderTiempoReal()">↻ Actualizar</button>
+  </div>
+  <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
+
+  <!-- MÉTRICAS REALES -->
+  <div class="metrics" style="margin-bottom:1.125rem">
+    <div class="metric m-g" style="cursor:default"><div class="mlbl">✅ Resueltos</div><div class="mval">${completados.length}</div></div>
+    <div class="metric m-a" style="cursor:default"><div class="mlbl">● En proceso</div><div class="mval">${enProceso.length}</div></div>
+    <div class="metric m-venc" style="cursor:default"><div class="mlbl">💀 Vencidos activos</div><div class="mval">${vencActivos.length}</div></div>
+    <div class="metric m-r" style="cursor:default"><div class="mlbl">⚠ Críticos activos</div><div class="mval">${critActivos.length}</div></div>
+    <div class="metric m-s" style="cursor:default"><div class="mlbl">⏰ Advertencias activas</div><div class="mval" style="color:var(--amber)">${advActivos.length}</div></div>
+    <div class="metric m-dev" style="cursor:default"><div class="mlbl">↩ Devueltos activos</div><div class="mval">${devActivos.length}</div></div>
+    <div class="metric m-dev" style="cursor:default;--m-dev:#0891b2"><div class="mlbl">↩✅ Dev. resueltos</div><div class="mval" style="color:#15803d">${devResueltos.length}</div></div>
+    <div class="metric m-r" style="cursor:default;opacity:.6"><div class="mlbl">⏳ Retrasados activos</div><div class="mval">${retActivos.length}</div></div>
+  </div>
+
+  ${devResueltos.length?`<div class="ab" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:.5rem .875rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
+    ✅ <strong>${devResueltos.length} devuelto${devResueltos.length!==1?'s':''}</strong> ya completado${devResueltos.length!==1?'s':''} o visados — <em>no cuentan como problema</em>
+  </div>`:''}
+  ${vencResueltos.length?`<div class="ab" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:.5rem .875rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
+    ✅ <strong>${vencResueltos.length} vencido${vencResueltos.length!==1?'s':''}</strong> con fecha expirada pero ya completado${vencResueltos.length!==1?'s':''}/visados — <em>no se contabilizan</em>
+  </div>`:''}
+
+  <!-- SECCIONES -->
+  ${panelTabla('💀 Vencidos activos — requieren acción',vencActivos,'','✅ Ningún vencido sin resolver')}
+  ${panelTabla('⚠ Críticos activos (≤7 días)',critActivos,'','✅ Sin críticos pendientes')}
+  ${panelTabla('↩ Devueltos activos — pendientes de reingreso',devActivos,'','✅ Todos los devueltos están resueltos')}
+  ${panelTabla('⏰ Advertencias activas (≤20 días)',advActivos,'','✅ Sin advertencias pendientes')}
+  ${sinFecha.length?panelTabla('📅 En proceso sin fecha límite asignada',sinFecha,'',''):''}
+  `;
 }
 
 /* GUARDAR */
