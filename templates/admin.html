@@ -223,6 +223,7 @@ tbody tr:hover td{background:var(--s2)}
     <div class="sb-sec">Panel</div>
     <button class="ni" id="nav-dashboard"    onclick="sv('dashboard')"><span class="ic">📊</span> Resumen General</button>
     <button class="ni" id="nav-tiemporeal"   onclick="sv('tiemporeal')"><span class="ic">🟢</span> Tiempo Real</button>
+    <button class="ni" id="nav-historico"    onclick="sv('historico')"><span class="ic">🕰</span> Histórico</button>
     <button class="ni" id="nav-contratos"    onclick="sv('contratos')"><span class="ic">📋</span> Lista</button>
     <button class="ni" id="nav-responsables" onclick="sv('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="ni" id="nav-materias"     onclick="sv('materias')"><span class="ic">📂</span> Materias</button>
@@ -454,7 +455,7 @@ function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev=''
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
-  const T={dashboard:'Resumen General',tiemporeal:'Tiempo Real',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const T={dashboard:'Resumen General',tiemporeal:'Tiempo Real',historico:'Histórico',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
@@ -462,6 +463,7 @@ function loadView(){
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
   else if(view==='tiemporeal') renderTiempoReal();
+  else if(view==='historico')  renderHistorico();
   else if(view==='contratos') renderContratos();
   else if(view==='responsables') renderResponsables();
   else if(view==='materias')  renderMaterias();
@@ -1426,6 +1428,295 @@ async function renderTiempoReal(){
           y:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#ece9e2'}},
           x:{ticks:{font:{size:10}}, grid:{display:false}}
         }
+      }
+    });
+  }
+}
+
+/* ── HISTÓRICO ── */
+async function renderHistorico(){
+  const el=document.getElementById('vc');
+  let all;
+  try{
+    all = await fetch('/api/contratos').then(r=>r.json());
+  }catch(e){
+    el.innerHTML=`<div class="empty">❌ Error al cargar. <button onclick="loadView()" class="btn btn-ghost btn-sm" style="margin-top:.5rem">Reintentar</button></div>`;
+    return;
+  }
+
+  const total       = all.length;
+  // Acumulados históricos — sin importar estado actual
+  const devTotal    = all.filter(c=>c.devuelto);
+  const vencTotal   = all.filter(c=>c.alerta==='vencido' || (c.dias_restantes!=null && c.dias_restantes<0));
+  const completados = all.filter(c=>c.estado==='completado');
+  const visados     = all.filter(c=>c.visado==='si');
+  const conObs      = all.filter(c=>c.tiene_observacion);
+  const imprevisto  = all.filter(c=>c.pago_imprevisto);
+  const retrasados  = all.filter(c=>c.retrasado);
+  const sinEfecto   = all.filter(c=>c.estado==='sin_efecto');
+
+  // Por responsable: acumulado de flags
+  const porResp={};
+  all.forEach(c=>{
+    const r=c.responsable||'Sin asignar';
+    if(!porResp[r]) porResp[r]={nombre:r,total:0,devueltos:0,vencidos:0,completados:0,visados:0,obs:0,imprevisto:0,retrasados:0};
+    porResp[r].total++;
+    if(c.devuelto) porResp[r].devueltos++;
+    if(c.alerta==='vencido'||(c.dias_restantes!=null&&c.dias_restantes<0)) porResp[r].vencidos++;
+    if(c.estado==='completado') porResp[r].completados++;
+    if(c.visado==='si') porResp[r].visados++;
+    if(c.tiene_observacion) porResp[r].obs++;
+    if(c.pago_imprevisto) porResp[r].imprevisto++;
+    if(c.retrasado) porResp[r].retrasados++;
+  });
+  const respRows=Object.values(porResp).sort((a,b)=>b.total-a.total);
+
+  // Por mes — cuántos se completaron/visaron (basado en fecha_fin como proxy)
+  const porMes=Array(12).fill(0);
+  all.filter(c=>c.estado==='completado'||c.visado==='si').forEach(c=>{
+    const f=c.fecha_fin||c.fecha_inicio;
+    if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMes[m]++;}
+  });
+
+  // Top devueltos históricos (más devoluciones por responsable)
+  const topDev=[...respRows].sort((a,b)=>b.devueltos-a.devueltos).filter(r=>r.devueltos>0).slice(0,5);
+  const topVenc=[...respRows].sort((a,b)=>b.vencidos-a.vencidos).filter(r=>r.vencidos>0).slice(0,5);
+
+  el.innerHTML=`
+  <style>
+    .hi-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+    .hi-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.125rem;position:relative;overflow:hidden}
+    .hi-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px}
+    .hi-kpi.navy::after{background:linear-gradient(90deg,#002060,#003082)}
+    .hi-kpi.green::after{background:linear-gradient(90deg,#15803d,#22c55e)}
+    .hi-kpi.red::after{background:linear-gradient(90deg,#dc2626,#ef4444)}
+    .hi-kpi.amber::after{background:linear-gradient(90deg,#d97706,#f59e0b)}
+    .hi-kpi.blue::after{background:linear-gradient(90deg,#0891b2,#06b6d4)}
+    .hi-kpi.purple::after{background:linear-gradient(90deg,#6d28d9,#8b5cf6)}
+    .hi-kpi.gray::after{background:linear-gradient(90deg,#6b7280,#9ca3af)}
+    .hi-kpi-icon{font-size:20px;margin-bottom:.375rem}
+    .hi-kpi-val{font-size:30px;font-weight:800;line-height:1;margin-bottom:.2rem}
+    .hi-kpi.navy .hi-kpi-val{color:#002060}
+    .hi-kpi.green .hi-kpi-val{color:#15803d}
+    .hi-kpi.red .hi-kpi-val{color:#dc2626}
+    .hi-kpi.amber .hi-kpi-val{color:#d97706}
+    .hi-kpi.blue .hi-kpi-val{color:#0891b2}
+    .hi-kpi.purple .hi-kpi-val{color:#6d28d9}
+    .hi-kpi.gray .hi-kpi-val{color:#6b7280}
+    .hi-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+    .hi-kpi-sub{font-size:10px;color:var(--soft);margin-top:.25rem}
+    .hi-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+    @media(max-width:700px){.hi-2col{grid-template-columns:1fr}}
+    .hi-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem}
+    .hi-box-h{padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:space-between}
+    .hi-box-title{font-size:12px;font-weight:700}
+    .hi-box-body{padding:.875rem 1rem}
+    .hi-resp-row{display:grid;grid-template-columns:1fr repeat(7,44px);gap:4px;align-items:center;padding:.5rem .875rem;border-bottom:1px solid var(--border);font-size:11px}
+    .hi-resp-row:last-child{border-bottom:none}
+    .hi-resp-row:hover{background:var(--s2)}
+    .hi-resp-head{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--soft);text-align:center}
+    .hi-resp-head:first-child{text-align:left}
+    .hi-pill{display:inline-flex;align-items:center;justify-content:center;min-width:26px;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:800;border:1px solid transparent}
+    .hi-pill.red{background:#fef2f2;color:#b91c1c;border-color:#fca5a5}
+    .hi-pill.amber{background:#fefce8;color:#b45309;border-color:#fde68a}
+    .hi-pill.green{background:#f0fdf4;color:#15803d;border-color:#86efac}
+    .hi-pill.blue{background:#e0f2fe;color:#0891b2;border-color:#7dd3fc}
+    .hi-pill.purple{background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd}
+    .hi-pill.gray{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
+    .hi-pill.zero{background:transparent;color:var(--soft);border-color:transparent;font-weight:400}
+    .hi-top-row{display:flex;align-items:center;gap:.75rem;padding:.55rem .875rem;border-bottom:1px solid var(--border)}
+    .hi-top-row:last-child{border-bottom:none}
+    .hi-top-rank{width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--muted);flex-shrink:0}
+    .hi-top-rank.gold{background:#fef9c3;border-color:#fde68a;color:#b45309}
+    .hi-top-rank.silver{background:#f3f4f6;border-color:#d1d5db;color:#6b7280}
+    .hi-top-rank.bronze{background:#fef3e2;border-color:#fcd9a0;color:#92400e}
+  </style>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+    <span style="font-size:11px;color:var(--muted)">Acumulado total — ${total} registros en el sistema</span>
+    <button class="btn btn-ghost btn-sm" onclick="renderHistorico()">↻ Actualizar</button>
+  </div>
+
+  <!-- KPIs históricos -->
+  <div class="hi-kpi-grid">
+    <div class="hi-kpi navy">
+      <div class="hi-kpi-icon">📋</div>
+      <div class="hi-kpi-val">${total}</div>
+      <div class="hi-kpi-lbl">Total registros</div>
+      <div class="hi-kpi-sub">Histórico completo</div>
+    </div>
+    <div class="hi-kpi green">
+      <div class="hi-kpi-icon">✅</div>
+      <div class="hi-kpi-val">${completados.length}</div>
+      <div class="hi-kpi-lbl">Completados</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(completados.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi green">
+      <div class="hi-kpi-icon">🔏</div>
+      <div class="hi-kpi-val">${visados.length}</div>
+      <div class="hi-kpi-lbl">Visados</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(visados.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi red">
+      <div class="hi-kpi-icon">↩</div>
+      <div class="hi-kpi-val">${devTotal.length}</div>
+      <div class="hi-kpi-lbl">Devueltos alguna vez</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(devTotal.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi red">
+      <div class="hi-kpi-icon">💀</div>
+      <div class="hi-kpi-val">${vencTotal.length}</div>
+      <div class="hi-kpi-lbl">Vencidos alguna vez</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(vencTotal.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi amber">
+      <div class="hi-kpi-icon">💬</div>
+      <div class="hi-kpi-val">${conObs.length}</div>
+      <div class="hi-kpi-lbl">Con observación</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(conObs.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi purple">
+      <div class="hi-kpi-icon">💲</div>
+      <div class="hi-kpi-val">${imprevisto.length}</div>
+      <div class="hi-kpi-lbl">Pago imprevisto</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(imprevisto.length/total*100):0}% del total</div>
+    </div>
+    <div class="hi-kpi gray">
+      <div class="hi-kpi-icon">🚫</div>
+      <div class="hi-kpi-val">${sinEfecto.length}</div>
+      <div class="hi-kpi-lbl">Sin efecto</div>
+      <div class="hi-kpi-sub">${total>0?Math.round(sinEfecto.length/total*100):0}% del total</div>
+    </div>
+  </div>
+
+  <!-- Gráficos: completados por mes + flags históricos -->
+  <div class="hi-2col">
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h"><span class="hi-box-title">📅 Completados/Visados por mes</span></div>
+      <div class="hi-box-body"><canvas id="hi-ch-mes" height="180"></canvas></div>
+    </div>
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
+      <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top rankings -->
+  <div class="hi-2col" style="margin-top:1rem">
+
+    <!-- Top devueltos por responsable -->
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h">
+        <span class="hi-box-title">↩ Más devoluciones históricas por responsable</span>
+        <span style="font-size:10px;color:var(--muted)">${devTotal.length} total</span>
+      </div>
+      ${topDev.length===0
+        ?`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin devoluciones registradas</div>`
+        :topDev.map((r,i)=>`<div class="hi-top-row">
+          <div class="hi-top-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+          <div style="flex:1;font-size:12px;font-weight:700">${r.nombre}</div>
+          <span class="hi-pill red">${r.devueltos} dev.</span>
+          <span class="hi-pill gray" style="margin-left:4px">${r.total} total</span>
+        </div>`).join('')
+      }
+    </div>
+
+    <!-- Top vencidos por responsable -->
+    <div class="hi-box" style="margin-bottom:0">
+      <div class="hi-box-h">
+        <span class="hi-box-title">💀 Más vencidos históricos por responsable</span>
+        <span style="font-size:10px;color:var(--muted)">${vencTotal.length} total</span>
+      </div>
+      ${topVenc.length===0
+        ?`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin vencidos registrados</div>`
+        :topVenc.map((r,i)=>`<div class="hi-top-row">
+          <div class="hi-top-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+          <div style="flex:1;font-size:12px;font-weight:700">${r.nombre}</div>
+          <span class="hi-pill red">${r.vencidos} venc.</span>
+          <span class="hi-pill gray" style="margin-left:4px">${r.total} total</span>
+        </div>`).join('')
+      }
+    </div>
+
+  </div>
+
+  <!-- Tabla completa por responsable -->
+  <div class="hi-box" style="margin-top:1rem">
+    <div class="hi-box-h">
+      <span class="hi-box-title">👤 Resumen histórico por responsable</span>
+      <span style="font-size:10px;color:var(--muted)">${respRows.length} responsables</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--s2)">
+            <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap">Responsable</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Total</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Complet.</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Visados</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Devueltos</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Vencidos</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Obs.</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Imprev.</th>
+            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Retras.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${respRows.map(r=>`<tr style="cursor:default;transition:background .1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+            <td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:700">${r.nombre}</td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill gray">${r.total}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.completados>0?'green':'zero'}">${r.completados||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.visados>0?'green':'zero'}">${r.visados||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.devueltos>0?'red':'zero'}">${r.devueltos||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.vencidos>0?'red':'zero'}">${r.vencidos||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.obs>0?'amber':'zero'}">${r.obs||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.imprevisto>0?'purple':'zero'}">${r.imprevisto||'—'}</span></td>
+            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.retrasados>0?'blue':'zero'}">${r.retrasados||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  `;
+
+  // ── Chart: Completados por mes ──
+  const ctxM=document.getElementById('hi-ch-mes');
+  if(ctxM){
+    const nowM=new Date().getMonth();
+    new Chart(ctxM.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:MESES,
+        datasets:[{
+          data:porMes,
+          backgroundColor:porMes.map((_,i)=>i===nowM?'rgba(21,128,61,1)':'rgba(21,128,61,.45)'),
+          borderRadius:5,borderWidth:0
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' completados'}}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
+      }
+    });
+  }
+
+  // ── Chart: Flags históricos ──
+  const ctxF=document.getElementById('hi-ch-flags');
+  if(ctxF){
+    new Chart(ctxF.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:['Devueltos','Vencidos','Con obs.','Imprevisto','Retrasados','Sin efecto'],
+        datasets:[{
+          data:[devTotal.length,vencTotal.length,conObs.length,imprevisto.length,retrasados.length,sinEfecto.length],
+          backgroundColor:['#dc2626','#7f1d1d','#d97706','#7c3aed','#0891b2','#6b7280'],
+          borderRadius:5,borderWidth:0
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
       }
     });
   }
