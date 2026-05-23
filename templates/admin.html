@@ -1289,11 +1289,11 @@ async function renderTiempoReal(){
     <!-- Gráfico: Estados actuales (donut) -->
     <div class="rt-box">
       <div class="rt-box-h"><span class="rt-box-title">🔵 Estados activos</span></div>
-      <div class="rt-box-body" style="padding:.875rem 1rem;display:flex;align-items:center;gap:1.5rem">
-        <div style="position:relative;width:150px;height:150px;flex-shrink:0">
+      <div class="rt-box-body" style="padding:.875rem 1rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+        <div style="position:relative;width:130px;height:130px;flex-shrink:0">
           <canvas id="rt-ch-estados"></canvas>
         </div>
-        <div style="display:flex;flex-direction:column;gap:.5rem;flex:1" id="rt-estados-legend"></div>
+        <div style="display:flex;flex-direction:column;gap:.45rem;flex:1;min-width:120px" id="rt-estados-legend"></div>
       </div>
     </div>
 
@@ -1401,10 +1401,10 @@ async function renderTiempoReal(){
     // Leyenda manual
     const leg=document.getElementById('rt-estados-legend');
     if(leg) leg.innerHTML=eLabels.map((l,i)=>`
-      <div style="display:flex;align-items:center;gap:7px">
-        <span style="width:11px;height:11px;border-radius:3px;background:${eColors[i]};flex-shrink:0"></span>
-        <span style="font-size:11px;color:var(--muted);flex:1">${l}</span>
-        <span style="font-size:12px;font-weight:800;color:var(--text)">${eData[i]}</span>
+      <div style="display:flex;align-items:center;gap:8px;padding:.3rem .5rem;border-radius:7px;background:var(--bg)">
+        <span style="width:12px;height:12px;border-radius:3px;background:${eColors[i]};flex-shrink:0"></span>
+        <span style="font-size:11px;color:var(--muted);flex:1;white-space:nowrap">${l}</span>
+        <span style="font-size:14px;font-weight:800;color:var(--text);min-width:24px;text-align:right">${eData[i]}</span>
       </div>`).join('');
   }
 
@@ -1602,16 +1602,10 @@ async function renderHistorico(){
     </div>
   </div>
 
-  <!-- Gráficos: ingresados por mes + flags históricos -->
-  <div class="hi-2col">
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">📅 Ingresados por mes</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-mes" height="180"></canvas></div>
-    </div>
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
-      <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
-    </div>
+  <!-- Gráfico: flags históricos (ancho completo) -->
+  <div class="hi-box" style="margin-bottom:1rem">
+    <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
+    <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
   </div>
 
   <!-- Top rankings -->
@@ -1699,27 +1693,6 @@ async function renderHistorico(){
     </div>
   </div>
   `;
-
-  // ── Chart: Ingresados por mes ──
-  const ctxM=document.getElementById('hi-ch-mes');
-  if(ctxM){
-    const nowM=new Date().getMonth();
-    new Chart(ctxM.getContext('2d'),{
-      type:'bar',
-      data:{
-        labels:MESES,
-        datasets:[{
-          data:porMesIngreso,
-          backgroundColor:porMesIngreso.map((_,i)=>i===nowM?'rgba(0,48,130,1)':'rgba(0,48,130,.4)'),
-          borderRadius:5,borderWidth:0
-        }]
-      },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' ingresados'}}},
-        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
-      }
-    });
-  }
 
   // ── Chart: Flags históricos ──
   const ctxF=document.getElementById('hi-ch-flags');
