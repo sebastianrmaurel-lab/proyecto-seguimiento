@@ -399,6 +399,7 @@ tbody tr:hover td{background:var(--s2)}
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='',fNumSeg='';
+let fAlertas=new Set(); // acumula: 'critico','advertencia','vencido','visados','obs','retrasado','devuelto','imprevisto','en_proceso','completado','sin_efecto'
 let hFMat='',hFResp='',hFUnidad='';
 let trFMat='',trFResp='',trFUnidad='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
@@ -441,7 +442,7 @@ function etapasHtml(etapas){
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function sv(v){
-  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';gPage=1;
+  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';fAlertas=new Set();gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
   document.getElementById('btn-exp').style.display='flex';
@@ -449,24 +450,27 @@ function sv(v){
 }
 function fv(f){
   view='contratos';
-  // Solo resetea el filtro de estado/alerta, mantiene materia, responsable, etc.
-  fEstado='';fVis='';fObs='';fRet='';fDev='';fImp='';
-  if(['critico','advertencia','vencido','en_proceso','completado','sin_efecto'].includes(f)) fEstado=f;
-  else if(f==='visados') fVis='si';
-  else if(f==='obs') fObs='1';
-  else if(f==='retrasado') fRet='1';
-  else if(f==='devuelto') fDev='1';
-  else if(f==='imprevisto') fImp='1';
+  // Toggle: si ya está activo lo quita, si no lo añade
+  if(fAlertas.has(f)) fAlertas.delete(f);
+  else fAlertas.add(f);
   gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos')?.classList.add('active');
   document.getElementById('btn-exp').style.display='flex';
   loadView();
 }
+
+// Navega a Lista aplicando filtro rápido Y traspasando filtros activos de Tiempo Real o Histórico
+function fvTR(f){
+  if(trFMat)    fMat=trFMat;
+  if(trFResp)   fResp=trFResp;
+  if(trFUnidad) fUnidad=trFUnidad;
+  fv(f);
+}
 function fByMat(m){view='contratos';clearAllF();fMat=m;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByResp(r){view='contratos';clearAllF();fResp=r;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByEtapa(e){view='contratos';clearAllF();fEtapa=e;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
-function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';gPage=1;}
+function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';fAlertas=new Set();gPage=1;}
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
@@ -474,6 +478,17 @@ function loadView(){
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
+  // Marcar botones sidebar activos según fAlertas
+  if(view==='contratos' && fAlertas.size>0){
+    const mapaBtn={critico:'nc-crit',advertencia:'nc-adv',vencido:'nc-venc',visados:'nc-vis',obs:'nc-obs',retrasado:'nc-ret',devuelto:'nc-dev',imprevisto:'nc-imp'};
+    document.querySelectorAll('.ni').forEach(b=>{
+      const nc=b.querySelector('.nc');
+      if(nc){
+        const key=Object.keys(mapaBtn).find(k=>mapaBtn[k]===nc.id);
+        if(key && fAlertas.has(key)) b.classList.add('active');
+      }
+    });
+  }
   // Mostrar barra de búsqueda solo en vista contratos
   const sb=document.getElementById('search-bar-wrap');
   if(sb) sb.style.display=view==='contratos'?'flex':'none';
@@ -483,6 +498,7 @@ function loadView(){
   const inp2=document.getElementById('numseg-inp');
   if(inp2 && view!=='contratos'){ inp2.value=''; fNumSeg=''; }
   if(view!=='contratos') loadCounts();
+  if(view!=='contratos') fAlertas=new Set();
   killCH();
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
@@ -624,10 +640,6 @@ async function renderDashboard(){
 /* ── CONTRATOS ── */
 async function renderContratos(){
   let url='/api/contratos?x=1';
-  if(fEstado==='critico')       url+='&alerta=critico';
-  else if(fEstado==='advertencia') url+='&alerta=advertencia';
-  else if(fEstado==='vencido')  url+='&alerta=vencido';
-  else if(fEstado)              url+='&estado='+fEstado;
   if(fRut)   url+='&rut='+encodeURIComponent(fRut);
   if(fMat)   url+='&materia='+encodeURIComponent(fMat);
   if(fVis)   url+='&visado='+fVis;
@@ -646,13 +658,32 @@ async function renderContratos(){
   try{ data=await fetch(url).then(r=>r.json()); }
   catch(e){ el.innerHTML='<div class="empty">❌ Error cargando.</div>'; return; }
 
+  // Filtrar por fAlertas acumuladas (OR entre ellas)
+  if(fAlertas.size>0){
+    data=data.filter(c=>{
+      if(fAlertas.has('critico')     && c.alerta==='critico')     return true;
+      if(fAlertas.has('advertencia') && c.alerta==='advertencia') return true;
+      if(fAlertas.has('vencido')     && c.alerta==='vencido')     return true;
+      if(fAlertas.has('en_proceso')  && c.estado==='en_proceso')  return true;
+      if(fAlertas.has('completado')  && c.estado==='completado')  return true;
+      if(fAlertas.has('sin_efecto')  && c.estado==='sin_efecto')  return true;
+      if(fAlertas.has('visados')     && c.visado==='si')          return true;
+      if(fAlertas.has('obs')         && c.tiene_observacion)      return true;
+      if(fAlertas.has('retrasado')   && c.retrasado)              return true;
+      if(fAlertas.has('devuelto')    && c.devuelto)               return true;
+      if(fAlertas.has('imprevisto')  && c.pago_imprevisto)        return true;
+      return false;
+    });
+  }
+
   const matOpts=gMats.map(m=>`<option value="${m}">${m}</option>`).join('');
   const rOpts=gResps.map(r=>`<option value="${r.nombre}">${r.nombre}</option>`).join('');
   const eOpts=gEtapaNombres.map(e=>`<option value="${e}">${e}</option>`).join('');
   const uOpts=gUnidades.map(u=>`<option value="${u}">${u}</option>`).join('');
 
   let albl='';
-  if(fResp) albl=`Responsable: ${fResp}`;
+  if(fAlertas.size>0) albl=[...fAlertas].map(f=>f.replace('_',' ')).join(' + ');
+  else if(fResp) albl=`Responsable: ${fResp}`;
   else if(fMat) albl=`Materia: ${fMat}`;
   else if(fEtapa) albl=`Etapa: ${fEtapa}`;
   else if(fUnidad) albl=`Unidad: ${fUnidad}`;
@@ -661,7 +692,6 @@ async function renderContratos(){
   else if(fRet) albl='Retrasados';
   else if(fDev) albl='Devueltos';
   else if(fImp) albl='Pago imprevisto';
-  else if(fEstado) albl=fEstado.replace('_',' ');
 
   // Paginación
   const PER_PAGE=25;
@@ -1284,37 +1314,37 @@ async function renderTiempoReal(){
 
   <!-- KPI cards -->
   <div class="rt-kpi-grid">
-    <div class="rt-kpi red" onclick="fv('vencido')">
+    <div class="rt-kpi red" onclick="fvTR('vencido')">
       <div class="rt-kpi-icon">💀</div>
       <div class="rt-kpi-val">${vencActivos.length}</div>
       <div class="rt-kpi-lbl">Vencidos activos</div>
       <div class="rt-kpi-sub">${vencResueltos.length} ya resueltos (no cuentan)</div>
     </div>
-    <div class="rt-kpi red" onclick="fv('critico')">
+    <div class="rt-kpi red" onclick="fvTR('critico')">
       <div class="rt-kpi-icon">⚠️</div>
       <div class="rt-kpi-val">${critActivos.length}</div>
       <div class="rt-kpi-lbl">Críticos activos</div>
       <div class="rt-kpi-sub">Vencen en ≤ 7 días</div>
     </div>
-    <div class="rt-kpi amber" onclick="fv('devuelto')">
+    <div class="rt-kpi amber" onclick="fvTR('devuelto')">
       <div class="rt-kpi-icon">↩</div>
       <div class="rt-kpi-val">${devActivos.length}</div>
       <div class="rt-kpi-lbl">Devueltos activos</div>
       <div class="rt-kpi-sub">${devResueltos.length} completados/visados (no cuentan)</div>
     </div>
-    <div class="rt-kpi amber" onclick="fv('advertencia')">
+    <div class="rt-kpi amber" onclick="fvTR('advertencia')">
       <div class="rt-kpi-icon">⏰</div>
       <div class="rt-kpi-val">${advActivos.length}</div>
       <div class="rt-kpi-lbl">Advertencias activas</div>
       <div class="rt-kpi-sub">Vencen en ≤ 20 días</div>
     </div>
-    <div class="rt-kpi green" onclick="fv('completado')">
+    <div class="rt-kpi green" onclick="fvTR('completado')">
       <div class="rt-kpi-icon">✅</div>
       <div class="rt-kpi-val">${completados.length}</div>
       <div class="rt-kpi-lbl">Resueltos</div>
       <div class="rt-kpi-sub">${pct(completados.length)}% del total</div>
     </div>
-    <div class="rt-kpi navy" onclick="fv('en_proceso')">
+    <div class="rt-kpi navy" onclick="fvTR('en_proceso')">
       <div class="rt-kpi-icon">📋</div>
       <div class="rt-kpi-val">${enProceso.length}</div>
       <div class="rt-kpi-lbl">En proceso</div>
@@ -1401,7 +1431,7 @@ async function renderTiempoReal(){
         }).join('')
       }
       ${urgentes.length>0&&(vencActivos.length+critActivos.length)>8
-        ?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('vencido')">Ver todos →</button></div>`:''}
+        ?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('vencido')">Ver todos →</button></div>`:''}
     </div>
 
     <!-- Devueltos activos -->
@@ -1422,7 +1452,7 @@ async function renderTiempoReal(){
             <div style="text-align:right;flex-shrink:0">${diasBadge(c)}<div style="font-size:9px;color:var(--soft);margin-top:2px">${fmtD(c.fecha_fin)}</div></div>
           </div>`).join('')
       }
-      ${devActivos.length>8?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('devuelto')">Ver todos →</button></div>`:''}
+      ${devActivos.length>8?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('devuelto')">Ver todos →</button></div>`:''}
     </div>
 
   </div>
@@ -1444,7 +1474,7 @@ async function renderTiempoReal(){
         ${diasBadge(c)}
       </div>`).join('')}
     </div>
-    ${advActivos.length>6?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fv('advertencia')">Ver todas (${advActivos.length}) →</button></div>`:''}
+    ${advActivos.length>6?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('advertencia')">Ver todas (${advActivos.length}) →</button></div>`:''}
   </div>`:''}
   `;
 
