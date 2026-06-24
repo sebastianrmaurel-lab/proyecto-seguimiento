@@ -152,6 +152,10 @@ def parse_date(s):
     try: return datetime.strptime(s, '%Y-%m-%d').date()
     except: return None
 
+def normalize_rut(rut):
+    """Elimina puntos y guión para comparación flexible de RUT."""
+    return rut.replace('.', '').replace('-', '').upper().strip()
+
 def reg_hist(cid, accion, detalle=''):
     db.session.add(Historial(contrato_id=cid, accion=accion, detalle=detalle))
 
@@ -265,8 +269,9 @@ def api_chart_data():
 def api_buscar():
     rut = request.args.get('rut','').strip()
     if not rut: return jsonify([])
-    return jsonify([c.to_dict() for c in
-        Contrato.query.filter_by(rut=rut).order_by(Contrato.creado_en.desc()).all()])
+    rut_norm = normalize_rut(rut)
+    all_c = Contrato.query.order_by(Contrato.creado_en.desc()).all()
+    return jsonify([c.to_dict() for c in all_c if normalize_rut(c.rut) == rut_norm])
 
 @app.route('/api/contratos')
 def api_contratos():
@@ -282,13 +287,14 @@ def api_contratos():
     dev_f      = request.args.get('devuelto','').strip()
     imp_f      = request.args.get('imprevisto','').strip()
     etapa_f    = request.args.get('etapa','').strip()
-    unidad_f   = request.args.get('unidad','').strip()
 
     query = Contrato.query
-    if rut:       query = query.filter(Contrato.rut == rut)
+    if rut:
+        rut_norm = normalize_rut(rut)
+        ids = [c.id for c in Contrato.query.all() if normalize_rut(c.rut) == rut_norm]
+        query = query.filter(Contrato.id.in_(ids))
     if estado:    query = query.filter(Contrato.estado == estado)
     if materia_f: query = query.filter(Contrato.materia == materia_f)
-    if unidad_f:  query = query.filter(Contrato.unidad == unidad_f)
     if visado_f == 'si':  query = query.filter(Contrato.visado == 'si')
     if visado_f == 'no':  query = query.filter(Contrato.visado != 'si')
     if obs_f == '1':      query = query.filter(Contrato.tiene_observacion == True)
