@@ -477,6 +477,7 @@ function loadView(){
   if(inp && view!=='contratos'){ inp.value=''; sq=''; }
   const inp2=document.getElementById('numseg-inp');
   if(inp2 && view!=='contratos'){ inp2.value=''; fNumSeg=''; }
+  if(view!=='contratos') loadCounts();
   killCH();
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
@@ -757,6 +758,20 @@ async function renderContratos(){
   if(fResp&&sels[2]) sels[2].value=fResp;
   if(fEtapa&&sels[3]) sels[3].value=fEtapa;
   if(fUnidad&&sels[4]) sels[4].value=fUnidad;
+
+  // Actualizar contadores sidebar con datos filtrados
+  updateSidebarCounts(data);
+}
+
+function updateSidebarCounts(data){
+  document.getElementById('nc-crit').textContent = data.filter(c=>c.alerta==='critico').length;
+  document.getElementById('nc-adv').textContent  = data.filter(c=>c.alerta==='advertencia').length;
+  document.getElementById('nc-venc').textContent = data.filter(c=>c.alerta==='vencido').length;
+  document.getElementById('nc-vis').textContent  = data.filter(c=>c.visado==='si').length;
+  document.getElementById('nc-obs').textContent  = data.filter(c=>c.tiene_observacion).length;
+  document.getElementById('nc-ret').textContent  = data.filter(c=>c.retrasado).length;
+  document.getElementById('nc-dev').textContent  = data.filter(c=>c.devuelto).length;
+  document.getElementById('nc-imp').textContent  = data.filter(c=>c.pago_imprevisto).length;
 }
 
 /* ── EXPORTAR ── */
