@@ -742,7 +742,7 @@ async function renderCalendario(){
   }
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const evs=data.filter(c=>c.fecha_fin===dateStr);
+    const evs=data.filter(c=>c.fecha_fin===dateStr && ['Honorario','Contrata','SIAPER'].includes(c.materia));
     const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
     const cell=document.createElement('div');
     cell.className='cal-day'+(isToday?' today':'');
