@@ -714,6 +714,15 @@ async function renderCalendario(){
         <div class="cal-dow">Lun</div><div class="cal-dow">Mar</div><div class="cal-dow">Mié</div>
         <div class="cal-dow">Jue</div><div class="cal-dow">Vie</div><div class="cal-dow">Sáb</div><div class="cal-dow">Dom</div>
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.875rem;padding:.625rem .875rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;align-items:center">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">Referencias:</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fef2f2;border:1px solid #fca5a5"></span><span style="color:var(--red);font-weight:600">Crítico</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fff1f2;border:1px solid #fda4af"></span><span style="color:#e11d48;font-weight:600">Vencido</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--amber-l);border:1px solid #fde68a"></span><span style="color:var(--amber);font-weight:600">Advertencia</span> <span style="color:var(--soft);font-size:10px">(vence ≤20d)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--navy-l);border:1px solid #bfdbfe"></span><span style="color:var(--navy2);font-weight:600">En proceso</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green-l);border:1px solid #86efac"></span><span style="color:var(--green);font-weight:600">Completado</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f3f4f6;border:1px solid #e5e7eb"></span><span style="color:#6b7280;font-weight:600">Sin efecto</span></span>
+      </div>
       <div class="cal-detail" id="cal-detail"><div style="color:var(--soft);font-size:12px">Haz click en un día para ver los contratos que vencen ese día.</div></div>
     </div>
   </div>`;
