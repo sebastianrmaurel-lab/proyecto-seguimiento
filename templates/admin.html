@@ -1805,15 +1805,27 @@ document.getElementById('cfm-wrap').addEventListener('click',function(e){if(e.ta
 /* Search debounce */
 let _searchTimer=null;
 function fmtRutSiAplica(el){
-  // Solo formatea si el valor parece un RUT (solo dígitos y opcionalmente K al final)
   const raw = el.value.replace(/[.\-]/g,'');
-  if(!/^[\dkK]{1,9}$/.test(raw)) return; // tiene letras u otros chars → es nombre/materia, no tocar
+  if(!/^[\dkK]{1,9}$/.test(raw)) return;
   const v = raw.toUpperCase();
-  if(v.length <= 1){ el.value = v; return; }
-  const dv = v.slice(-1);
-  let body = v.slice(0,-1);
-  body = body.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  el.value = body + '-' + dv;
+  let formatted;
+  if(v.length <= 1){ formatted = v; }
+  else {
+    const dv = v.slice(-1);
+    let body = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    formatted = body + '-' + dv;
+  }
+  if(el.value === formatted) return; // sin cambios, no mover cursor
+  const pos = el.selectionStart;
+  const antes = el.value.slice(0, pos).replace(/[.\-]/g,'').length;
+  el.value = formatted;
+  // Recalcular posición del cursor en el string formateado
+  let cuenta = 0, nuevaPos = 0;
+  for(let i = 0; i < formatted.length; i++){
+    if(formatted[i] !== '.' && formatted[i] !== '-') cuenta++;
+    if(cuenta >= antes){ nuevaPos = i + 1; break; }
+  }
+  try{ el.setSelectionRange(nuevaPos, nuevaPos); }catch(e){}
 }
 
 function debounceSearch(){
