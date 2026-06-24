@@ -240,6 +240,7 @@ tbody tr:hover td{background:var(--s2)}
     <div class="sb-sec">Panel</div>
     <button class="ni" id="nav-tiemporeal"   onclick="sv('tiemporeal')"><span class="ic">🟢</span> Tiempo Real</button>
     <button class="ni" id="nav-historico"    onclick="sv('historico')"><span class="ic">🕰</span> Histórico</button>
+    <button class="ni" id="nav-calendario"   onclick="sv('calendario')"><span class="ic">🗓</span> Calendario</button>
     <button class="ni" id="nav-contratos"    onclick="sv('contratos')"><span class="ic">📋</span> Lista</button>
     <button class="ni" id="nav-responsables" onclick="sv('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="ni" id="nav-materias"     onclick="sv('materias')"><span class="ic">📂</span> Materias</button>
@@ -497,7 +498,7 @@ function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev=''
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
-  const T={tiemporeal:'Tiempo Real',historico:'Histórico',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const T={tiemporeal:'Tiempo Real',historico:'Histórico',calendario:'Calendario',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
@@ -529,6 +530,7 @@ function loadView(){
   if(view==='dashboard')     renderDashboard();
   else if(view==='tiemporeal') renderTiempoReal();
   else if(view==='historico')  renderHistorico();
+  else if(view==='calendario') renderCalendario();
   else if(view==='contratos') renderContratos();
   else if(view==='responsables') renderResponsables();
   else if(view==='materias')  renderMaterias();
@@ -662,6 +664,103 @@ async function renderDashboard(){
     type:'bar',data:{labels:MESES,datasets:[{data:cd.by_month_ingreso,
       backgroundColor:cd.by_month_ingreso.map((_,i)=>i===nowM?'rgba(21,128,61,1)':'rgba(21,128,61,.4)'),borderRadius:4,borderWidth:0}]},
     options:barOpts(cd.by_month_ingreso)});
+}
+
+/* ── CALENDARIO ── */
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+const CAL_MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+async function renderCalendario(){
+  const el=document.getElementById('vc');
+  let data;
+  try{ data=await fetch('/api/contratos').then(r=>r.json()); }
+  catch(e){ el.innerHTML='<div class="empty">❌ Error cargando.</div>'; return; }
+
+  el.innerHTML=`
+  <style>
+    .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .cal-nav-title{font-size:15px;font-weight:700}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:1rem}
+    .cal-dow{text-align:center;font-size:10px;font-weight:700;color:var(--soft);padding:4px 0;text-transform:uppercase;letter-spacing:.5px}
+    .cal-day{min-height:72px;border:1px solid var(--border);border-radius:8px;padding:4px 6px;cursor:pointer;transition:background .1s;background:var(--surface)}
+    .cal-day:hover{background:var(--s2)}
+    .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-day.today{border-color:var(--navy2);background:var(--navy-l)}
+    .day-num{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:2px}
+    .cal-day.today .day-num{color:var(--navy2)}
+    .cal-ev{font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-weight:600}
+    .ev-critico{background:var(--red-l);color:var(--red)}
+    .ev-vencido{background:#fff1f2;color:#e11d48}
+    .ev-advertencia{background:var(--amber-l);color:var(--amber)}
+    .ev-proceso{background:var(--navy-l);color:var(--navy2)}
+    .ev-completado{background:var(--green-l);color:var(--green)}
+    .ev-sinefecto{background:#f3f4f6;color:#6b7280}
+    .cal-detail{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-top:.5rem}
+    .cal-detail-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px}
+    .cal-detail-item{display:flex;align-items:center;justify-content:space-between;padding:.375rem 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer}
+    .cal-detail-item:last-child{border-bottom:none}
+    .cal-detail-item:hover{color:var(--navy2)}
+  </style>
+  <div class="panel">
+    <div class="ph">
+      <div class="cal-nav" style="width:100%">
+        <button class="btn btn-ghost btn-sm" onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendario()">‹ Anterior</button>
+        <span class="cal-nav-title" id="cal-title"></span>
+        <button class="btn btn-ghost btn-sm" onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendario()">Siguiente ›</button>
+      </div>
+    </div>
+    <div style="padding:.875rem">
+      <div class="cal-grid" id="cal-grid">
+        <div class="cal-dow">Lun</div><div class="cal-dow">Mar</div><div class="cal-dow">Mié</div>
+        <div class="cal-dow">Jue</div><div class="cal-dow">Vie</div><div class="cal-dow">Sáb</div><div class="cal-dow">Dom</div>
+      </div>
+      <div class="cal-detail" id="cal-detail"><div style="color:var(--soft);font-size:12px">Haz click en un día para ver los contratos que vencen ese día.</div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('cal-title').textContent=`${CAL_MESES[calMonth]} ${calYear}`;
+  const grid=document.getElementById('cal-grid');
+  const headers=Array.from(grid.querySelectorAll('.cal-dow'));
+  grid.innerHTML=''; headers.forEach(h=>grid.appendChild(h));
+
+  const first=new Date(calYear,calMonth,1);
+  let startDow=first.getDay(); startDow=(startDow===0)?6:startDow-1;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+
+  const evColor=c=>{
+    if(c.alerta==='vencido')     return 'ev-vencido';
+    if(c.alerta==='critico')     return 'ev-critico';
+    if(c.alerta==='advertencia') return 'ev-advertencia';
+    if(c.estado==='completado')  return 'ev-completado';
+    if(c.estado==='sin_efecto')  return 'ev-sinefecto';
+    return 'ev-proceso';
+  };
+
+  for(let i=0;i<startDow;i++){
+    const e=document.createElement('div'); e.className='cal-day empty'; grid.appendChild(e);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=data.filter(c=>c.fecha_fin===dateStr);
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const cell=document.createElement('div');
+    cell.className='cal-day'+(isToday?' today':'');
+    cell.innerHTML=`<div class="day-num">${d}</div>`+
+      evs.slice(0,3).map(c=>`<span class="cal-ev ${evColor(c)}">${c.nombre.split(' ')[0]} ${c.nombre.split(' ')[1]||''}</span>`).join('')+
+      (evs.length>3?`<span style="font-size:9px;color:var(--soft)">+${evs.length-3} más</span>`:'');
+    cell.onclick=()=>{
+      const det=document.getElementById('cal-detail');
+      if(!evs.length){ det.innerHTML=`<div style="color:var(--soft);font-size:12px">Sin contratos el ${d} de ${CAL_MESES[calMonth]}.</div>`; return; }
+      const lbls={critico:'⚠ Crítico',advertencia:'⏰ Advertencia',vencido:'💀 Vencido'};
+      det.innerHTML=`<div class="cal-detail-title">${evs.length} contrato${evs.length!==1?'s':''} — ${d} de ${CAL_MESES[calMonth]}</div>`+
+        evs.map(c=>`<div class="cal-detail-item" onclick="openModal(${c.id})">
+          <div><strong>${c.nombre}</strong><div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div></div>
+          <span class="badge ${c.alerta==='critico'?'b-alert':c.alerta==='vencido'?'b-venc':c.alerta==='advertencia'?'b-warn':c.estado==='completado'?'b-done':'b-proc'}">${lbls[c.alerta]||'● En proceso'}</span>
+        </div>`).join('');
+    };
+    grid.appendChild(cell);
+  }
 }
 
 /* ── CONTRATOS ── */
@@ -2048,4 +2147,3 @@ function renderCards(pageData){
 </script>
 </body>
 </html>
-
