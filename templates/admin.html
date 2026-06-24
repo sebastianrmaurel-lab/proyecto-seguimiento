@@ -765,7 +765,7 @@ async function renderCalendario(){
       det.innerHTML=`<div class="cal-detail-title">${evs.length} contrato${evs.length!==1?'s':''} — ${d} de ${CAL_MESES[calMonth]}</div>`+
         evs.map(c=>`<div class="cal-detail-item" onclick="openModal(${c.id})">
           <div><strong>${c.nombre}</strong><div style="font-size:10px;font-family:monospace;color:var(--muted)">${c.rut}</div></div>
-          <span class="badge ${c.alerta==='critico'?'b-alert':c.alerta==='vencido'?'b-venc':c.alerta==='advertencia'?'b-warn':c.estado==='completado'?'b-done':'b-proc'}">${lbls[c.alerta]||'● En proceso'}</span>
+          <span class="badge ${c.alerta==='critico'?'b-alert':c.alerta==='vencido'?'b-venc':c.alerta==='advertencia'?'b-warn':c.estado==='completado'?'b-done':c.estado==='sin_efecto'?'b-sinef':'b-proc'}">${c.alerta==='critico'?'⚠ Crítico':c.alerta==='vencido'?'💀 Vencido':c.alerta==='advertencia'?'⏰ Advertencia':c.estado==='completado'?'✓ Completado':c.estado==='sin_efecto'?'Sin efecto':'● En proceso'}</span>
         </div>`).join('');
     };
     grid.appendChild(cell);
