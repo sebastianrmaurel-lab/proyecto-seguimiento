@@ -253,6 +253,8 @@ tbody tr:hover td{background:var(--s2)}
     <button class="ni" onclick="fv('retrasado')"><span class="ic">⏳</span> Retrasados <span class="nc r" id="nc-ret">—</span></button>
     <button class="ni" onclick="fv('devuelto')"><span class="ic">↩</span> Devueltos <span class="nc p" id="nc-dev">—</span></button>
     <button class="ni" onclick="fv('imprevisto')"><span class="ic">💲</span> Pago imprevisto <span class="nc p" id="nc-imp">—</span></button>
+    <button class="ni" onclick="fv('sin_efecto')"><span class="ic">🚫</span> Sin efecto <span class="nc" id="nc-sinef">—</span></button>
+    <button class="ni" onclick="fv('en_proceso')"><span class="ic">🔵</span> En proceso <span class="nc" id="nc-enproc">—</span></button>
   </div>
   <div class="sb-foot">
     <a class="sf" href="/">← Portal</a>
@@ -501,7 +503,7 @@ function loadView(){
   document.getElementById('nav-'+view)?.classList.add('active');
   // Marcar botones sidebar activos según fAlertas
   if(view==='contratos' && fAlertas.size>0){
-    const mapaBtn={critico:'nc-crit',advertencia:'nc-adv',vencido:'nc-venc',visados:'nc-vis',obs:'nc-obs',retrasado:'nc-ret',devuelto:'nc-dev',imprevisto:'nc-imp'};
+    const mapaBtn={critico:'nc-crit',advertencia:'nc-adv',vencido:'nc-venc',visados:'nc-vis',obs:'nc-obs',retrasado:'nc-ret',devuelto:'nc-dev',imprevisto:'nc-imp',sin_efecto:'nc-sinef',en_proceso:'nc-enproc'};
     document.querySelectorAll('.ni').forEach(b=>{
       const nc=b.querySelector('.nc');
       if(nc){
@@ -544,6 +546,8 @@ async function loadCounts(){
     document.getElementById('nc-ret').textContent=s.retrasados;
     document.getElementById('nc-dev').textContent=s.devueltos||0;
     document.getElementById('nc-imp').textContent=s.imprevisto||0;
+    document.getElementById('nc-sinef').textContent=s.sin_efecto||0;
+    document.getElementById('nc-enproc').textContent=s.en_proceso||0;
   }catch(e){}
 }
 
@@ -663,6 +667,7 @@ async function renderDashboard(){
 /* ── CONTRATOS ── */
 async function renderContratos(){
   let url='/api/contratos?x=1';
+  if(fEstado) url+='&estado='+encodeURIComponent(fEstado);
   if(fRut)   url+='&rut='+encodeURIComponent(fRut);
   if(fMat)   url+='&materia='+encodeURIComponent(fMat);
   if(fVis)   url+='&visado='+fVis;
