@@ -366,7 +366,7 @@ async function buscar(){
   wrap.style.display='block';
   document.getElementById('results-body').innerHTML='<div class="spinner"></div>';
   try{
-    const res=await fetch(`/api/contratos?q=${encodeURIComponent(q)}`);
+    const res=await fetch(`/api/contratos?q=${encodeURIComponent(normalizarSiEsRut(q))}`);
     gData=await res.json();
     gPage=1;
     renderTable();
@@ -376,6 +376,13 @@ async function buscar(){
 }
 
 function debounceSearch(){clearTimeout(_timer);_timer=setTimeout(buscar,320);}
+
+function normalizarSiEsRut(q){
+  // Si el input parece un RUT (solo dígitos y K, con o sin puntos/guión), lo normaliza
+  const soloDigitos = q.replace(/[.\-]/g,'');
+  if(/^[\dkK]{7,9}$/.test(soloDigitos)) return soloDigitos;
+  return q;
+}
 </script>
 </body>
 </html>
