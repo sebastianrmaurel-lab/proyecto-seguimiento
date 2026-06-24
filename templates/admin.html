@@ -19,15 +19,6 @@
   --purple:#6d28d9;--purple-l:#f5f3ff;
   --sb:220px;
 }
-[data-theme="dark"]{
-  --bg:#0f1117;--surface:#1a1d27;--s2:#1f2233;--border:#2a2d3e;
-  --text:#e8e9f0;--muted:#8b8fa8;--soft:#5a5e78;
-  --navy:#1a2a5e;--navy2:#2a3f8f;--navy-l:#1a2240;
-  --red:#ef4444;--red-l:#2d1515;
-  --amber:#f59e0b;--amber-l:#2d2006;
-  --green:#22c55e;--green-l:#0f2d1a;
-  --purple:#a78bfa;--purple-l:#1e1535;
-}
 
 /* Card view */
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:1rem}
@@ -41,9 +32,6 @@
 .crd-flags{display:flex;gap:4px;flex-wrap:wrap;margin-top:.5rem}
 .crd-actions{position:absolute;top:.625rem;right:.625rem;display:flex;gap:4px}
 
-/* Dark mode toggle btn */
-.dark-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
-.dark-btn:hover{background:var(--bg)}
 /* View toggle btn */
 .view-toggle{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
 .vt-btn{padding:4px 10px;font-size:12px;background:transparent;border:none;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'Inter',sans-serif}
@@ -276,7 +264,6 @@ tbody tr:hover td{background:var(--s2)}
   <div class="topbar">
     <div class="topbar-title" id="view-title">Resumen General</div>
     <div style="display:flex;gap:7px;align-items:center">
-      <button class="dark-btn" onclick="toggleDark()" id="dark-btn" title="Modo oscuro">🌙</button>
       <div class="view-toggle" id="view-toggle-btns" style="display:none">
         <button class="vt-btn active" id="vt-table" onclick="setCardView('table')" title="Vista tabla">☰</button>
         <button class="vt-btn" id="vt-card" onclick="setCardView('card')" title="Vista tarjetas">⊞</button>
@@ -1996,15 +1983,6 @@ function debounceSearch(){
 }
 
 /* ── MODO OSCURO ── */
-function toggleDark(){
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  document.documentElement.setAttribute('data-theme', isDark?'light':'dark');
-  document.getElementById('dark-btn').textContent=isDark?'🌙':'☀️';
-  localStorage.setItem('theme', isDark?'light':'dark');
-  // Rehacer charts si hay alguno activo
-  if(Object.keys(CH).length) loadView();
-}
-
 /* ── VISTA TARJETAS ── */
 let cardView='table'; // 'table' | 'card'
 
@@ -2043,12 +2021,6 @@ function renderCards(pageData){
 
 /* INIT */
 (async()=>{
-  // Cargar tema guardado
-  const savedTheme=localStorage.getItem('theme');
-  if(savedTheme==='dark'){
-    document.documentElement.setAttribute('data-theme','dark');
-    document.getElementById('dark-btn').textContent='☀️';
-  }
   try{
     const me=await fetch('/api/me').then(r=>r.json());
     isViewer=me.role==='viewer';
