@@ -446,13 +446,16 @@ function sv(v){
   loadView();
 }
 function fv(f){
-  view='contratos';fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';
+  view='contratos';
+  // Solo resetea el filtro de estado/alerta, mantiene materia, responsable, etc.
+  fEstado='';fVis='';fObs='';fRet='';fDev='';fImp='';
   if(['critico','advertencia','vencido','en_proceso','completado','sin_efecto'].includes(f)) fEstado=f;
   else if(f==='visados') fVis='si';
   else if(f==='obs') fObs='1';
   else if(f==='retrasado') fRet='1';
   else if(f==='devuelto') fDev='1';
   else if(f==='imprevisto') fImp='1';
+  gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos')?.classList.add('active');
   document.getElementById('btn-exp').style.display='flex';
