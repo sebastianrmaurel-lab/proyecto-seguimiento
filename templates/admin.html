@@ -252,10 +252,14 @@ tbody tr:hover td{background:var(--s2)}
     </div>
   </div>
   <!-- Barra de búsqueda estática - nunca se regenera -->
-  <div id="search-bar-wrap" style="display:none;padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2)">
+  <div id="search-bar-wrap" style="display:none;padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);flex-direction:column;gap:6px">
     <input id="search-inp" placeholder="Buscar nombre, RUT, materia, unidad..."
-      style="border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;flex:1;min-width:160px;width:100%"
+      style="border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;width:100%"
       oninput="fmtRutSiAplica(this);sq=this.value;gPage=1;debounceSearch()"
+      autocomplete="off">
+    <input id="numseg-inp" placeholder="🔍 Buscar por N° de seguimiento..."
+      style="border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;width:100%"
+      oninput="fNumSeg=this.value.trim();gPage=1;debounceSearch()"
       autocomplete="off">
   </div>
   <div class="content" id="vc"><div class="spinner"></div></div>
@@ -394,7 +398,7 @@ tbody tr:hover td{background:var(--s2)}
 <script>
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
-let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
+let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='',fNumSeg='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
 let gPage=1;
@@ -435,7 +439,7 @@ function etapasHtml(etapas){
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function sv(v){
-  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;
+  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
   document.getElementById('btn-exp').style.display='flex';
@@ -457,7 +461,7 @@ function fv(f){
 function fByMat(m){view='contratos';clearAllF();fMat=m;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByResp(r){view='contratos';clearAllF();fResp=r;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByEtapa(e){view='contratos';clearAllF();fEtapa=e;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
-function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;}
+function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';gPage=1;}
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
@@ -467,10 +471,12 @@ function loadView(){
   document.getElementById('nav-'+view)?.classList.add('active');
   // Mostrar barra de búsqueda solo en vista contratos
   const sb=document.getElementById('search-bar-wrap');
-  if(sb) sb.style.display=view==='contratos'?'block':'none';
+  if(sb) sb.style.display=view==='contratos'?'flex':'none';
   // Resetear input si cambia de vista
   const inp=document.getElementById('search-inp');
   if(inp && view!=='contratos'){ inp.value=''; sq=''; }
+  const inp2=document.getElementById('numseg-inp');
+  if(inp2 && view!=='contratos'){ inp2.value=''; fNumSeg=''; }
   killCH();
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
@@ -626,7 +632,8 @@ async function renderContratos(){
   if(fImp)   url+='&imprevisto='+fImp;
   if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
   if(fUnidad) url+='&unidad='+encodeURIComponent(fUnidad);
-  if(sq)     url+='&q='+encodeURIComponent(sq);
+  if(fNumSeg) url+='&q='+encodeURIComponent(fNumSeg);
+  else if(sq) url+='&q='+encodeURIComponent(sq);
 
   const el=document.getElementById('vc');
   let data;
@@ -682,14 +689,6 @@ async function renderContratos(){
     </div>
     <div class="frow">
       <select onchange="fEstado=this.value;gPage=1;renderContratos()" id="sel-estado">
-        <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
-        <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
-        <option value="completado" ${fEstado==='completado'?'selected':''}>Completado</option>
-        <option value="sin_efecto" ${fEstado==='sin_efecto'?'selected':''}>Sin efecto</option>
-        <option value="vencido" ${fEstado==='vencido'?'selected':''}>💀 Vencidos</option>
-        <option value="critico" ${fEstado==='critico'?'selected':''}>🔴 Críticos</option>
-        <option value="advertencia" ${fEstado==='advertencia'?'selected':''}>🟡 Advertencias</option>
-      </select>
         <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${fEstado==='completado'?'selected':''}>Completado</option>
