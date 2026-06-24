@@ -1831,7 +1831,8 @@ function debounceSearch(){
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(async()=>{
     const inp=document.getElementById('search-inp');
-    const savedVal=inp?inp.value:sq;
+    if(inp) sq=inp.value; // captura el valor REAL del input justo antes de renderizar
+    const savedVal=sq;
     const pos=inp?inp.selectionStart:null;
     await renderContratos();
     const inp2=document.getElementById('search-inp');
@@ -1840,7 +1841,7 @@ function debounceSearch(){
       inp2.focus();
       try{inp2.setSelectionRange(pos,pos);}catch(e){}
     }
-  },150);
+  },400);
 }
 
 /* INIT */
