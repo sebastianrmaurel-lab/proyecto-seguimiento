@@ -669,7 +669,7 @@ async function renderContratos(){
     </div>
     <div class="frow">
       <input placeholder="Buscar nombre, RUT, materia, unidad..." value="${sq}"
-        oninput="fmtRutSiAplica(this);sq=this.value;gPage=1;debounceSearch()" id="search-inp" onkeydown="sq=this.value">
+        oninput="fmtRutSiAplica(this);sq=this.value;gPage=1;debounceSearch()" id="search-inp">
       <select onchange="fEstado=this.value;gPage=1;renderContratos()">
         <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
@@ -1815,11 +1815,10 @@ function fmtRutSiAplica(el){
     let body = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
     formatted = body + '-' + dv;
   }
-  if(el.value === formatted) return; // sin cambios, no mover cursor
+  if(el.value === formatted) return;
   const pos = el.selectionStart;
   const antes = el.value.slice(0, pos).replace(/[.\-]/g,'').length;
   el.value = formatted;
-  // Recalcular posición del cursor en el string formateado
   let cuenta = 0, nuevaPos = 0;
   for(let i = 0; i < formatted.length; i++){
     if(formatted[i] !== '.' && formatted[i] !== '-') cuenta++;
@@ -1832,16 +1831,16 @@ function debounceSearch(){
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(async()=>{
     const inp=document.getElementById('search-inp');
-    const savedVal=inp?inp.value:sq;  // guarda el valor YA formateado
+    const savedVal=inp?inp.value:sq;
     const pos=inp?inp.selectionStart:null;
     await renderContratos();
     const inp2=document.getElementById('search-inp');
     if(inp2){
-      inp2.value=savedVal;  // restaura el valor formateado, no sq sin formato
+      inp2.value=savedVal;
       inp2.focus();
       try{inp2.setSelectionRange(pos,pos);}catch(e){}
     }
-  },300);
+  },150);
 }
 
 /* INIT */
