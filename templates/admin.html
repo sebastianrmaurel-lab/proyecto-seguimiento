@@ -19,23 +19,6 @@
   --purple:#6d28d9;--purple-l:#f5f3ff;
   --sb:220px;
 }
-
-/* Card view */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:1rem}
-.crd{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;position:relative}
-.crd:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
-.crd-name{font-size:13px;font-weight:700;margin-bottom:2px}
-.crd-rut{font-size:10px;font-family:monospace;color:var(--muted);margin-bottom:.5rem}
-.crd-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem;font-size:11px}
-.crd-lbl{color:var(--muted)}
-.crd-val{font-weight:600}
-.crd-flags{display:flex;gap:4px;flex-wrap:wrap;margin-top:.5rem}
-.crd-actions{position:absolute;top:.625rem;right:.625rem;display:flex;gap:4px}
-
-/* View toggle btn */
-.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
-.vt-btn{padding:4px 10px;font-size:12px;background:transparent;border:none;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'Inter',sans-serif}
-.vt-btn.active{background:var(--navy2);color:#fff}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
 /* ── SIDEBAR ── */
@@ -238,8 +221,7 @@ tbody tr:hover td{background:var(--s2)}
   <div class="sb-logo"><span class="dot"></span> Seguimiento</div>
   <div class="sb-nav">
     <div class="sb-sec">Panel</div>
-    <button class="ni" id="nav-tiemporeal"   onclick="sv('tiemporeal')"><span class="ic">🟢</span> Tiempo Real</button>
-    <button class="ni" id="nav-historico"    onclick="sv('historico')"><span class="ic">🕰</span> Histórico</button>
+    <button class="ni" id="nav-dashboard"    onclick="sv('dashboard')"><span class="ic">📊</span> Resumen General</button>
     <button class="ni" id="nav-contratos"    onclick="sv('contratos')"><span class="ic">📋</span> Lista</button>
     <button class="ni" id="nav-responsables" onclick="sv('responsables')"><span class="ic">👤</span> Responsables</button>
     <button class="ni" id="nav-materias"     onclick="sv('materias')"><span class="ic">📂</span> Materias</button>
@@ -253,8 +235,6 @@ tbody tr:hover td{background:var(--s2)}
     <button class="ni" onclick="fv('retrasado')"><span class="ic">⏳</span> Retrasados <span class="nc r" id="nc-ret">—</span></button>
     <button class="ni" onclick="fv('devuelto')"><span class="ic">↩</span> Devueltos <span class="nc p" id="nc-dev">—</span></button>
     <button class="ni" onclick="fv('imprevisto')"><span class="ic">💲</span> Pago imprevisto <span class="nc p" id="nc-imp">—</span></button>
-    <button class="ni" onclick="fv('sin_efecto')"><span class="ic">🚫</span> Sin efecto <span class="nc" id="nc-sinef">—</span></button>
-    <button class="ni" onclick="fv('en_proceso')"><span class="ic">🔵</span> En proceso <span class="nc" id="nc-enproc">—</span></button>
   </div>
   <div class="sb-foot">
     <a class="sf" href="/">← Portal</a>
@@ -265,25 +245,10 @@ tbody tr:hover td{background:var(--s2)}
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="view-title">Resumen General</div>
-    <div style="display:flex;gap:7px;align-items:center">
-      <div class="view-toggle" id="view-toggle-btns" style="display:none">
-        <button class="vt-btn active" id="vt-table" onclick="setCardView('table')" title="Vista tabla">☰</button>
-        <button class="vt-btn" id="vt-card" onclick="setCardView('card')" title="Vista tarjetas">⊞</button>
-      </div>
+    <div style="display:flex;gap:7px">
       <button class="btn btn-ghost btn-sm" onclick="exportarExcel()" id="btn-exp" style="display:none">⬇ Excel</button>
       <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo Registro</button>
     </div>
-  </div>
-  <!-- Barra de búsqueda estática - nunca se regenera -->
-  <div id="search-bar-wrap" style="display:none;padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);flex-direction:column;gap:6px">
-    <input id="search-inp" placeholder="Buscar nombre, RUT, materia, unidad..."
-      style="border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;width:100%"
-      oninput="fmtRutSiAplica(this);sq=this.value;gPage=1;debounceSearch()"
-      autocomplete="off">
-    <input id="numseg-inp" placeholder="🔍 Buscar por N° de seguimiento..."
-      style="border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;font-size:12px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;width:100%"
-      oninput="fNumSeg=this.value.trim();gPage=1;debounceSearch()"
-      autocomplete="off">
   </div>
   <div class="content" id="vc"><div class="spinner"></div></div>
 </div>
@@ -420,11 +385,8 @@ tbody tr:hover td{background:var(--s2)}
 
 <script>
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
-let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='',fNumSeg='';
-let fAlertas=new Set(); // acumula: 'critico','advertencia','vencido','visados','obs','retrasado','devuelto','imprevisto','en_proceso','completado','sin_efecto'
-let hFMat='',hFResp='',hFUnidad='';
-let trFMat='',trFResp='',trFUnidad='';
+let view='dashboard', editId=null, delId=null, delType='contrato', delCb=null;
+let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
 let gPage=1;
@@ -465,70 +427,39 @@ function etapasHtml(etapas){
 function killCH(){Object.values(CH).forEach(c=>c.destroy());CH={};}
 
 function sv(v){
-  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';fAlertas=new Set();gPage=1;
+  view=v;fEstado='';fRut='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+v)?.classList.add('active');
-  document.getElementById('btn-exp').style.display='flex';
+  document.getElementById('btn-exp').style.display=v==='contratos'?'flex':'none';
   loadView();
 }
 function fv(f){
-  view='contratos';
-  // Toggle: si ya está activo lo quita, si no lo añade
-  if(fAlertas.has(f)) fAlertas.delete(f);
-  else fAlertas.add(f);
-  gPage=1;
+  view='contratos';fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';
+  if(['critico','advertencia','vencido','en_proceso','completado','sin_efecto'].includes(f)) fEstado=f;
+  else if(f==='visados') fVis='si';
+  else if(f==='obs') fObs='1';
+  else if(f==='retrasado') fRet='1';
+  else if(f==='devuelto') fDev='1';
+  else if(f==='imprevisto') fImp='1';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-contratos')?.classList.add('active');
   document.getElementById('btn-exp').style.display='flex';
   loadView();
 }
-
-// Navega a Lista aplicando filtro rápido Y traspasando filtros activos de Tiempo Real o Histórico
-function fvTR(f){
-  if(trFMat)    fMat=trFMat;
-  if(trFResp)   fResp=trFResp;
-  if(trFUnidad) fUnidad=trFUnidad;
-  fv(f);
-}
 function fByMat(m){view='contratos';clearAllF();fMat=m;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByResp(r){view='contratos';clearAllF();fResp=r;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
 function fByEtapa(e){view='contratos';clearAllF();fEtapa=e;document.getElementById('nav-contratos')?.classList.add('active');document.getElementById('btn-exp').style.display='flex';loadView();}
-function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';fNumSeg='';fAlertas=new Set();gPage=1;}
+function clearAllF(){fEstado='';fMat='';fVis='';fObs='';fResp='';fRet='';fDev='';fImp='';fEtapa='';fUnidad='';sq='';gPage=1;}
 function clearFilters(){clearAllF();renderContratos();}
 
 function loadView(){
-  const T={tiemporeal:'Tiempo Real',historico:'Histórico',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
+  const T={dashboard:'Resumen General',contratos:'Lista',responsables:'Responsables',materias:'Materias',ruts:'Historial por RUT'};
   document.getElementById('view-title').textContent=T[view]||'Panel';
   document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
-  // Marcar botones sidebar activos según fAlertas
-  if(view==='contratos' && fAlertas.size>0){
-    const mapaBtn={critico:'nc-crit',advertencia:'nc-adv',vencido:'nc-venc',visados:'nc-vis',obs:'nc-obs',retrasado:'nc-ret',devuelto:'nc-dev',imprevisto:'nc-imp',sin_efecto:'nc-sinef',en_proceso:'nc-enproc'};
-    document.querySelectorAll('.ni').forEach(b=>{
-      const nc=b.querySelector('.nc');
-      if(nc){
-        const key=Object.keys(mapaBtn).find(k=>mapaBtn[k]===nc.id);
-        if(key && fAlertas.has(key)) b.classList.add('active');
-      }
-    });
-  }
-  // Mostrar barra de búsqueda y toggle vista solo en contratos
-  const sb=document.getElementById('search-bar-wrap');
-  if(sb) sb.style.display=view==='contratos'?'flex':'none';
-  const vt=document.getElementById('view-toggle-btns');
-  if(vt) vt.style.display=view==='contratos'?'flex':'none';
-  // Resetear input si cambia de vista
-  const inp=document.getElementById('search-inp');
-  if(inp && view!=='contratos'){ inp.value=''; sq=''; }
-  const inp2=document.getElementById('numseg-inp');
-  if(inp2 && view!=='contratos'){ inp2.value=''; fNumSeg=''; }
-  if(view!=='contratos') loadCounts();
-  if(view!=='contratos') fAlertas=new Set();
   killCH();
   document.getElementById('vc').innerHTML='<div class="spinner"></div>';
   if(view==='dashboard')     renderDashboard();
-  else if(view==='tiemporeal') renderTiempoReal();
-  else if(view==='historico')  renderHistorico();
   else if(view==='contratos') renderContratos();
   else if(view==='responsables') renderResponsables();
   else if(view==='materias')  renderMaterias();
@@ -546,8 +477,6 @@ async function loadCounts(){
     document.getElementById('nc-ret').textContent=s.retrasados;
     document.getElementById('nc-dev').textContent=s.devueltos||0;
     document.getElementById('nc-imp').textContent=s.imprevisto||0;
-    document.getElementById('nc-sinef').textContent=s.sin_efecto||0;
-    document.getElementById('nc-enproc').textContent=s.en_proceso||0;
   }catch(e){}
 }
 
@@ -667,7 +596,10 @@ async function renderDashboard(){
 /* ── CONTRATOS ── */
 async function renderContratos(){
   let url='/api/contratos?x=1';
-  if(fEstado) url+='&estado='+encodeURIComponent(fEstado);
+  if(fEstado==='critico')       url+='&alerta=critico';
+  else if(fEstado==='advertencia') url+='&alerta=advertencia';
+  else if(fEstado==='vencido')  url+='&alerta=vencido';
+  else if(fEstado)              url+='&estado='+fEstado;
   if(fRut)   url+='&rut='+encodeURIComponent(fRut);
   if(fMat)   url+='&materia='+encodeURIComponent(fMat);
   if(fVis)   url+='&visado='+fVis;
@@ -678,31 +610,12 @@ async function renderContratos(){
   if(fImp)   url+='&imprevisto='+fImp;
   if(fEtapa) url+='&etapa='+encodeURIComponent(fEtapa);
   if(fUnidad) url+='&unidad='+encodeURIComponent(fUnidad);
-  if(fNumSeg) url+='&q='+encodeURIComponent(fNumSeg);
-  else if(sq) url+='&q='+encodeURIComponent(sq);
+  if(sq)     url+='&q='+encodeURIComponent(sq);
 
   const el=document.getElementById('vc');
   let data;
   try{ data=await fetch(url).then(r=>r.json()); }
   catch(e){ el.innerHTML='<div class="empty">❌ Error cargando.</div>'; return; }
-
-  // Filtrar por fAlertas acumuladas (OR entre ellas)
-  if(fAlertas.size>0){
-    data=data.filter(c=>{
-      if(fAlertas.has('critico')     && c.alerta==='critico')     return true;
-      if(fAlertas.has('advertencia') && c.alerta==='advertencia') return true;
-      if(fAlertas.has('vencido')     && c.alerta==='vencido')     return true;
-      if(fAlertas.has('en_proceso')  && c.estado==='en_proceso')  return true;
-      if(fAlertas.has('completado')  && c.estado==='completado')  return true;
-      if(fAlertas.has('sin_efecto')  && c.estado==='sin_efecto')  return true;
-      if(fAlertas.has('visados')     && c.visado==='si')          return true;
-      if(fAlertas.has('obs')         && c.tiene_observacion)      return true;
-      if(fAlertas.has('retrasado')   && c.retrasado)              return true;
-      if(fAlertas.has('devuelto')    && c.devuelto)               return true;
-      if(fAlertas.has('imprevisto')  && c.pago_imprevisto)        return true;
-      return false;
-    });
-  }
 
   const matOpts=gMats.map(m=>`<option value="${m}">${m}</option>`).join('');
   const rOpts=gResps.map(r=>`<option value="${r.nombre}">${r.nombre}</option>`).join('');
@@ -710,8 +623,7 @@ async function renderContratos(){
   const uOpts=gUnidades.map(u=>`<option value="${u}">${u}</option>`).join('');
 
   let albl='';
-  if(fAlertas.size>0) albl=[...fAlertas].map(f=>f.replace('_',' ')).join(' + ');
-  else if(fResp) albl=`Responsable: ${fResp}`;
+  if(fResp) albl=`Responsable: ${fResp}`;
   else if(fMat) albl=`Materia: ${fMat}`;
   else if(fEtapa) albl=`Etapa: ${fEtapa}`;
   else if(fUnidad) albl=`Unidad: ${fUnidad}`;
@@ -720,6 +632,7 @@ async function renderContratos(){
   else if(fRet) albl='Retrasados';
   else if(fDev) albl='Devueltos';
   else if(fImp) albl='Pago imprevisto';
+  else if(fEstado) albl=fEstado.replace('_',' ');
 
   // Paginación
   const PER_PAGE=25;
@@ -752,7 +665,9 @@ async function renderContratos(){
       <span class="ph-title">Todos los Trámites <span style="font-size:11px;font-weight:400;color:var(--muted)">(${data.length})</span></span>
     </div>
     <div class="frow">
-      <select onchange="fEstado=this.value;gPage=1;renderContratos()" id="sel-estado">
+      <input placeholder="Buscar nombre, RUT, materia, unidad..." value="${sq}"
+        oninput="sq=this.value;gPage=1;debounceSearch()" id="search-inp">
+      <select onchange="fEstado=this.value;gPage=1;renderContratos()">
         <option value="" ${!fEstado?'selected':''}>Todos los estados</option>
         <option value="en_proceso" ${fEstado==='en_proceso'?'selected':''}>En proceso</option>
         <option value="completado" ${fEstado==='completado'?'selected':''}>Completado</option>
@@ -775,9 +690,8 @@ async function renderContratos(){
       </select>
       ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||fUnidad||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
     </div>
-    ${!data.length?`<div class="empty">📭 Sin registros</div>`:
-      cardView==='card' ? renderCards(pageData)+paginationHtml() :
-    `<div class="tw"><table>
+    ${!data.length?`<div class="empty">📭 Sin registros</div>`:`
+    <div class="tw"><table>
       <thead><tr>
         <th>Nombre / RUT</th><th>Materia</th><th>Responsable</th>
         <th>Etapas completadas</th><th>Estado</th><th>Flags</th>
@@ -817,25 +731,10 @@ async function renderContratos(){
 
   // set select values
   const sels=el.querySelectorAll('.frow select');
-  if(fEstado&&sels[0]) sels[0].value=fEstado;
   if(fMat&&sels[1]) sels[1].value=fMat;
   if(fResp&&sels[2]) sels[2].value=fResp;
   if(fEtapa&&sels[3]) sels[3].value=fEtapa;
   if(fUnidad&&sels[4]) sels[4].value=fUnidad;
-
-  // Actualizar contadores sidebar con datos filtrados
-  updateSidebarCounts(data);
-}
-
-function updateSidebarCounts(data){
-  document.getElementById('nc-crit').textContent = data.filter(c=>c.alerta==='critico').length;
-  document.getElementById('nc-adv').textContent  = data.filter(c=>c.alerta==='advertencia').length;
-  document.getElementById('nc-venc').textContent = data.filter(c=>c.alerta==='vencido').length;
-  document.getElementById('nc-vis').textContent  = data.filter(c=>c.visado==='si').length;
-  document.getElementById('nc-obs').textContent  = data.filter(c=>c.tiene_observacion).length;
-  document.getElementById('nc-ret').textContent  = data.filter(c=>c.retrasado).length;
-  document.getElementById('nc-dev').textContent  = data.filter(c=>c.devuelto).length;
-  document.getElementById('nc-imp').textContent  = data.filter(c=>c.pago_imprevisto).length;
 }
 
 /* ── EXPORTAR ── */
@@ -859,16 +758,13 @@ async function exportarExcel(){
   const rows=data.map(c=>({
     RUT:c.rut, Nombre:c.nombre, Materia:c.materia, Unidad:c.unidad,
     Responsable:c.responsable, Estado:c.ocultar_estado?'—':c.estado,
-    Alerta:c.alerta||'—',
     Retrasado:c.retrasado?'Sí':'No', Visado:c.visado,
     Devuelto:c.devuelto?'Sí':'No', Observacion:c.tiene_observacion?'Sí':'No',
     PagoImprevisto:c.pago_imprevisto?'Sí':'No',
-    FechaInicio:fmtD(c.fecha_inicio),
     Ingreso:c.creado_en, FechaFin:fmtD(c.fecha_fin),
     DiasRestantes:c.dias_restantes,
     EtapaActual:c.etapa_actual,
     EtapasCompletadas:c.etapas.filter(e=>e.completada).map(e=>e.nombre).join(', '),
-    LinksEtapas:c.etapas.filter(e=>e.completada&&e.link).map(e=>`${e.nombre}: ${e.link}`).join(' | '),
     NumSeguimiento:c.num_seguimiento,
   }));
   const ws=XLSX.utils.json_to_sheet(rows);
@@ -1000,7 +896,7 @@ async function renderRuts(){
     <div id="rut-resultado"></div>
   </div>
   <div class="panel">
-    <div class="ph"><span class="ph-title">👥 RUT</span></div>
+    <div class="ph"><span class="ph-title">👥 Todos los clientes por RUT</span></div>
     <div id="ruts-lista"><div class="spinner"></div></div>
   </div>`;
   cargarRutsList();
@@ -1210,665 +1106,6 @@ async function delNota(id){
   loadNotas(editId);
 }
 
-/* ── TIEMPO REAL ── */
-async function renderTiempoReal(){
-  const el=document.getElementById('vc');
-  let all,stats;
-  try{
-    [all,stats]=await Promise.all([
-      fetch('/api/contratos').then(r=>r.json()),
-      fetch('/api/stats').then(r=>r.json()),
-    ]);
-  }catch(e){
-    el.innerHTML=`<div class="empty">❌ Error al cargar. <button onclick="loadView()" class="btn btn-ghost btn-sm" style="margin-top:.5rem">Reintentar</button></div>`;
-    return;
-  }
-
-  // Opciones para filtros (del total sin filtrar)
-  const trMats=[...new Set(all.map(c=>c.materia).filter(Boolean))].sort();
-  const trResps=[...new Set(all.map(c=>c.responsable).filter(Boolean))].sort();
-  const trUnids=[...new Set(all.map(c=>c.unidad).filter(Boolean))].sort();
-
-  // Aplicar filtros
-  if(trFMat)    all = all.filter(c=>c.materia===trFMat);
-  if(trFResp)   all = all.filter(c=>c.responsable===trFResp);
-  if(trFUnidad) all = all.filter(c=>c.unidad===trFUnidad);
-
-  // Lógica limpia: completado o visado = resuelto → no cuenta como problema
-  const esResuelto = c => c.estado==='completado' || c.visado==='si';
-
-  const devActivos   = all.filter(c=>c.devuelto && !esResuelto(c));
-  const devResueltos = all.filter(c=>c.devuelto && esResuelto(c));
-  const vencActivos  = all.filter(c=>c.alerta==='vencido' && !esResuelto(c));
-  const vencResueltos= all.filter(c=>c.alerta==='vencido' && esResuelto(c));
-  const critActivos  = all.filter(c=>c.alerta==='critico' && !esResuelto(c));
-  const advActivos   = all.filter(c=>c.alerta==='advertencia' && !esResuelto(c));
-  const completados  = all.filter(c=>esResuelto(c));
-  const enProceso    = all.filter(c=>c.estado==='en_proceso' && !esResuelto(c));
-  const total        = all.length;
-  const pct          = v => total>0?Math.round(v/total*100):0;
-
-  const hora=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-  // Urgentes: vencidos + críticos (los que realmente necesitan acción)
-  const urgentes=[...vencActivos,...critActivos].slice(0,8);
-
-  function diasBadge(c){
-    if(c.alerta==='vencido') return`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5">VENCIDO</span>`;
-    if(c.dias_restantes!=null) return`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:#fefce8;color:#b45309;border:1px solid #fde68a">${c.dias_restantes}d</span>`;
-    return'—';
-  }
-
-  el.innerHTML=`
-  <style>
-    @keyframes tr-pulse{0%,100%{opacity:1}50%{opacity:.45}}
-    .rt-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;background:#f0fdf4;color:#15803d;border:1px solid #86efac;padding:3px 12px;border-radius:20px}
-    .rt-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:tr-pulse 1.5s infinite}
-    .rt-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem}
-    .rt-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.125rem;position:relative;overflow:hidden;transition:all .15s;cursor:pointer}
-    .rt-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
-    .rt-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px}
-    .rt-kpi.red::after{background:linear-gradient(90deg,#dc2626,#ef4444)}
-    .rt-kpi.amber::after{background:linear-gradient(90deg,#d97706,#f59e0b)}
-    .rt-kpi.green::after{background:linear-gradient(90deg,#15803d,#22c55e)}
-    .rt-kpi.blue::after{background:linear-gradient(90deg,#0891b2,#06b6d4)}
-    .rt-kpi.navy::after{background:linear-gradient(90deg,#002060,#003082)}
-    .rt-kpi-icon{font-size:22px;margin-bottom:.375rem;line-height:1}
-    .rt-kpi-val{font-size:32px;font-weight:800;line-height:1;margin-bottom:.2rem}
-    .rt-kpi.red .rt-kpi-val{color:#dc2626}
-    .rt-kpi.amber .rt-kpi-val{color:#d97706}
-    .rt-kpi.green .rt-kpi-val{color:#15803d}
-    .rt-kpi.blue .rt-kpi-val{color:#0891b2}
-    .rt-kpi.navy .rt-kpi-val{color:#002060}
-    .rt-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-    .rt-kpi-sub{font-size:10px;color:var(--soft);margin-top:.25rem}
-    .rt-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-    @media(max-width:700px){.rt-2col{grid-template-columns:1fr}}
-    .rt-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-    .rt-box-h{padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:space-between}
-    .rt-box-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
-    .rt-box-body{padding:.875rem 1rem}
-    .rt-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:.625rem}
-    .rt-bar-row:last-child{margin-bottom:0}
-    .rt-bar-lbl{font-size:11px;font-weight:600;width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-    .rt-bar-track{flex:1;height:8px;background:var(--border);border-radius:6px;overflow:hidden}
-    .rt-bar-fill{height:100%;border-radius:6px;transition:width .4s ease}
-    .rt-bar-num{font-size:11px;font-weight:800;min-width:24px;text-align:right}
-    .rt-urg-row{display:flex;align-items:center;gap:.75rem;padding:.6rem .875rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
-    .rt-urg-row:last-child{border-bottom:none}
-    .rt-urg-row:hover{background:var(--s2)}
-    .rt-urg-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
-    .rt-urg-name{font-size:12px;font-weight:700;line-height:1.2}
-    .rt-urg-sub{font-size:10px;color:var(--muted);margin-top:1px}
-    .rt-donut-wrap{display:flex;align-items:center;gap:1.25rem;padding:.25rem 0}
-    .rt-donut-canvas{width:110px;height:110px;flex-shrink:0}
-    .rt-legend{display:flex;flex-direction:column;gap:.5rem;flex:1}
-    .rt-leg-row{display:flex;align-items:center;gap:7px;font-size:11px}
-    .rt-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-    .rt-leg-lbl{flex:1;color:var(--muted)}
-    .rt-leg-val{font-weight:800;font-size:12px}
-    .rt-pct-bar{margin-bottom:1rem}
-    .rt-pct-lbl{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:.3rem}
-    .rt-pct-track{height:10px;background:var(--border);border-radius:6px;overflow:hidden;display:flex}
-    .rt-pct-seg{height:100%;transition:width .5s ease}
-    .rt-empty-ok{display:flex;align-items:center;gap:8px;padding:.75rem 1rem;font-size:12px;color:var(--green);font-weight:600;background:var(--green-l);border-radius:8px;border:1px solid #86efac}
-  </style>
-
-  <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="rt-live"><span class="rt-dot"></span>EN VIVO — ${hora}</span>
-      ${(vencActivos.length+critActivos.length)>0
-        ?`<span style="font-size:11px;font-weight:700;color:#b91c1c;background:#fef2f2;border:1px solid #fca5a5;padding:3px 10px;border-radius:20px">⚠ ${vencActivos.length+critActivos.length} requieren acción</span>`
-        :`<span style="font-size:11px;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;padding:3px 10px;border-radius:20px">✅ Todo al día</span>`}
-    </div>
-    <button class="btn btn-ghost btn-sm" onclick="renderTiempoReal()">↻ Actualizar</button>
-  </div>
-  <!-- Filtros -->
-  <div class="frow" style="margin-bottom:1rem;border-radius:10px;border:1px solid var(--border)">
-    <select onchange="trFMat=this.value;renderTiempoReal()">
-      <option value="">Todas las materias</option>
-      ${trMats.map(m=>`<option value="${m}" ${trFMat===m?'selected':''}>${m}</option>`).join('')}
-    </select>
-    <select onchange="trFResp=this.value;renderTiempoReal()">
-      <option value="">Todos los responsables</option>
-      ${trResps.map(r=>`<option value="${r}" ${trFResp===r?'selected':''}>${r}</option>`).join('')}
-    </select>
-    <select onchange="trFUnidad=this.value;renderTiempoReal()">
-      <option value="">Todas las unidades</option>
-      ${trUnids.map(u=>`<option value="${u}" ${trFUnidad===u?'selected':''}>${u}</option>`).join('')}
-    </select>
-    ${trFMat||trFResp||trFUnidad?`<button class="btn btn-ghost btn-sm" onclick="trFMat='';trFResp='';trFUnidad='';renderTiempoReal()">✕ Limpiar</button>`:''}
-  </div>
-
-  <!-- KPI cards -->
-  <div class="rt-kpi-grid">
-    <div class="rt-kpi red" onclick="fvTR('vencido')">
-      <div class="rt-kpi-icon">💀</div>
-      <div class="rt-kpi-val">${vencActivos.length}</div>
-      <div class="rt-kpi-lbl">Vencidos activos</div>
-      <div class="rt-kpi-sub">${vencResueltos.length} ya resueltos (no cuentan)</div>
-    </div>
-    <div class="rt-kpi red" onclick="fvTR('critico')">
-      <div class="rt-kpi-icon">⚠️</div>
-      <div class="rt-kpi-val">${critActivos.length}</div>
-      <div class="rt-kpi-lbl">Críticos activos</div>
-      <div class="rt-kpi-sub">Vencen en ≤ 7 días</div>
-    </div>
-    <div class="rt-kpi amber" onclick="fvTR('devuelto')">
-      <div class="rt-kpi-icon">↩</div>
-      <div class="rt-kpi-val">${devActivos.length}</div>
-      <div class="rt-kpi-lbl">Devueltos activos</div>
-      <div class="rt-kpi-sub">${devResueltos.length} completados/visados (no cuentan)</div>
-    </div>
-    <div class="rt-kpi amber" onclick="fvTR('advertencia')">
-      <div class="rt-kpi-icon">⏰</div>
-      <div class="rt-kpi-val">${advActivos.length}</div>
-      <div class="rt-kpi-lbl">Advertencias activas</div>
-      <div class="rt-kpi-sub">Vencen en ≤ 20 días</div>
-    </div>
-    <div class="rt-kpi green" onclick="fvTR('completado')">
-      <div class="rt-kpi-icon">✅</div>
-      <div class="rt-kpi-val">${completados.length}</div>
-      <div class="rt-kpi-lbl">Resueltos</div>
-      <div class="rt-kpi-sub">${pct(completados.length)}% del total</div>
-    </div>
-    <div class="rt-kpi navy" onclick="fvTR('en_proceso')">
-      <div class="rt-kpi-icon">📋</div>
-      <div class="rt-kpi-val">${enProceso.length}</div>
-      <div class="rt-kpi-lbl">En proceso</div>
-      <div class="rt-kpi-sub">De ${total} totales</div>
-    </div>
-  </div>
-
-  <!-- Barra de progreso global -->
-  <div class="rt-box" style="margin-bottom:1rem">
-    <div class="rt-box-h"><span class="rt-box-title">📊 Composición general (tiempo real)</span><span style="font-size:11px;color:var(--muted)">${total} registros</span></div>
-    <div class="rt-box-body">
-      <div style="display:flex;gap:0;height:14px;border-radius:8px;overflow:hidden;margin-bottom:.75rem">
-        <div style="width:${pct(completados.length)}%;background:#15803d;transition:width .5s" title="Resueltos ${completados.length}"></div>
-        <div style="width:${pct(enProceso.length)}%;background:#003082;transition:width .5s" title="En proceso ${enProceso.length}"></div>
-        <div style="width:${pct(advActivos.length)}%;background:#d97706;transition:width .5s" title="Advertencias ${advActivos.length}"></div>
-        <div style="width:${pct(critActivos.length)}%;background:#ef4444;transition:width .5s" title="Críticos ${critActivos.length}"></div>
-        <div style="width:${pct(vencActivos.length)}%;background:#7f1d1d;transition:width .5s" title="Vencidos ${vencActivos.length}"></div>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:.625rem 1.25rem">
-        ${[
-          ['#15803d','Resueltos',completados.length],
-          ['#003082','En proceso',enProceso.length],
-          ['#d97706','Advertencias',advActivos.length],
-          ['#ef4444','Críticos activos',critActivos.length],
-          ['#7f1d1d','Vencidos activos',vencActivos.length],
-          ['#0891b2','Devueltos activos',devActivos.length],
-        ].map(([col,lbl,val])=>`
-          <div style="display:flex;align-items:center;gap:5px">
-            <span style="width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0"></span>
-            <span style="font-size:10px;color:var(--muted)">${lbl}</span>
-            <span style="font-size:11px;font-weight:800;color:var(--text)">${val}</span>
-          </div>`).join('')}
-      </div>
-    </div>
-  </div>
-
-  <!-- GRÁFICOS -->
-  <div class="rt-2col" style="margin-bottom:1rem">
-
-    <!-- Gráfico: Estados actuales (donut) -->
-    <div class="rt-box">
-      <div class="rt-box-h"><span class="rt-box-title">🔵 Estados activos</span></div>
-      <div class="rt-box-body" style="padding:.875rem 1rem;display:flex;align-items:center;gap:1.5rem">
-        <div style="position:relative;width:150px;height:150px;flex-shrink:0">
-          <canvas id="rt-ch-estados"></canvas>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:.5rem;flex:1" id="rt-estados-legend"></div>
-      </div>
-    </div>
-
-    <!-- Gráfico: Flags / alertas (barras) -->
-    <div class="rt-box">
-      <div class="rt-box-h"><span class="rt-box-title">🚩 Flags y alertas activas</span></div>
-      <div class="rt-box-body" style="padding:.875rem 1rem">
-        <canvas id="rt-ch-flags" height="180"></canvas>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- 2 columnas: urgentes + devueltos activos -->
-  <div class="rt-2col">
-
-    <!-- Urgentes -->
-    <div class="rt-box">
-      <div class="rt-box-h">
-        <span class="rt-box-title">🔴 Urgentes — vencidos + críticos</span>
-        <span style="font-size:10px;font-weight:800;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;padding:2px 8px;border-radius:20px">${vencActivos.length+critActivos.length}</span>
-      </div>
-      ${urgentes.length===0
-        ?`<div class="rt-box-body"><div class="rt-empty-ok">✅ Sin urgentes pendientes</div></div>`
-        :urgentes.map(c=>{
-          const isVenc=c.alerta==='vencido';
-          const bgAv=isVenc?'#fef2f2':'#fefce8';
-          const colAv=isVenc?'#b91c1c':'#b45309';
-          return`<div class="rt-urg-row" onclick="openModal(${c.id})">
-            <div class="rt-urg-av" style="background:${bgAv};color:${colAv}">${ini(c.nombre)}</div>
-            <div style="flex:1;min-width:0">
-              <div class="rt-urg-name">${c.nombre}</div>
-              <div class="rt-urg-sub">${c.materia||'—'} · ${c.responsable||'—'}</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">${diasBadge(c)}<div style="font-size:9px;color:var(--soft);margin-top:2px">${fmtD(c.fecha_fin)}</div></div>
-          </div>`;
-        }).join('')
-      }
-      ${urgentes.length>0&&(vencActivos.length+critActivos.length)>8
-        ?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('vencido')">Ver todos →</button></div>`:''}
-    </div>
-
-    <!-- Devueltos activos -->
-    <div class="rt-box">
-      <div class="rt-box-h">
-        <span class="rt-box-title">↩ Devueltos activos</span>
-        <span style="font-size:10px;font-weight:800;background:#e0f2fe;color:#0891b2;border:1px solid #7dd3fc;padding:2px 8px;border-radius:20px">${devActivos.length}</span>
-      </div>
-      ${devResueltos.length>0?`<div style="margin:.625rem .875rem 0;padding:.4rem .75rem;background:#f0fdf4;border:1px solid #86efac;border-radius:7px;font-size:10px;color:#15803d;font-weight:600">✅ ${devResueltos.length} devuelto${devResueltos.length!==1?'s':''} completado${devResueltos.length!==1?'s':''}/visados — no se contabilizan</div>`:''}
-      ${devActivos.length===0
-        ?`<div class="rt-box-body"><div class="rt-empty-ok">✅ Sin devueltos pendientes</div></div>`
-        :devActivos.slice(0,8).map(c=>`<div class="rt-urg-row" onclick="openModal(${c.id})">
-            <div class="rt-urg-av" style="background:#e0f2fe;color:#0891b2">${ini(c.nombre)}</div>
-            <div style="flex:1;min-width:0">
-              <div class="rt-urg-name">${c.nombre}</div>
-              <div class="rt-urg-sub">${c.materia||'—'} · ${c.responsable||'—'}</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">${diasBadge(c)}<div style="font-size:9px;color:var(--soft);margin-top:2px">${fmtD(c.fecha_fin)}</div></div>
-          </div>`).join('')
-      }
-      ${devActivos.length>8?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('devuelto')">Ver todos →</button></div>`:''}
-    </div>
-
-  </div>
-
-  <!-- Advertencias activas -->
-  ${advActivos.length>0?`
-  <div class="rt-box">
-    <div class="rt-box-h">
-      <span class="rt-box-title">⏰ Advertencias activas — vencen en ≤ 20 días</span>
-      <span style="font-size:10px;font-weight:800;background:#fefce8;color:#b45309;border:1px solid #fde68a;padding:2px 8px;border-radius:20px">${advActivos.length}</span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0">
-      ${advActivos.slice(0,6).map(c=>`<div class="rt-urg-row" onclick="openModal(${c.id})">
-        <div class="rt-urg-av" style="background:#fefce8;color:#b45309">${ini(c.nombre)}</div>
-        <div style="flex:1;min-width:0">
-          <div class="rt-urg-name">${c.nombre}</div>
-          <div class="rt-urg-sub">${c.responsable||'—'}</div>
-        </div>
-        ${diasBadge(c)}
-      </div>`).join('')}
-    </div>
-    ${advActivos.length>6?`<div style="padding:.5rem 1rem;border-top:1px solid var(--border);text-align:center"><button class="btn btn-ghost btn-sm" onclick="fvTR('advertencia')">Ver todas (${advActivos.length}) →</button></div>`:''}
-  </div>`:''}
-  `;
-
-  // ── Chart: Estados activos (donut) ──
-  const ctxE = document.getElementById('rt-ch-estados');
-  if(ctxE){
-    const eLabels=['En proceso','Vencidos','Críticos','Advertencias'];
-    const eData=[enProceso.length, vencActivos.length, critActivos.length, advActivos.length];
-    const eColors=['#003082','#dc2626','#ef4444','#d97706'];
-    new Chart(ctxE.getContext('2d'),{
-      type:'doughnut',
-      data:{
-        labels:eLabels,
-        datasets:[{data:eData,backgroundColor:eColors,borderWidth:2,borderColor:'#fff',hoverOffset:4}]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        cutout:'68%',
-        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}`}}}
-      }
-    });
-    // Leyenda manual
-    const leg=document.getElementById('rt-estados-legend');
-    if(leg) leg.innerHTML=eLabels.map((l,i)=>`
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="width:11px;height:11px;border-radius:3px;background:${eColors[i]};flex-shrink:0"></span>
-        <span style="font-size:11px;color:var(--muted)">${l}</span>
-        <span style="font-size:12px;font-weight:800;color:var(--text)">${eData[i]}</span>
-      </div>`).join('');
-  }
-
-  // ── Chart: Flags activas (sin visados ni dev. resueltos) ──
-  const ctxF = document.getElementById('rt-ch-flags');
-  if(ctxF){
-    // solo activos: no resueltos
-    const conObs = all.filter(c=>c.tiene_observacion && !esResuelto(c)).length;
-    const imprev = all.filter(c=>c.pago_imprevisto   && !esResuelto(c)).length;
-    const retras = all.filter(c=>c.retrasado         && !esResuelto(c)).length;
-    new Chart(ctxF.getContext('2d'),{
-      type:'bar',
-      data:{
-        labels:['Dev. activos','Con obs.','Imprevisto','Retrasados'],
-        datasets:[{
-          data:[devActivos.length, conObs, imprev, retras],
-          backgroundColor:['#dc2626','#d97706','#7c3aed','#0891b2'],
-          borderRadius:6,
-          borderWidth:0,
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
-        scales:{
-          y:{beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#ece9e2'}},
-          x:{ticks:{font:{size:10}}, grid:{display:false}}
-        }
-      }
-    });
-  }
-}
-
-/* ── HISTÓRICO ── */
-async function renderHistorico(){
-  const el=document.getElementById('vc');
-  let all;
-  try{
-    all = await fetch('/api/contratos').then(r=>r.json());
-  }catch(e){
-    el.innerHTML=`<div class="empty">❌ Error al cargar. <button onclick="loadView()" class="btn btn-ghost btn-sm" style="margin-top:.5rem">Reintentar</button></div>`;
-    return;
-  }
-
-  // Aplicar filtros
-  let data = all;
-  if(hFMat)    data = data.filter(c=>c.materia===hFMat);
-  if(hFResp)   data = data.filter(c=>c.responsable===hFResp);
-  if(hFUnidad) data = data.filter(c=>c.unidad===hFUnidad);
-
-  const total       = data.length;
-  // Acumulados históricos — sin importar estado actual
-  const devTotal    = data.filter(c=>c.devuelto);
-  const vencTotal   = data.filter(c=>c.alerta==='vencido' || (c.dias_restantes!=null && c.dias_restantes<0));
-  const completados = data.filter(c=>c.estado==='completado');
-  const visados     = data.filter(c=>c.visado==='si');
-  const conObs      = data.filter(c=>c.tiene_observacion);
-  const imprevisto  = data.filter(c=>c.pago_imprevisto);
-  const retrasados  = data.filter(c=>c.retrasado);
-  const sinEfecto   = data.filter(c=>c.estado==='sin_efecto');
-
-  // Por responsable: acumulado de flags
-  const porResp={};
-  data.forEach(c=>{
-    const r=c.responsable||'Sin asignar';
-    if(!porResp[r]) porResp[r]={nombre:r,total:0,devueltos:0,vencidos:0,completados:0,visados:0,obs:0,imprevisto:0,retrasados:0};
-    porResp[r].total++;
-    if(c.devuelto) porResp[r].devueltos++;
-    if(c.alerta==='vencido'||(c.dias_restantes!=null&&c.dias_restantes<0)) porResp[r].vencidos++;
-    if(c.estado==='completado') porResp[r].completados++;
-    if(c.visado==='si') porResp[r].visados++;
-    if(c.tiene_observacion) porResp[r].obs++;
-    if(c.pago_imprevisto) porResp[r].imprevisto++;
-    if(c.retrasado) porResp[r].retrasados++;
-  });
-  const respRows=Object.values(porResp).sort((a,b)=>b.total-a.total);
-
-  // Por mes — ingresados (creado_en = fecha registro en sistema)
-  const porMesIngreso=Array(12).fill(0);
-  data.forEach(c=>{
-    const f=c.creado_en;
-    if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMesIngreso[m]++;}
-  });
-
-  // Por mes — cuántos se completaron/visaron (basado en fecha_fin como proxy)
-  const porMes=Array(12).fill(0);
-  data.filter(c=>c.estado==='completado'||c.visado==='si').forEach(c=>{
-    const f=c.fecha_fin||c.fecha_inicio;
-    if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMes[m]++;}
-  });
-
-  // Top devueltos históricos (más devoluciones por responsable)
-  const topDev=[...respRows].sort((a,b)=>b.devueltos-a.devueltos).filter(r=>r.devueltos>0).slice(0,5);
-  const topVenc=[...respRows].sort((a,b)=>b.vencidos-a.vencidos).filter(r=>r.vencidos>0).slice(0,5);
-
-  // Opciones para filtros
-  const mats=[...new Set(all.map(c=>c.materia).filter(Boolean))].sort();
-  const resps=[...new Set(all.map(c=>c.responsable).filter(Boolean))].sort();
-  const unids=[...new Set(all.map(c=>c.unidad).filter(Boolean))].sort();
-
-  el.innerHTML=`
-  <style>
-    .hi-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
-    .hi-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.125rem;position:relative;overflow:hidden}
-    .hi-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px}
-    .hi-kpi.navy::after{background:linear-gradient(90deg,#002060,#003082)}
-    .hi-kpi.green::after{background:linear-gradient(90deg,#15803d,#22c55e)}
-    .hi-kpi.red::after{background:linear-gradient(90deg,#dc2626,#ef4444)}
-    .hi-kpi.amber::after{background:linear-gradient(90deg,#d97706,#f59e0b)}
-    .hi-kpi.blue::after{background:linear-gradient(90deg,#0891b2,#06b6d4)}
-    .hi-kpi.purple::after{background:linear-gradient(90deg,#6d28d9,#8b5cf6)}
-    .hi-kpi.gray::after{background:linear-gradient(90deg,#6b7280,#9ca3af)}
-    .hi-kpi-icon{font-size:20px;margin-bottom:.375rem}
-    .hi-kpi-val{font-size:30px;font-weight:800;line-height:1;margin-bottom:.2rem}
-    .hi-kpi.navy .hi-kpi-val{color:#002060}
-    .hi-kpi.green .hi-kpi-val{color:#15803d}
-    .hi-kpi.red .hi-kpi-val{color:#dc2626}
-    .hi-kpi.amber .hi-kpi-val{color:#d97706}
-    .hi-kpi.blue .hi-kpi-val{color:#0891b2}
-    .hi-kpi.purple .hi-kpi-val{color:#6d28d9}
-    .hi-kpi.gray .hi-kpi-val{color:#6b7280}
-    .hi-kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-    .hi-kpi-sub{font-size:10px;color:var(--soft);margin-top:.25rem}
-    .hi-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-    @media(max-width:700px){.hi-2col{grid-template-columns:1fr}}
-    .hi-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem}
-    .hi-box-h{padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:space-between}
-    .hi-box-title{font-size:12px;font-weight:700}
-    .hi-box-body{padding:.875rem 1rem}
-    .hi-resp-row{display:grid;grid-template-columns:1fr repeat(7,44px);gap:4px;align-items:center;padding:.5rem .875rem;border-bottom:1px solid var(--border);font-size:11px}
-    .hi-resp-row:last-child{border-bottom:none}
-    .hi-resp-row:hover{background:var(--s2)}
-    .hi-resp-head{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--soft);text-align:center}
-    .hi-resp-head:first-child{text-align:left}
-    .hi-pill{display:inline-flex;align-items:center;justify-content:center;min-width:26px;padding:2px 6px;border-radius:20px;font-size:10px;font-weight:800;border:1px solid transparent}
-    .hi-pill.red{background:#fef2f2;color:#b91c1c;border-color:#fca5a5}
-    .hi-pill.amber{background:#fefce8;color:#b45309;border-color:#fde68a}
-    .hi-pill.green{background:#f0fdf4;color:#15803d;border-color:#86efac}
-    .hi-pill.blue{background:#e0f2fe;color:#0891b2;border-color:#7dd3fc}
-    .hi-pill.purple{background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd}
-    .hi-pill.gray{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
-    .hi-pill.zero{background:transparent;color:var(--soft);border-color:transparent;font-weight:400}
-    .hi-top-row{display:flex;align-items:center;gap:.75rem;padding:.55rem .875rem;border-bottom:1px solid var(--border)}
-    .hi-top-row:last-child{border-bottom:none}
-    .hi-top-rank{width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--muted);flex-shrink:0}
-    .hi-top-rank.gold{background:#fef9c3;border-color:#fde68a;color:#b45309}
-    .hi-top-rank.silver{background:#f3f4f6;border-color:#d1d5db;color:#6b7280}
-    .hi-top-rank.bronze{background:#fef3e2;border-color:#fcd9a0;color:#92400e}
-  </style>
-
-  <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
-    <span style="font-size:11px;color:var(--muted)">Acumulado total — ${total} registros${hFMat||hFResp||hFUnidad?' (filtrado)':' en el sistema'}</span>
-    <button class="btn btn-ghost btn-sm" onclick="renderHistorico()">↻ Actualizar</button>
-  </div>
-  <!-- Filtros -->
-  <div class="frow" style="margin-bottom:1rem;border-radius:10px;border:1px solid var(--border)">
-    <select onchange="hFMat=this.value;renderHistorico()">
-      <option value="">Todas las materias</option>
-      ${mats.map(m=>`<option value="${m}" ${hFMat===m?'selected':''}>${m}</option>`).join('')}
-    </select>
-    <select onchange="hFResp=this.value;renderHistorico()">
-      <option value="">Todos los responsables</option>
-      ${resps.map(r=>`<option value="${r}" ${hFResp===r?'selected':''}>${r}</option>`).join('')}
-    </select>
-    <select onchange="hFUnidad=this.value;renderHistorico()">
-      <option value="">Todas las unidades</option>
-      ${unids.map(u=>`<option value="${u}" ${hFUnidad===u?'selected':''}>${u}</option>`).join('')}
-    </select>
-    ${hFMat||hFResp||hFUnidad?`<button class="btn btn-ghost btn-sm" onclick="hFMat='';hFResp='';hFUnidad='';renderHistorico()">✕ Limpiar</button>`:''}
-  </div>
-
-  <!-- KPIs históricos -->
-  <div class="hi-kpi-grid">
-    <div class="hi-kpi navy">
-      <div class="hi-kpi-icon">📋</div>
-      <div class="hi-kpi-val">${total}</div>
-      <div class="hi-kpi-lbl">Total registros</div>
-      <div class="hi-kpi-sub">Histórico completo</div>
-    </div>
-    <div class="hi-kpi green">
-      <div class="hi-kpi-icon">✅</div>
-      <div class="hi-kpi-val">${completados.length}</div>
-      <div class="hi-kpi-lbl">Completados</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(completados.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi green">
-      <div class="hi-kpi-icon">🔏</div>
-      <div class="hi-kpi-val">${visados.length}</div>
-      <div class="hi-kpi-lbl">Visados</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(visados.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi red">
-      <div class="hi-kpi-icon">↩</div>
-      <div class="hi-kpi-val">${devTotal.length}</div>
-      <div class="hi-kpi-lbl">Devueltos alguna vez</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(devTotal.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi red">
-      <div class="hi-kpi-icon">💀</div>
-      <div class="hi-kpi-val">${vencTotal.length}</div>
-      <div class="hi-kpi-lbl">Vencidos alguna vez</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(vencTotal.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi amber">
-      <div class="hi-kpi-icon">💬</div>
-      <div class="hi-kpi-val">${conObs.length}</div>
-      <div class="hi-kpi-lbl">Con observación</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(conObs.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi purple">
-      <div class="hi-kpi-icon">💲</div>
-      <div class="hi-kpi-val">${imprevisto.length}</div>
-      <div class="hi-kpi-lbl">Pago imprevisto</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(imprevisto.length/total*100):0}% del total</div>
-    </div>
-    <div class="hi-kpi gray">
-      <div class="hi-kpi-icon">🚫</div>
-      <div class="hi-kpi-val">${sinEfecto.length}</div>
-      <div class="hi-kpi-lbl">Sin efecto</div>
-      <div class="hi-kpi-sub">${total>0?Math.round(sinEfecto.length/total*100):0}% del total</div>
-    </div>
-  </div>
-
-  <!-- Gráficos: flags históricos -->
-  <div class="hi-box" style="margin-bottom:1rem">
-    <div class="hi-box-h"><span class="hi-box-title">🚩 Flags históricos totales</span></div>
-    <div class="hi-box-body"><canvas id="hi-ch-flags" height="180"></canvas></div>
-  </div>
-
-  <!-- Top rankings -->
-  <div class="hi-2col" style="margin-top:1rem">
-
-    <!-- Top devueltos por responsable -->
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h">
-        <span class="hi-box-title">↩ Más devoluciones históricas por responsable</span>
-        <span style="font-size:10px;color:var(--muted)">${devTotal.length} total</span>
-      </div>
-      ${topDev.length===0
-        ?`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin devoluciones registradas</div>`
-        :topDev.map((r,i)=>`<div class="hi-top-row">
-          <div class="hi-top-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
-          <div style="flex:1;font-size:12px;font-weight:700">${r.nombre}</div>
-          <span class="hi-pill red">${r.devueltos} dev.</span>
-          <span class="hi-pill gray" style="margin-left:4px">${r.total} total</span>
-        </div>`).join('')
-      }
-    </div>
-
-    <!-- Top vencidos por unidad -->
-    <div class="hi-box" style="margin-bottom:0">
-      <div class="hi-box-h">
-        <span class="hi-box-title">💀 Más vencidos históricos por unidad</span>
-        <span style="font-size:10px;color:var(--muted)">${vencTotal.length} total</span>
-      </div>
-      ${(()=>{
-        const porUnidad={};
-        data.forEach(c=>{
-          const u=c.unidad||'Sin unidad';
-          if(!porUnidad[u]) porUnidad[u]={nombre:u,vencidos:0,total:0};
-          porUnidad[u].total++;
-          if(c.alerta==='vencido'||(c.dias_restantes!=null&&c.dias_restantes<0)) porUnidad[u].vencidos++;
-        });
-        const topU=Object.values(porUnidad).sort((a,b)=>b.vencidos-a.vencidos).filter(u=>u.vencidos>0).slice(0,5);
-        if(!topU.length) return`<div class="hi-box-body" style="text-align:center;color:var(--muted);font-size:12px">Sin vencidos registrados</div>`;
-        return topU.map((u,i)=>`<div class="hi-top-row">
-          <div class="hi-top-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
-          <div style="flex:1;font-size:12px;font-weight:700">${u.nombre}</div>
-          <span class="hi-pill red">${u.vencidos} venc.</span>
-          <span class="hi-pill gray" style="margin-left:4px">${u.total} total</span>
-        </div>`).join('');
-      })()}
-    </div>
-
-  </div>
-
-  <!-- Tabla completa por responsable -->
-  <div class="hi-box" style="margin-top:1rem">
-    <div class="hi-box-h">
-      <span class="hi-box-title">👤 Resumen histórico por responsable</span>
-      <span style="font-size:10px;color:var(--muted)">${respRows.length} responsables</span>
-    </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="background:var(--s2)">
-            <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap">Responsable</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Total</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Complet.</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Visados</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Devueltos</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Vencidos</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Obs.</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Imprev.</th>
-            <th style="padding:8px 8px;text-align:center;font-size:9px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)">Retras.</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${respRows.map(r=>`<tr style="cursor:default;transition:background .1s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
-            <td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:700">${r.nombre}</td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill gray">${r.total}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.completados>0?'green':'zero'}">${r.completados||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.visados>0?'green':'zero'}">${r.visados||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.devueltos>0?'red':'zero'}">${r.devueltos||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.vencidos>0?'red':'zero'}">${r.vencidos||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.obs>0?'amber':'zero'}">${r.obs||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.imprevisto>0?'purple':'zero'}">${r.imprevisto||'—'}</span></td>
-            <td style="padding:9px 8px;border-bottom:1px solid var(--border);text-align:center"><span class="hi-pill ${r.retrasados>0?'blue':'zero'}">${r.retrasados||'—'}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  `;
-
-  // ── Chart: Flags históricos ──
-  const ctxF=document.getElementById('hi-ch-flags');
-  if(ctxF){
-    new Chart(ctxF.getContext('2d'),{
-      type:'bar',
-      data:{
-        labels:['Devueltos','Vencidos','Con obs.','Imprevisto','Retrasados','Sin efecto'],
-        datasets:[{
-          data:[devTotal.length,vencTotal.length,conObs.length,imprevisto.length,retrasados.length,sinEfecto.length],
-          backgroundColor:['#dc2626','#7f1d1d','#d97706','#7c3aed','#0891b2','#6b7280'],
-          borderRadius:5,borderWidth:0
-        }]
-      },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' registros'}}},
-        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9}},grid:{color:'#ece9e2'}},x:{ticks:{font:{size:9}},grid:{display:false}}}
-      }
-    });
-  }
-}
-
 /* GUARDAR */
 async function guardar(){
   const f=id=>document.getElementById(id).value;
@@ -1955,73 +1192,16 @@ document.getElementById('cfm-wrap').addEventListener('click',function(e){if(e.ta
 
 /* Search debounce */
 let _searchTimer=null;
-function fmtRutSiAplica(el){
-  const raw = el.value.replace(/[.\-]/g,'');
-  if(!/^[\dkK]{1,9}$/.test(raw)) return;
-  const v = raw.toUpperCase();
-  let formatted;
-  if(v.length <= 1){ formatted = v; }
-  else {
-    const dv = v.slice(-1);
-    let body = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-    formatted = body + '-' + dv;
-  }
-  if(el.value === formatted) return;
-  const pos = el.selectionStart;
-  const antes = el.value.slice(0, pos).replace(/[.\-]/g,'').length;
-  el.value = formatted;
-  let cuenta = 0, nuevaPos = 0;
-  for(let i = 0; i < formatted.length; i++){
-    if(formatted[i] !== '.' && formatted[i] !== '-') cuenta++;
-    if(cuenta >= antes){ nuevaPos = i + 1; break; }
-  }
-  try{ el.setSelectionRange(nuevaPos, nuevaPos); }catch(e){}
-}
-
 function debounceSearch(){
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(async()=>{
     const inp=document.getElementById('search-inp');
-    if(inp) sq=inp.value;
+    const pos=inp?inp.selectionStart:null;
     await renderContratos();
-  },400);
-}
-
-/* ── MODO OSCURO ── */
-/* ── VISTA TARJETAS ── */
-let cardView='table'; // 'table' | 'card'
-
-function setCardView(v){
-  cardView=v;
-  document.getElementById('vt-table').classList.toggle('active', v==='table');
-  document.getElementById('vt-card').classList.toggle('active', v==='card');
-  renderContratos();
-}
-
-function renderCards(pageData){
-  return `<div class="card-grid">${pageData.map(c=>`
-  <div class="crd" onclick="openModal(${c.id})">
-    <div class="crd-actions" onclick="event.stopPropagation()">
-      ${isViewer?'':`<button class="act-btn" onclick="openModal(${c.id})">✏</button>
-      <button class="act-btn del" onclick="askDel(${c.id},'contrato')">🗑</button>`}
-    </div>
-    <div class="crd-name">${c.nombre}</div>
-    <div class="crd-rut">${c.rut}</div>
-    <div class="crd-row"><span class="crd-lbl">Materia</span><span class="crd-val" style="color:var(--navy2)">${c.materia||'—'}</span></div>
-    <div class="crd-row"><span class="crd-lbl">Responsable</span><span class="crd-val">${c.responsable||'—'}</span></div>
-    <div class="crd-row"><span class="crd-lbl">Vence</span><span class="crd-val">${fmtD(c.fecha_fin)}${c.dias_restantes!==null&&c.estado==='en_proceso'?` <span style="font-size:10px;color:${c.dias_restantes<=0?'var(--red)':c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</span>`:''}</span></div>
-    <div class="crd-row"><span class="crd-lbl">Estado</span>${badgeFull(c)}</div>
-    <div class="crd-flags">
-      ${etapasHtml(c.etapas)}
-    </div>
-    <div class="crd-flags" style="margin-top:.375rem">
-      ${c.visado==='si'?`<span class="flag f-ok">Vis✓</span>`:`<span class="flag f-no">Vis ${c.visado}</span>`}
-      ${c.devuelto?`<span class="flag f-ok">Dev✓</span>`:''}
-      ${c.tiene_observacion?`<span class="flag f-warn">Obs⚠</span>`:''}
-      ${c.pago_imprevisto?`<span class="flag f-warn">$Imp</span>`:''}
-      ${c.retrasado?`<span class="flag f-warn">⏳Ret</span>`:''}
-    </div>
-  </div>`).join('')}</div>`;
+    // restore focus and cursor
+    const inp2=document.getElementById('search-inp');
+    if(inp2){ inp2.focus(); try{inp2.setSelectionRange(pos,pos);}catch(e){} }
+  },300);
 }
 
 /* INIT */
