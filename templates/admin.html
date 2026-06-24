@@ -399,6 +399,7 @@ tbody tr:hover td{background:var(--s2)}
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='',fNumSeg='';
+let hFMat='',hFResp='',hFUnidad='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
 let gPage=1;
@@ -1489,20 +1490,26 @@ async function renderHistorico(){
     return;
   }
 
-  const total       = all.length;
+  // Aplicar filtros
+  let data = all;
+  if(hFMat)    data = data.filter(c=>c.materia===hFMat);
+  if(hFResp)   data = data.filter(c=>c.responsable===hFResp);
+  if(hFUnidad) data = data.filter(c=>c.unidad===hFUnidad);
+
+  const total       = data.length;
   // Acumulados históricos — sin importar estado actual
-  const devTotal    = all.filter(c=>c.devuelto);
-  const vencTotal   = all.filter(c=>c.alerta==='vencido' || (c.dias_restantes!=null && c.dias_restantes<0));
-  const completados = all.filter(c=>c.estado==='completado');
-  const visados     = all.filter(c=>c.visado==='si');
-  const conObs      = all.filter(c=>c.tiene_observacion);
-  const imprevisto  = all.filter(c=>c.pago_imprevisto);
-  const retrasados  = all.filter(c=>c.retrasado);
-  const sinEfecto   = all.filter(c=>c.estado==='sin_efecto');
+  const devTotal    = data.filter(c=>c.devuelto);
+  const vencTotal   = data.filter(c=>c.alerta==='vencido' || (c.dias_restantes!=null && c.dias_restantes<0));
+  const completados = data.filter(c=>c.estado==='completado');
+  const visados     = data.filter(c=>c.visado==='si');
+  const conObs      = data.filter(c=>c.tiene_observacion);
+  const imprevisto  = data.filter(c=>c.pago_imprevisto);
+  const retrasados  = data.filter(c=>c.retrasado);
+  const sinEfecto   = data.filter(c=>c.estado==='sin_efecto');
 
   // Por responsable: acumulado de flags
   const porResp={};
-  all.forEach(c=>{
+  data.forEach(c=>{
     const r=c.responsable||'Sin asignar';
     if(!porResp[r]) porResp[r]={nombre:r,total:0,devueltos:0,vencidos:0,completados:0,visados:0,obs:0,imprevisto:0,retrasados:0};
     porResp[r].total++;
@@ -1518,14 +1525,14 @@ async function renderHistorico(){
 
   // Por mes — ingresados (creado_en = fecha registro en sistema)
   const porMesIngreso=Array(12).fill(0);
-  all.forEach(c=>{
+  data.forEach(c=>{
     const f=c.creado_en;
     if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMesIngreso[m]++;}
   });
 
   // Por mes — cuántos se completaron/visaron (basado en fecha_fin como proxy)
   const porMes=Array(12).fill(0);
-  all.filter(c=>c.estado==='completado'||c.visado==='si').forEach(c=>{
+  data.filter(c=>c.estado==='completado'||c.visado==='si').forEach(c=>{
     const f=c.fecha_fin||c.fecha_inicio;
     if(f){const m=parseInt(f.split('-')[1])-1; if(m>=0&&m<12) porMes[m]++;}
   });
@@ -1533,6 +1540,11 @@ async function renderHistorico(){
   // Top devueltos históricos (más devoluciones por responsable)
   const topDev=[...respRows].sort((a,b)=>b.devueltos-a.devueltos).filter(r=>r.devueltos>0).slice(0,5);
   const topVenc=[...respRows].sort((a,b)=>b.vencidos-a.vencidos).filter(r=>r.vencidos>0).slice(0,5);
+
+  // Opciones para filtros
+  const mats=[...new Set(all.map(c=>c.materia).filter(Boolean))].sort();
+  const resps=[...new Set(all.map(c=>c.responsable).filter(Boolean))].sort();
+  const unids=[...new Set(all.map(c=>c.unidad).filter(Boolean))].sort();
 
   el.innerHTML=`
   <style>
@@ -1585,9 +1597,25 @@ async function renderHistorico(){
   </style>
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
-    <span style="font-size:11px;color:var(--muted)">Acumulado total — ${total} registros en el sistema</span>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+    <span style="font-size:11px;color:var(--muted)">Acumulado total — ${total} registros${hFMat||hFResp||hFUnidad?' (filtrado)':' en el sistema'}</span>
     <button class="btn btn-ghost btn-sm" onclick="renderHistorico()">↻ Actualizar</button>
+  </div>
+  <!-- Filtros -->
+  <div class="frow" style="margin-bottom:1rem;border-radius:10px;border:1px solid var(--border)">
+    <select onchange="hFMat=this.value;renderHistorico()">
+      <option value="">Todas las materias</option>
+      ${mats.map(m=>`<option value="${m}" ${hFMat===m?'selected':''}>${m}</option>`).join('')}
+    </select>
+    <select onchange="hFResp=this.value;renderHistorico()">
+      <option value="">Todos los responsables</option>
+      ${resps.map(r=>`<option value="${r}" ${hFResp===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+    <select onchange="hFUnidad=this.value;renderHistorico()">
+      <option value="">Todas las unidades</option>
+      ${unids.map(u=>`<option value="${u}" ${hFUnidad===u?'selected':''}>${u}</option>`).join('')}
+    </select>
+    ${hFMat||hFResp||hFUnidad?`<button class="btn btn-ghost btn-sm" onclick="hFMat='';hFResp='';hFUnidad='';renderHistorico()">✕ Limpiar</button>`:''}
   </div>
 
   <!-- KPIs históricos -->
@@ -1676,7 +1704,7 @@ async function renderHistorico(){
       </div>
       ${(()=>{
         const porUnidad={};
-        all.forEach(c=>{
+        data.forEach(c=>{
           const u=c.unidad||'Sin unidad';
           if(!porUnidad[u]) porUnidad[u]={nombre:u,vencidos:0,total:0};
           porUnidad[u].total++;
