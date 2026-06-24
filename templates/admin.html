@@ -400,6 +400,7 @@ const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','
 let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='',fNumSeg='';
 let hFMat='',hFResp='',hFUnidad='';
+let trFMat='',trFResp='',trFUnidad='';
 let gMats=[],gResps=[],gEtapaNombres=[],gUnidades=[],activeEtapas=[],CH={};
 let isViewer=false;
 let gPage=1;
@@ -1164,6 +1165,16 @@ async function renderTiempoReal(){
     return;
   }
 
+  // Opciones para filtros (del total sin filtrar)
+  const trMats=[...new Set(all.map(c=>c.materia).filter(Boolean))].sort();
+  const trResps=[...new Set(all.map(c=>c.responsable).filter(Boolean))].sort();
+  const trUnids=[...new Set(all.map(c=>c.unidad).filter(Boolean))].sort();
+
+  // Aplicar filtros
+  if(trFMat)    all = all.filter(c=>c.materia===trFMat);
+  if(trFResp)   all = all.filter(c=>c.responsable===trFResp);
+  if(trFUnidad) all = all.filter(c=>c.unidad===trFUnidad);
+
   // Lógica limpia: completado o visado = resuelto → no cuenta como problema
   const esResuelto = c => c.estado==='completado' || c.visado==='si';
 
@@ -1245,7 +1256,7 @@ async function renderTiempoReal(){
   </style>
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
     <div style="display:flex;align-items:center;gap:10px">
       <span class="rt-live"><span class="rt-dot"></span>EN VIVO — ${hora}</span>
       ${(vencActivos.length+critActivos.length)>0
@@ -1253,6 +1264,22 @@ async function renderTiempoReal(){
         :`<span style="font-size:11px;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;padding:3px 10px;border-radius:20px">✅ Todo al día</span>`}
     </div>
     <button class="btn btn-ghost btn-sm" onclick="renderTiempoReal()">↻ Actualizar</button>
+  </div>
+  <!-- Filtros -->
+  <div class="frow" style="margin-bottom:1rem;border-radius:10px;border:1px solid var(--border)">
+    <select onchange="trFMat=this.value;renderTiempoReal()">
+      <option value="">Todas las materias</option>
+      ${trMats.map(m=>`<option value="${m}" ${trFMat===m?'selected':''}>${m}</option>`).join('')}
+    </select>
+    <select onchange="trFResp=this.value;renderTiempoReal()">
+      <option value="">Todos los responsables</option>
+      ${trResps.map(r=>`<option value="${r}" ${trFResp===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+    <select onchange="trFUnidad=this.value;renderTiempoReal()">
+      <option value="">Todas las unidades</option>
+      ${trUnids.map(u=>`<option value="${u}" ${trFUnidad===u?'selected':''}>${u}</option>`).join('')}
+    </select>
+    ${trFMat||trFResp||trFUnidad?`<button class="btn btn-ghost btn-sm" onclick="trFMat='';trFResp='';trFUnidad='';renderTiempoReal()">✕ Limpiar</button>`:''}
   </div>
 
   <!-- KPI cards -->
