@@ -385,6 +385,15 @@ tbody tr:hover td{background:var(--s2)}
 </div>
 
 <script>
+// Formatea RUT automáticamente: usuario escribe solo números y aparece XX.XXX.XXX-X
+function fmtRutInp(el){
+  let v = el.value.replace(/[^\dkK]/g,'').toUpperCase();
+  if(!v){ el.value=''; return; }
+  const dv = v.slice(-1);
+  let body = v.slice(0,-1);
+  body = body.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  el.value = v.length > 1 ? body+'-'+dv : v;
+}
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let view='tiemporeal', editId=null, delId=null, delType='contrato', delCb=null;
 let fEstado='',fRut='',fMat='',fVis='',fObs='',fResp='',fRet='',fDev='',fImp='',fEtapa='',fUnidad='',sq='';
@@ -897,7 +906,7 @@ async function renderRuts(){
   <div class="panel" style="margin-bottom:1rem">
     <div class="ph"><span class="ph-title">🔍 Buscar por RUT</span></div>
     <div style="padding:.75rem 1rem;display:flex;gap:8px">
-      <input id="rut-search-inp" placeholder="Ingresa el RUT a buscar..." style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:var(--bg)" oninput="buscarRutAdmin()" value="">
+      <input id="rut-search-inp" placeholder="Ej: 123456789  →  12.345.678-9" maxlength="12" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:var(--bg)" oninput="fmtRutInp(this);buscarRutAdmin()" value="">
     </div>
     <div id="rut-resultado"></div>
   </div>
