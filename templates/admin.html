@@ -19,6 +19,35 @@
   --purple:#6d28d9;--purple-l:#f5f3ff;
   --sb:220px;
 }
+[data-theme="dark"]{
+  --bg:#0f1117;--surface:#1a1d27;--s2:#1f2233;--border:#2a2d3e;
+  --text:#e8e9f0;--muted:#8b8fa8;--soft:#5a5e78;
+  --navy:#1a2a5e;--navy2:#2a3f8f;--navy-l:#1a2240;
+  --red:#ef4444;--red-l:#2d1515;
+  --amber:#f59e0b;--amber-l:#2d2006;
+  --green:#22c55e;--green-l:#0f2d1a;
+  --purple:#a78bfa;--purple-l:#1e1535;
+}
+
+/* Card view */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:1rem}
+.crd{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;position:relative}
+.crd:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.crd-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.crd-rut{font-size:10px;font-family:monospace;color:var(--muted);margin-bottom:.5rem}
+.crd-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem;font-size:11px}
+.crd-lbl{color:var(--muted)}
+.crd-val{font-weight:600}
+.crd-flags{display:flex;gap:4px;flex-wrap:wrap;margin-top:.5rem}
+.crd-actions{position:absolute;top:.625rem;right:.625rem;display:flex;gap:4px}
+
+/* Dark mode toggle btn */
+.dark-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.dark-btn:hover{background:var(--bg)}
+/* View toggle btn */
+.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.vt-btn{padding:4px 10px;font-size:12px;background:transparent;border:none;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'Inter',sans-serif}
+.vt-btn.active{background:var(--navy2);color:#fff}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
 /* ── SIDEBAR ── */
@@ -246,7 +275,12 @@ tbody tr:hover td{background:var(--s2)}
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="view-title">Resumen General</div>
-    <div style="display:flex;gap:7px">
+    <div style="display:flex;gap:7px;align-items:center">
+      <button class="dark-btn" onclick="toggleDark()" id="dark-btn" title="Modo oscuro">🌙</button>
+      <div class="view-toggle" id="view-toggle-btns" style="display:none">
+        <button class="vt-btn active" id="vt-table" onclick="setCardView('table')" title="Vista tabla">☰</button>
+        <button class="vt-btn" id="vt-card" onclick="setCardView('card')" title="Vista tarjetas">⊞</button>
+      </div>
       <button class="btn btn-ghost btn-sm" onclick="exportarExcel()" id="btn-exp" style="display:none">⬇ Excel</button>
       <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo Registro</button>
     </div>
@@ -489,9 +523,11 @@ function loadView(){
       }
     });
   }
-  // Mostrar barra de búsqueda solo en vista contratos
+  // Mostrar barra de búsqueda y toggle vista solo en contratos
   const sb=document.getElementById('search-bar-wrap');
   if(sb) sb.style.display=view==='contratos'?'flex':'none';
+  const vt=document.getElementById('view-toggle-btns');
+  if(vt) vt.style.display=view==='contratos'?'flex':'none';
   // Resetear input si cambia de vista
   const inp=document.getElementById('search-inp');
   if(inp && view!=='contratos'){ inp.value=''; sq=''; }
@@ -747,8 +783,9 @@ async function renderContratos(){
       </select>
       ${fEstado||fMat||fVis||fObs||fResp||fRet||fDev||fImp||fEtapa||fUnidad||sq?`<button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕</button>`:''}
     </div>
-    ${!data.length?`<div class="empty">📭 Sin registros</div>`:`
-    <div class="tw"><table>
+    ${!data.length?`<div class="empty">📭 Sin registros</div>`:
+      cardView==='card' ? renderCards(pageData)+paginationHtml() :
+    `<div class="tw"><table>
       <thead><tr>
         <th>Nombre / RUT</th><th>Materia</th><th>Responsable</th>
         <th>Etapas completadas</th><th>Estado</th><th>Flags</th>
@@ -1958,8 +1995,60 @@ function debounceSearch(){
   },400);
 }
 
+/* ── MODO OSCURO ── */
+function toggleDark(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('dark-btn').textContent=isDark?'🌙':'☀️';
+  localStorage.setItem('theme', isDark?'light':'dark');
+  // Rehacer charts si hay alguno activo
+  if(Object.keys(CH).length) loadView();
+}
+
+/* ── VISTA TARJETAS ── */
+let cardView='table'; // 'table' | 'card'
+
+function setCardView(v){
+  cardView=v;
+  document.getElementById('vt-table').classList.toggle('active', v==='table');
+  document.getElementById('vt-card').classList.toggle('active', v==='card');
+  renderContratos();
+}
+
+function renderCards(pageData){
+  return `<div class="card-grid">${pageData.map(c=>`
+  <div class="crd" onclick="openModal(${c.id})">
+    <div class="crd-actions" onclick="event.stopPropagation()">
+      ${isViewer?'':`<button class="act-btn" onclick="openModal(${c.id})">✏</button>
+      <button class="act-btn del" onclick="askDel(${c.id},'contrato')">🗑</button>`}
+    </div>
+    <div class="crd-name">${c.nombre}</div>
+    <div class="crd-rut">${c.rut}</div>
+    <div class="crd-row"><span class="crd-lbl">Materia</span><span class="crd-val" style="color:var(--navy2)">${c.materia||'—'}</span></div>
+    <div class="crd-row"><span class="crd-lbl">Responsable</span><span class="crd-val">${c.responsable||'—'}</span></div>
+    <div class="crd-row"><span class="crd-lbl">Vence</span><span class="crd-val">${fmtD(c.fecha_fin)}${c.dias_restantes!==null&&c.estado==='en_proceso'?` <span style="font-size:10px;color:${c.dias_restantes<=0?'var(--red)':c.dias_restantes<=7?'var(--red)':c.dias_restantes<=20?'var(--amber)':'var(--muted)'}">${c.dias_restantes<=0?'VENCIDO':c.dias_restantes+'d'}</span>`:''}</span></div>
+    <div class="crd-row"><span class="crd-lbl">Estado</span>${badgeFull(c)}</div>
+    <div class="crd-flags">
+      ${etapasHtml(c.etapas)}
+    </div>
+    <div class="crd-flags" style="margin-top:.375rem">
+      ${c.visado==='si'?`<span class="flag f-ok">Vis✓</span>`:`<span class="flag f-no">Vis ${c.visado}</span>`}
+      ${c.devuelto?`<span class="flag f-ok">Dev✓</span>`:''}
+      ${c.tiene_observacion?`<span class="flag f-warn">Obs⚠</span>`:''}
+      ${c.pago_imprevisto?`<span class="flag f-warn">$Imp</span>`:''}
+      ${c.retrasado?`<span class="flag f-warn">⏳Ret</span>`:''}
+    </div>
+  </div>`).join('')}</div>`;
+}
+
 /* INIT */
 (async()=>{
+  // Cargar tema guardado
+  const savedTheme=localStorage.getItem('theme');
+  if(savedTheme==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('dark-btn').textContent='☀️';
+  }
   try{
     const me=await fetch('/api/me').then(r=>r.json());
     isViewer=me.role==='viewer';
