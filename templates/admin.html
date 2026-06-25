@@ -736,17 +736,23 @@ async function renderCalendario(){
   const total=delMes.length;
   const criticos=delMes.filter(c=>c.alerta==='critico').length;
   const vencidos=delMes.filter(c=>c.alerta==='vencido').length;
-  const completados=delMes.filter(c=>c.estado==='completado').length;
-  const enProceso=delMes.filter(c=>c.estado==='en_proceso'&&c.alerta!=='critico'&&c.alerta!=='vencido').length;
   const advertencias=delMes.filter(c=>c.alerta==='advertencia').length;
+  const completados=delMes.filter(c=>c.estado==='completado').length;
+  const sinEfecto=delMes.filter(c=>c.estado==='sin_efecto').length;
+  const enProceso=delMes.filter(c=>c.estado==='en_proceso').length;
+  const imprevistos=delMes.filter(c=>c.pago_imprevisto).length;
+  const conObs=delMes.filter(c=>c.tiene_observacion).length;
   document.getElementById('cal-resumen').innerHTML=`
-    <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">${CAL_MESES[calMonth]}:</span>
+    <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">${CAL_MESES[calMonth]} — Contratos por finalizar en el mes:</span>
     <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);padding:3px 10px;border-radius:20px">📋 ${total} contratos</span>
     ${criticos?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#fef2f2;color:var(--red);padding:3px 10px;border-radius:20px">⚠ ${criticos} críticos</span>`:''}
     ${vencidos?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#fff1f2;color:#e11d48;padding:3px 10px;border-radius:20px">💀 ${vencidos} vencidos</span>`:''}
     ${advertencias?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:var(--amber-l);color:var(--amber);padding:3px 10px;border-radius:20px">⏰ ${advertencias} advertencias</span>`:''}
-    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:var(--green-l);color:var(--green);padding:3px 10px;border-radius:20px">✓ ${completados} completados</span>
     <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:var(--navy-l);color:var(--navy2);padding:3px 10px;border-radius:20px">● ${enProceso} en proceso</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:var(--green-l);color:var(--green);padding:3px 10px;border-radius:20px">✓ ${completados} completados</span>
+    ${sinEfecto?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:20px">🚫 ${sinEfecto} sin efecto</span>`:''}
+    ${imprevistos?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:var(--amber-l);color:var(--amber);padding:3px 10px;border-radius:20px">💲 ${imprevistos} imprevistos</span>`:''}
+    ${conObs?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#fffbeb;color:#92400e;padding:3px 10px;border-radius:20px">💬 ${conObs} con observación</span>`:''}
   `;
   const grid=document.getElementById('cal-grid');
   const headers=Array.from(grid.querySelectorAll('.cal-dow'));
@@ -2176,4 +2182,6 @@ function renderCards(pageData){
 </script>
 </body>
 </html>
+
+
 
