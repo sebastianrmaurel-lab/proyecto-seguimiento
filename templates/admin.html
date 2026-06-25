@@ -743,7 +743,7 @@ async function renderCalendario(){
   const imprevistos=delMes.filter(c=>c.pago_imprevisto).length;
   const conObs=delMes.filter(c=>c.tiene_observacion).length;
   document.getElementById('cal-resumen').innerHTML=`
-    <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">${CAL_MESES[calMonth]} — Contratos por finalizar en el mes:</span>
+    <span style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-right:4px">${CAL_MESES[calMonth]} — Contratos por finalizar en el mes:</span>
     <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);padding:3px 10px;border-radius:20px">📋 ${total} contratos</span>
     ${criticos?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#fef2f2;color:var(--red);padding:3px 10px;border-radius:20px">⚠ ${criticos} críticos</span>`:''}
     ${vencidos?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;background:#fff1f2;color:#e11d48;padding:3px 10px;border-radius:20px">💀 ${vencidos} vencidos</span>`:''}
